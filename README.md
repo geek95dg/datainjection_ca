@@ -1,55 +1,64 @@
-# Datainjection GLPI plugin
+# Datainjection (Custom Assets fork) — `datainjectionca`
 
-[![License](https://img.shields.io/github/license/pluginsGLPI/datainjection.svg?&label=License)](https://github.com/pluginsGLPI/datainjection/blob/develop/LICENSE)
-[![Follow twitter](https://img.shields.io/twitter/follow/Teclib.svg?style=social&label=Twitter&style=flat-square)](https://twitter.com/teclib)
-[![Telegram Group](https://img.shields.io/badge/Telegram-Group-blue.svg)](https://t.me/glpien)
-[![Project Status: Active](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![GitHub release](https://img.shields.io/github/release/pluginsGLPI/datainjection.svg)](https://github.com/pluginsGLPI/datainjection/releases)
-[![GitHub build](https://travis-ci.org/pluginsGLPI/datainjection.svg?)](https://travis-ci.org/pluginsGLPI/datainjection/)
+Fork of the upstream `pluginsGLPI/datainjection` plugin that adds:
 
+- **GLPI 11 custom-asset support** — every `AssetDefinition` row is exposed as its own injectable type and per-definition custom fields stored in the JSON `glpi_assets_assets.custom_fields` column are surfaced as extra mappable columns.
+- **XLSX (.xlsx) import path** — pure-PHP reader using `ZipArchive` + `SimpleXML`, no external dependency.
 
-![Screenshot](./screenshots/datainjection.gif "Alert")
+This fork ships under `<glpi_root>/plugins/` and is intentionally renamed so it can coexist with the upstream `datainjection` plugin.
 
+---
 
-This plugin allows data import into [GLPI](http://glpi-project.org) using CSV files.
+## Installation
 
-It allows to create models of injection for a future re-use. It's been created in order to:
+> **The plugin's directory on disk MUST be named `datainjectionca` — no underscore, no other casing.**
+> GLPI 11 enforces `PLUGIN_KEY_PATTERN = '/^[a-z0-9]+$/i'` in `Plugin::loadPluginSetupFile()`. The repo on GitHub keeps the `datainjection_ca` name for branding, but the deployed folder must drop the underscore.
 
-- import data coming from others asset management softwares
-- inject electronic delivery forms
+```bash
+# 1. Clone the repo to a working location
+git clone https://github.com/geek95dg/datainjection_ca.git ~/github/datainjection_ca
 
-Data to be imported using the plugins are:
+# 2. Make it available under GLPI as `datainjectionca`
+ln -s ~/github/datainjection_ca /var/www/html/glpi/plugins/datainjectionca
+#   - or -
+cp -r ~/github/datainjection_ca /var/www/html/glpi/plugins/datainjectionca
 
-- inventory data (except softwares and licenses),
-- management data (contract, contact, supplier),
-- configuration data (user, group, entity).
+# 3. (Re)build the GLPI cache so the new plugin is discovered
+sudo -u www-data php /var/www/html/glpi/bin/console cache:clear
 
-## Documentation
+# 4. List plugins — `datainjectionca` should appear with state "Not installed"
+sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:list
 
-We maintain a detailed documentation here -> [Documentation](https://glpi-plugins.readthedocs.io/en/latest/datainjection/index.html)
+# 5. Install and activate
+sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:install datainjectionca
+sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:activate datainjectionca
+```
 
-## Contact
+### Troubleshooting
 
-For notices about major changes and general discussion of datainjection, subscribe to the [/r/glpi](https://www.reddit.com/r/glpi/) subreddit.
-You can also chat with us via IRC in [#glpi on freenode](http://webchat.freenode.net/?channels=glpi) or [@glpi on Telegram](https://t.me/glpien).
+| Symptom | Cause |
+|---|---|
+| `Invalid plugin directory "datainjection_ca"` | You passed the underscored name. Use `datainjectionca`. |
+| `Invalid plugin directory "datainjectionca"` | Folder on disk has underscore (or wrong case). Run `ls /var/www/html/glpi/plugins/` and verify the directory is literally `datainjectionca`. |
+| Plugin missing from `glpi:plugin:list` | Folder is not under any of GLPI's plugin directories (`/var/www/html/glpi/plugins` or `/var/www/html/glpi/marketplace`), OR `setup.php` is missing inside it, OR the cache is stale — re-run `cache:clear`. |
+| `plugin_version_datainjectionca method must be defined!` | `setup.php` wasn't loaded — usually a permissions issue. Ensure `www-data` can read the folder and `setup.php`. |
 
-## Professional Services
+---
 
-![GLPI Network](./glpi_network.png "GLPI network")
+## What's imported
 
-The GLPI Network services are available through our [Partner's Network](http://www.teclib-edition.com/en/partners/). We provide special training, bug fixes with editor subscription, contributions for new features, and more.
+- Native assets: Computer, Monitor, Printer, NetworkEquipment, Phone, Peripheral, etc.
+- **GLPI 11 custom assets** (any `AssetDefinition`), including custom fields.
+- Management: Contract, Contact, Supplier, Document, License.
+- Configuration: User, Group, Entity, Profile, Location.
+- Inventory: Software, Cartridge, Consumable, Budget, NetworkPort, VLAN.
+- Device components and operating systems.
 
-Obtain a personalized service experience, associated with benefits and opportunities.
+## Supported file formats
 
-## Contributing
+- **CSV** — pick a delimiter and whether the first row is a header.
+- **XLSX** — first worksheet, with shared and inline strings.
 
-* Open a ticket for each bug/feature so it can be discussed
-* Follow [development guidelines](http://glpi-developer-documentation.readthedocs.io/en/latest/plugins/index.html)
-* Refer to [GitFlow](http://git-flow.readthedocs.io/) process for branching
-* Work on a new branch on your own fork
-* Open a PR that will be reviewed by a developer
+## License
 
-## Copying
-
-* **Code**: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License ([GPL-2.0](https://www.gnu.org/licenses/gpl-2.0.en.html)).
+GPL-2.0 — see `LICENSE`. Original work by the Teclib datainjection team; custom-asset and XLSX additions by [@geek95dg](https://github.com/geek95dg).
