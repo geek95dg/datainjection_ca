@@ -59,9 +59,6 @@ class PluginDatainjectionLogger
 
     private static function log(string $level, string $message, array $context): void
     {
-        $file = self::getLogFile();
-        self::ensureRotation($file);
-
         $ts     = date('Y-m-d H:i:s');
         $userId = 0;
         try {
@@ -83,14 +80,36 @@ class PluginDatainjectionLogger
             }
         }
 
-        $line = "[{$ts}] [{$level}] [user:{$userId}] {$message}{$ctxStr}\n";
-        @file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
+        $line = "[{$ts}] [{$level}] [user:{$userId}] {$message}{$ctxStr}";
+
+        $file    = self::getLogFile();
+        $written = false;
+        if ($file !== null) {
+            self::ensureRotation($file);
+            $bytes = @file_put_contents($file, $line . "\n", FILE_APPEND | LOCK_EX);
+            $written = ($bytes !== false && $bytes > 0);
+        }
+
+        // Always mirror to PHP's error_log so messages are never lost — even
+        // if GLPI_LOG_DIR is undefined, missing, or unwritable by the web
+        // user. Apache/php-fpm route this to /var/log/php-fpm/error.log,
+        // /var/log/apache2/error.log, or wherever error_log() points.
+        if (!$written) {
+            @error_log('[datainjection] ' . $line);
+        }
     }
 
-    private static function getLogFile(): string
+    private static function getLogFile(): ?string
     {
-        $dir = defined('GLPI_LOG_DIR') ? GLPI_LOG_DIR : sys_get_temp_dir();
-        return rtrim($dir, '/') . '/' . self::LOG_FILE;
+        $dir = defined('GLPI_LOG_DIR') ? GLPI_LOG_DIR : null;
+        if ($dir === null || !is_string($dir) || $dir === '') {
+            return null;
+        }
+        $dir = rtrim($dir, '/');
+        if (!is_dir($dir) || !is_writable($dir)) {
+            return null;
+        }
+        return $dir . '/' . self::LOG_FILE;
     }
 
     /**
