@@ -238,6 +238,9 @@ function getTypesToInject(): void
         }
     } catch (\Throwable $e) {
         // Best effort; the plugin must still load if custom assets fail.
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::exception($e, 'custom asset registry init failed');
+        }
     }
 
     //Add plugins

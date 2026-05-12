@@ -776,7 +776,16 @@ class PluginDatainjectionModel extends CommonDBTM
    **/
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
+        try {
+            return $this->doGetTabNameForItem($item, $withtemplate);
+        } catch (\Throwable $e) {
+            PluginDatainjectionLogger::exception($e, 'getTabNameForItem failed');
+            return '';
+        }
+    }
 
+    private function doGetTabNameForItem(CommonGLPI $item, $withtemplate)
+    {
         $canedit = Session::haveRight('plugin_datainjection_model', UPDATE);
 
         if (!$withtemplate && $item instanceof self) {
@@ -801,6 +810,23 @@ class PluginDatainjectionModel extends CommonDBTM
 
 
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
+    {
+        try {
+            return self::doDisplayTabContentForItem($item, $tabnum, $withtemplate);
+        } catch (\Throwable $e) {
+            PluginDatainjectionLogger::exception(
+                $e,
+                'displayTabContentForItem failed',
+            );
+            // Surface a short, safe message instead of a 500.
+            echo '<div class="alert alert-danger">'
+                . htmlspecialchars(__('An unexpected error occurred. See /var/log/glpi/datainjection.log for details.', 'datainjection'))
+                . '</div>';
+            return false;
+        }
+    }
+
+    private static function doDisplayTabContentForItem(CommonGLPI $item, $tabnum, $withtemplate)
     {
 
         if ($item instanceof self) {
