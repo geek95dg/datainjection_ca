@@ -28,28 +28,28 @@
  * -------------------------------------------------------------------------
  */
 
-Session::checkRight("plugin_datainjection_ca_use", READ);
+Session::checkRight("plugin_datainjectionca_use", READ);
 
 Html::header(
-    __('Data injection', 'datainjection_ca'),
+    __('Data injection', 'datainjectionca'),
     $_SERVER["PHP_SELF"],
     "tools",
     "plugindatainjectionmenu",
     "client",
 );
 
-if (isset($_SESSION['datainjection_ca']['go'])) {
-    $model = unserialize($_SESSION['datainjection_ca']['currentmodel']);
+if (isset($_SESSION['datainjectionca']['go'])) {
+    $model = unserialize($_SESSION['datainjectionca']['currentmodel']);
     PluginDatainjectionCaClientInjection::showInjectionForm($model, $_SESSION['glpiactive_entity']);
 } elseif (isset($_POST['upload'])) {
     $model = new PluginDatainjectionCaModel();
     $model->can($_POST['id'], READ);
-    $_SESSION['datainjection_ca']['infos'] = ($_POST['info'] ?? []);
+    $_SESSION['datainjectionca']['infos'] = ($_POST['info'] ?? []);
 
     //If additional informations provided : check if mandatory infos are present
-    if (!$model->checkMandatoryFields($_SESSION['datainjection_ca']['infos'])) {
+    if (!$model->checkMandatoryFields($_SESSION['datainjectionca']['infos'])) {
         Session::addMessageAfterRedirect(
-            __s('One mandatory field is not filled', 'datainjection_ca'),
+            __s('One mandatory field is not filled', 'datainjectionca'),
             true,
             ERROR,
             true,
@@ -72,18 +72,18 @@ if (isset($_SESSION['datainjection_ca']['go'])) {
 
         if ($response) {
             //File uploaded successfully and matches the given model : switch to the import tab
-            $_SESSION['datainjection_ca']['file_name']    = $_FILES['filename']['name'];
-            $_SESSION['datainjection_ca']['step']         = PluginDatainjectionCaClientInjection::STEP_PROCESS;
+            $_SESSION['datainjectionca']['file_name']    = $_FILES['filename']['name'];
+            $_SESSION['datainjectionca']['step']         = PluginDatainjectionCaClientInjection::STEP_PROCESS;
             //Store model in session for injection
-            $_SESSION['datainjection_ca']['currentmodel'] = serialize($model);
-            $_SESSION['datainjection_ca']['go']           = true;
+            $_SESSION['datainjectionca']['currentmodel'] = serialize($model);
+            $_SESSION['datainjectionca']['go']           = true;
         } else {
             //Got back to the file upload page
-            $_SESSION['datainjection_ca']['step'] = PluginDatainjectionCaClientInjection::STEP_UPLOAD;
+            $_SESSION['datainjectionca']['step'] = PluginDatainjectionCaClientInjection::STEP_UPLOAD;
         }
     } else {
         Session::addMessageAfterRedirect(
-            __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjection_ca'),
+            __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjectionca'),
             true,
             ERROR,
             true,

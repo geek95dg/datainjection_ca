@@ -60,7 +60,7 @@ class PluginDatainjectionCaProfileInjection extends Profile implements PluginDat
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -103,7 +103,7 @@ class PluginDatainjectionCaProfileInjection extends Profile implements PluginDat
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {

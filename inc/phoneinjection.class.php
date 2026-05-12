@@ -60,7 +60,7 @@ class PluginDatainjectionCaPhoneInjection extends Phone implements PluginDatainj
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -68,7 +68,7 @@ class PluginDatainjectionCaPhoneInjection extends Phone implements PluginDatainj
         $tab           = Search::getOptions(get_parent_class($this));
 
         //specific for domain
-        $tab[205]['name'] = __('Domain name', 'datainjection_ca');
+        $tab[205]['name'] = __('Domain name', 'datainjectionca');
 
         //Remove some options because some fields cannot be imported
         $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
@@ -87,7 +87,7 @@ class PluginDatainjectionCaPhoneInjection extends Phone implements PluginDatainj
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {

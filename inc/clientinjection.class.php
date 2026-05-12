@@ -44,7 +44,7 @@ use function Safe\unlink;
 
 class PluginDatainjectionCaClientInjection
 {
-    public static $rightname = "plugin_datainjection_ca_use";
+    public static $rightname = "plugin_datainjectionca_use";
 
     public const STEP_UPLOAD  = 0;
     public const STEP_PROCESS = 1;
@@ -68,7 +68,7 @@ class PluginDatainjectionCaClientInjection
             $buttons[$url] = PluginDatainjectionCaModel::getTypeName();
             $title         = "";
             Html::displayTitle(
-                plugin_datainjection_ca_geturl() . "pics/datainjection.png",
+                plugin_datainjectionca_geturl() . "pics/datainjection.png",
                 PluginDatainjectionCaModel::getTypeName(),
                 $title,
                 $buttons,
@@ -82,15 +82,15 @@ class PluginDatainjectionCaClientInjection
         /** @var array $CFG_GLPI */
         global $CFG_GLPI;
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/clientinjection.html.twig', [
+        TemplateRenderer::getInstance()->display('@datainjectionca/clientinjection.html.twig', [
             'form_action' => Toolbox::getItemTypeFormURL(self::class),
             'models' => PluginDatainjectionCaModel::getModels(Session::getLoginUserID(), 'name', $_SESSION['glpiactive_entity'], false),
-            'can_create_model' => Session::haveRight('plugin_datainjection_ca_model', CREATE),
+            'can_create_model' => Session::haveRight('plugin_datainjectionca_model', CREATE),
             'model_type_name' => PluginDatainjectionCaModel::getTypeName(),
             'models_id' => PluginDatainjectionCaSession::getParam('models_id'),
             'step' => PluginDatainjectionCaSession::getParam('step'),
-            'upload_url' => $CFG_GLPI['root_doc'] . "/plugins/datainjection_ca/ajax/dropdownSelectModel.php",
-            'result_url' => $CFG_GLPI['root_doc'] . "/plugins/datainjection_ca/ajax/results.php",
+            'upload_url' => $CFG_GLPI['root_doc'] . "/plugins/datainjectionca/ajax/dropdownSelectModel.php",
+            'result_url' => $CFG_GLPI['root_doc'] . "/plugins/datainjectionca/ajax/results.php",
             'params' => ['models_id' => PluginDatainjectionCaSession::getParam('models_id')],
             'upload_step' => self::STEP_UPLOAD,
             'result_step' => self::STEP_RESULT,
@@ -113,11 +113,11 @@ class PluginDatainjectionCaClientInjection
             'url' => $url,
             'models_id' => $options['models_id'] ?? null,
             'confirm' => $confirm,
-            'submit_label' => $options['submit'] ?? __('Launch the import', 'datainjection_ca'),
+            'submit_label' => $options['submit'] ?? __('Launch the import', 'datainjectionca'),
             'file_encoding_values' => PluginDatainjectionCaDropdown::getFileEncodingValue(),
         ];
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/clientinjection_upload_file.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjectionca/clientinjection_upload_file.html.twig', $data);
     }
 
 
@@ -160,16 +160,16 @@ class PluginDatainjectionCaClientInjection
         PluginDatainjectionCaSession::setParam('injection_results', json_encode([]));
         PluginDatainjectionCaSession::setParam('injection_error_lines', json_encode([]));
 
-        $batch_url  = $CFG_GLPI['root_doc'] . "/plugins/datainjection_ca/ajax/inject_batch.php";
-        $result_url = $CFG_GLPI['root_doc'] . "/plugins/datainjection_ca/ajax/results.php";
+        $batch_url  = $CFG_GLPI['root_doc'] . "/plugins/datainjectionca/ajax/inject_batch.php";
+        $result_url = $CFG_GLPI['root_doc'] . "/plugins/datainjectionca/ajax/results.php";
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/clientinjection_injection.html.twig', [
+        TemplateRenderer::getInstance()->display('@datainjectionca/clientinjection_injection.html.twig', [
             'model_name' => $model->fields['name'],
             'nblines'    => $nblines,
             'model_id'   => $model->fields['id'],
             'batch_url'  => $batch_url,
             'result_url' => $result_url,
-            'plugin_url' => plugin_datainjection_ca_geturl(),
+            'plugin_url' => plugin_datainjectionca_geturl(),
         ]);
 
         echo "<span id='span_injection' name='span_injection'></span>";
@@ -194,7 +194,7 @@ class PluginDatainjectionCaClientInjection
 
         Profile::getCurrent()->disable();
 
-        $model = unserialize($_SESSION['datainjection_ca']['currentmodel']);
+        $model = unserialize($_SESSION['datainjectionca']['currentmodel']);
         $model->loadSpecificModel();
         $entities_id = $_SESSION['glpiactive_entity'];
         $lines_json  = PluginDatainjectionCaSession::getParam('injection_lines');
@@ -237,8 +237,8 @@ class PluginDatainjectionCaClientInjection
             PluginDatainjectionCaSession::setParam('results', json_encode($results));
             PluginDatainjectionCaSession::setParam('error_lines', json_encode($error_lines));
 
-            $_SESSION['datainjection_ca']['step'] = self::STEP_RESULT;
-            unset($_SESSION['datainjection_ca']['go']);
+            $_SESSION['datainjectionca']['step'] = self::STEP_RESULT;
+            unset($_SESSION['datainjectionca']['go']);
 
             //Delete CSV file
             $backend = $model->getBackend();
@@ -297,19 +297,19 @@ class PluginDatainjectionCaClientInjection
             }
         }
 
-        $from_url = plugin_datainjection_ca_geturl() . "front/clientinjection.form.php";
+        $from_url = plugin_datainjectionca_geturl() . "front/clientinjection.form.php";
         $plugin      = new Plugin();
 
         $data = [
             'ok'            => $ok,
             'from_url'      => $from_url,
-            'popup_url'     => plugin_datainjection_ca_geturl() . "front/popup.php?popup=log&models_id=" . $model->fields['id'],
+            'popup_url'     => plugin_datainjectionca_geturl() . "front/popup.php?popup=log&models_id=" . $model->fields['id'],
             'model_id'      => $model->fields['id'],
             'has_pdf'       => $plugin->isActivated('pdf'),
             'has_errors'    => !empty($error_lines),
         ];
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/clientinjection_result.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjectionca/clientinjection_result.html.twig', $data);
     }
 
     public static function exportErrorsInCSV()

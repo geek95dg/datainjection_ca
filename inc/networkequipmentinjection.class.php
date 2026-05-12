@@ -60,7 +60,7 @@ class PluginDatainjectionCaNetworkEquipmentInjection extends NetworkEquipment im
 
 
     /**
-     * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+     * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
      **/
     public function getOptions($primary_type = '')
     {
@@ -73,7 +73,7 @@ class PluginDatainjectionCaNetworkEquipmentInjection extends NetworkEquipment im
         //Virtual type : need to be processed at the end !
         $tab[200]['table']         = 'glpi_networkequipments';
         $tab[200]['field']         = 'nb_ports';
-        $tab[200]['name']          = __('Number of ports', 'datainjection_ca');
+        $tab[200]['name']          = __('Number of ports', 'datainjectionca');
         $tab[200]['checktype']     = 'integer';
         $tab[200]['displaytype']   = 'virtual';
         $tab[200]['linkfield']     = 'nb_ports';
@@ -121,7 +121,7 @@ class PluginDatainjectionCaNetworkEquipmentInjection extends NetworkEquipment im
 
 
     /**
-     * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+     * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
      **/
     public function addOrUpdateObject($values = [], $options = [])
     {

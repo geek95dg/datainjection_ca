@@ -15,7 +15,7 @@ use Glpi\Application\View\TemplateRenderer;
 
 class PluginDatainjectionCaModelxlsx extends CommonDBChild
 {
-    public static $rightname = 'plugin_datainjection_ca_model';
+    public static $rightname = 'plugin_datainjectionca_model';
     public $specific_fields;
 
     // From CommonDBChild
@@ -114,7 +114,7 @@ class PluginDatainjectionCaModelxlsx extends CommonDBChild
             'is_header_present' => $this->isHeaderPresent(),
         ];
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/modelxlsx_additional_form.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjectionca/modelxlsx_additional_form.html.twig', $data);
     }
 
     public function saveFields($fields)

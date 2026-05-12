@@ -61,7 +61,7 @@ class PluginDatainjectionCaComputerInjection extends Computer implements PluginD
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -75,7 +75,7 @@ class PluginDatainjectionCaComputerInjection extends Computer implements PluginD
         $tab[71]['linkfield'] = 'groups_id_normal';
 
         //specific for antiviruses
-        $tab[167]['name'] = __('Antivirus name', 'datainjection_ca');
+        $tab[167]['name'] = __('Antivirus name', 'datainjectionca');
 
         //Remove some options because some fields cannot be imported
         $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
@@ -101,7 +101,7 @@ class PluginDatainjectionCaComputerInjection extends Computer implements PluginD
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
