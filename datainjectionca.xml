@@ -22,7 +22,7 @@
    <versions>
       <version>
           <num>2.15.6</num>
-          <compatibility>~11.0.5</compatibility>
+          <compatibility>~11.0.0</compatibility>
           <download_url>https://github.com/geek95dg/datainjectionca/releases</download_url>
       </version>
    </versions>
