@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionMappingCollection
+class PluginDatainjectionCaMappingCollection
 {
     private $mappingCollection;
 
@@ -51,14 +51,14 @@ class PluginDatainjectionMappingCollection
         global $DB;
 
         $sql = "SELECT *
-              FROM `glpi_plugin_datainjection_mappings`
+              FROM `glpi_plugin_datainjection_ca_mappings`
               WHERE `models_id` = '$models_id'
               ORDER BY `rank` ASC";
 
         $this->mappingCollection = [];
 
         foreach ($data = $DB->doQuery($sql) as $data) {
-            $mapping                   = new PluginDatainjectionMapping();
+            $mapping                   = new PluginDatainjectionCaMapping();
             $mapping->fields           = $data;
             $this->mappingCollection[] = $mapping;
         }
@@ -78,11 +78,11 @@ class PluginDatainjectionMappingCollection
 
 
     /**
-    * Get a PluginDatainjectionMapping by giving the mapping name
+    * Get a PluginDatainjectionCaMapping by giving the mapping name
     *
     * @param string $name
     *
-    * @return PluginDatainjectionMapping the PluginDatainjectionMapping object associated or null
+    * @return PluginDatainjectionCaMapping the PluginDatainjectionCaMapping object associated or null
    **/
     public function getMappingByName($name)
     {
@@ -92,11 +92,11 @@ class PluginDatainjectionMappingCollection
 
 
     /**
-    * Get a PluginDatainjectionMapping by giving the mapping rank
+    * Get a PluginDatainjectionCaMapping by giving the mapping rank
     *
     * @param int $rank
     *
-    * @return PluginDatainjectionMapping the PluginDatainjectionMapping object associated or null
+    * @return PluginDatainjectionCaMapping the PluginDatainjectionCaMapping object associated or null
    **/
     public function getMappingByRank($rank)
     {
@@ -111,7 +111,7 @@ class PluginDatainjectionMappingCollection
     * @param string $field the field to look for
     * @param string|int $value the value of the field
     *
-    * @return PluginDatainjectionMapping|null the PluginDatainjectionMapping object associated or null
+    * @return PluginDatainjectionCaMapping|null the PluginDatainjectionCaMapping object associated or null
    **/
     public function getMappingsByField($field, $value)
     {
@@ -148,7 +148,7 @@ class PluginDatainjectionMappingCollection
     public function deleteMappingsFromDB($model_id)
     {
 
-        $mapping = new PluginDatainjectionMapping();
+        $mapping = new PluginDatainjectionCaMapping();
         $mapping->deleteByCriteria(['models_id' => $model_id]);
     }
 
@@ -158,7 +158,7 @@ class PluginDatainjectionMappingCollection
     /**
     * Add a new mapping to this model (don't write in to DB)
     *
-    * @param PluginDatainjectionMapping $mapping the new PluginDatainjectionMapping to add
+    * @param PluginDatainjectionCaMapping $mapping the new PluginDatainjectionCaMapping to add
    **/
     public function addNewMapping($mapping)
     {
@@ -170,7 +170,7 @@ class PluginDatainjectionMappingCollection
     /**
     * Replace all the mappings for a model
     *
-    * @param array $mappings the array of PluginDatainjectionMapping objects
+    * @param array $mappings the array of PluginDatainjectionCaMapping objects
    **/
     public function replaceMappings($mappings)
     {

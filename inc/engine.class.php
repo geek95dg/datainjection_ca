@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionEngine
+class PluginDatainjectionCaEngine
 {
     //Model informations
     private $model;
@@ -78,8 +78,8 @@ class PluginDatainjectionEngine
 
         //Get the injectionclass associated to the itemtype
         $itemtype       = $this->getModel()->getItemtype();
-        $injectionClass = PluginDatainjectionCommonInjectionLib::getInjectionClassInstance($itemtype);
-        $several        = PluginDatainjectionMapping::getSeveralMappedField($this->getModel()->fields['id']);
+        $injectionClass = PluginDatainjectionCaCommonInjectionLib::getInjectionClassInstance($itemtype);
+        $several        = PluginDatainjectionCaMapping::getSeveralMappedField($this->getModel()->fields['id']);
 
         //First of all : transform $line which is an array of values to inject into another array
         //which looks like this :
@@ -93,7 +93,7 @@ class PluginDatainjectionEngine
             //If field is mapped with a value in glpi
             if (
                 ($mapping != null)
-                && ($mapping->getItemtype() != PluginDatainjectionInjectionType::NO_VALUE)
+                && ($mapping->getItemtype() != PluginDatainjectionCaInjectionType::NO_VALUE)
             ) {
                 $this->addValueToInject($fields_toinject, $searchOptions, $mapping, $line[$i], $several);
             }
@@ -157,7 +157,7 @@ class PluginDatainjectionEngine
 
         //Add injected line number to the result array
         $results['line'] = $index;
-        if ($results['status'] != PluginDatainjectionCommonInjectionLib::SUCCESS) {
+        if ($results['status'] != PluginDatainjectionCaCommonInjectionLib::SUCCESS) {
             $this->error_lines[] = $line;
         }
         return $results;
@@ -201,7 +201,7 @@ class PluginDatainjectionEngine
     ): void {
 
         // Option will be found only for "main" type.
-        $option       = PluginDatainjectionCommonInjectionLib::findSearchOption(
+        $option       = PluginDatainjectionCaCommonInjectionLib::findSearchOption(
             $searchOptions,
             $mapping->getValue(),
         );
@@ -210,7 +210,7 @@ class PluginDatainjectionEngine
         if (
             !empty($option) && ($option['displaytype'] == 'multiline_text')
             && in_array($mapping->getValue(), $several)
-            && ($value != PluginDatainjectionCommonInjectionLib::EMPTY_VALUE)
+            && ($value != PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE)
         ) {
             $return_value = '';
 
@@ -235,7 +235,7 @@ class PluginDatainjectionEngine
         foreach ($this->model->getInfos() as $info) {
             if (
                 isset($this->infos[$info->getValue()])
-                && PluginDatainjectionInfo::keepInfo($info, $this->infos[$info->getValue()])
+                && PluginDatainjectionCaInfo::keepInfo($info, $this->infos[$info->getValue()])
             ) {
                 $additional_infos[$info->getInfosType()][$info->getValue()]
                           = $this->infos[$info->getValue()];

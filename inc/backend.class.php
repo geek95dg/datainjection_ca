@@ -34,7 +34,7 @@ use function Safe\preg_match;
 /*
  * Common backend to read files to import
  */
-abstract class PluginDatainjectionBackend
+abstract class PluginDatainjectionCaBackend
 {
     protected $file = "";
     protected $delimiter = "";
@@ -50,7 +50,7 @@ abstract class PluginDatainjectionBackend
     /**
     * Get header of the file
     *
-    * @param PluginDatainjectionData|null $injectionData
+    * @param PluginDatainjectionCaData|null $injectionData
     * @param boolean $header_present
     *
     * @return array with the data from the header
@@ -79,8 +79,8 @@ abstract class PluginDatainjectionBackend
     public static function getInstance($type)
     {
         $allowedBackends = [
-            'csv'  => PluginDatainjectionBackendcsv::class,
-            'xlsx' => PluginDatainjectionBackendxlsx::class,
+            'csv'  => PluginDatainjectionCaBackendcsv::class,
+            'xlsx' => PluginDatainjectionCaBackendxlsx::class,
         ];
 
         if (!isset($allowedBackends[$type])) {

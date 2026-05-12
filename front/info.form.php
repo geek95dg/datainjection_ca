@@ -32,9 +32,9 @@ Session::checkLoginUser();
 
 /* Update mappings */
 if (isset($_POST["update"])) {
-    PluginDatainjectionInfo::manageInfos($_POST['models_id'], $_POST);
+    PluginDatainjectionCaInfo::manageInfos($_POST['models_id'], $_POST);
 } elseif (isset($_POST["delete"])) {
-    $info = new PluginDatainjectionInfo();
+    $info = new PluginDatainjectionCaInfo();
     foreach ($_POST["item"] as $key => $val) {
         $input = ['id' => $key];
         if ($val == 1) {
@@ -44,5 +44,5 @@ if (isset($_POST["update"])) {
     }
     Html::back();
 }
-Session::setActiveTab('PluginDatainjectionModel', 'PluginDatainjectionModel$5');
+Session::setActiveTab('PluginDatainjectionCaModel', 'PluginDatainjectionCaModel$5');
 Html::back();

@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionDocumentInjection extends Document implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaDocumentInjection extends Document implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionDocumentInjection extends Document implements PluginDat
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -69,12 +69,12 @@ class PluginDatainjectionDocumentInjection extends Document implements PluginDat
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

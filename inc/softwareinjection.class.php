@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionSoftwareInjection extends Software implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaSoftwareInjection extends Software implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionSoftwareInjection extends Software implements PluginDat
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -71,7 +71,7 @@ class PluginDatainjectionSoftwareInjection extends Software implements PluginDat
         $tab[3]['linkfield']    = 'locations_id';
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [4, 5, 31, 72, 91, 92, 93, 160, 161, 162, 163, 164, 165, 166, 170];
 
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
@@ -82,7 +82,7 @@ class PluginDatainjectionSoftwareInjection extends Software implements PluginDat
             "multiline_text" => [16, 90],
         ];
 
-        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
@@ -123,12 +123,12 @@ class PluginDatainjectionSoftwareInjection extends Software implements PluginDat
     }
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

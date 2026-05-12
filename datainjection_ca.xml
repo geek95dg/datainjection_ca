@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+   <name>Data Injection (Custom Assets)</name>
+   <key>datainjection_ca</key>
+   <state>stable</state>
+   <logo>https://raw.githubusercontent.com/geek95dg/datainjection_ca/main/datainjection.png</logo>
+   <description>
+      <short>
+         <en><![CDATA[Fork of the Data Injection plugin with GLPI 11 custom-asset support and XLSX imports.]]></en>
+      </short>
+      <long>
+         <en><![CDATA[Imports CSV and XLSX files into GLPI tables. Adds full support for GLPI 11 custom assets (the glpi_assets_assets table) including the per-definition JSON custom_fields column, on top of the original plugin's coverage of standard inventory, management and configuration data.]]></en>
+      </long>
+   </description>
+   <homepage>https://github.com/geek95dg/datainjection_ca</homepage>
+   <download>https://github.com/geek95dg/datainjection_ca/releases</download>
+   <issues>https://github.com/geek95dg/datainjection_ca/issues</issues>
+   <readme>https://github.com/geek95dg/datainjection_ca/blob/main/README.md</readme>
+   <authors>
+      <author>geek95dg</author>
+   </authors>
+   <versions>
+      <version>
+          <num>2.15.6</num>
+          <compatibility>~11.0.5</compatibility>
+          <download_url>https://github.com/geek95dg/datainjection_ca/releases</download_url>
+      </version>
+   </versions>
+   <langs>
+      <lang>en_GB</lang>
+   </langs>
+   <tags>
+         <en>
+            <tag>Injection</tag>
+            <tag>data</tag>
+            <tag>csv</tag>
+            <tag>xlsx</tag>
+            <tag>custom assets</tag>
+            <tag>entities</tag>
+         </en>
+   </tags>
+   <license>GPL v2+</license>
+</root>
