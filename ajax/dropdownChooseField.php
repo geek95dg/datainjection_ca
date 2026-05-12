@@ -35,4 +35,4 @@ if (strpos($_SERVER['PHP_SELF'], "dropdownChooseField.php")) {
 }
 
 Session::checkCentralAccess();
-PluginDatainjectionInjectionType::dropdownFields($_POST);
+PluginDatainjectionCaInjectionType::dropdownFields($_POST);

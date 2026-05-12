@@ -28,17 +28,17 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionDropdown
+class PluginDatainjectionCaDropdown
 {
     public static function dateFormats()
     {
 
-        $date_format[PluginDatainjectionCommonInjectionLib::DATE_TYPE_DDMMYYYY]
-                                                          = __('dd-mm-yyyy', 'datainjection');
-        $date_format[PluginDatainjectionCommonInjectionLib::DATE_TYPE_MMDDYYYY]
-                                                          = __('mm-dd-yyyy', 'datainjection');
-        $date_format[PluginDatainjectionCommonInjectionLib::DATE_TYPE_YYYYMMDD]
-                                                          = __('yyyy-mm-dd', 'datainjection');
+        $date_format[PluginDatainjectionCaCommonInjectionLib::DATE_TYPE_DDMMYYYY]
+                                                          = __('dd-mm-yyyy', 'datainjection_ca');
+        $date_format[PluginDatainjectionCaCommonInjectionLib::DATE_TYPE_MMDDYYYY]
+                                                          = __('mm-dd-yyyy', 'datainjection_ca');
+        $date_format[PluginDatainjectionCaCommonInjectionLib::DATE_TYPE_YYYYMMDD]
+                                                          = __('yyyy-mm-dd', 'datainjection_ca');
 
         return $date_format;
     }
@@ -55,12 +55,12 @@ class PluginDatainjectionDropdown
     public static function floatFormats()
     {
 
-        $float_format[PluginDatainjectionCommonInjectionLib::FLOAT_TYPE_DOT]
-                                                          = __('1 234.56', 'datainjection');
-        $float_format[PluginDatainjectionCommonInjectionLib::FLOAT_TYPE_COMMA]
-                                                          = __('1 234,56', 'datainjection');
-        $float_format[PluginDatainjectionCommonInjectionLib::FLOAT_TYPE_DOT_AND_COM]
-                                                          = __('1,234.56', 'datainjection');
+        $float_format[PluginDatainjectionCaCommonInjectionLib::FLOAT_TYPE_DOT]
+                                                          = __('1 234.56', 'datainjection_ca');
+        $float_format[PluginDatainjectionCaCommonInjectionLib::FLOAT_TYPE_COMMA]
+                                                          = __('1 234,56', 'datainjection_ca');
+        $float_format[PluginDatainjectionCaCommonInjectionLib::FLOAT_TYPE_DOT_AND_COM]
+                                                          = __('1,234.56', 'datainjection_ca');
 
         return $float_format;
     }
@@ -81,16 +81,16 @@ class PluginDatainjectionDropdown
     {
 
         $states[0]                                            = Dropdown::EMPTY_VALUE;
-        //$states[PluginDatainjectionModel::INITIAL_STEP] = __('Creation of the model on going', 'datainjection');
-        $states[PluginDatainjectionModel::FILE_STEP]          = __('File to inject', 'datainjection');
-        $states[PluginDatainjectionModel::MAPPING_STEP]       = __('Mappings', 'datainjection');
-        $states[PluginDatainjectionModel::OTHERS_STEP]        = __(
+        //$states[PluginDatainjectionCaModel::INITIAL_STEP] = __('Creation of the model on going', 'datainjection_ca');
+        $states[PluginDatainjectionCaModel::FILE_STEP]          = __('File to inject', 'datainjection_ca');
+        $states[PluginDatainjectionCaModel::MAPPING_STEP]       = __('Mappings', 'datainjection_ca');
+        $states[PluginDatainjectionCaModel::OTHERS_STEP]        = __(
             'Additional Information',
-            'datainjection',
+            'datainjection_ca',
         );
-        $states[PluginDatainjectionModel::READY_TO_USE_STEP]  = __(
+        $states[PluginDatainjectionCaModel::READY_TO_USE_STEP]  = __(
             'Model available for use',
-            'datainjection',
+            'datainjection_ca',
         );
         return $states;
     }
@@ -111,10 +111,10 @@ class PluginDatainjectionDropdown
     public static function getStatusColor($step)
     {
         switch ($step) {
-            case PluginDatainjectionModel::MAPPING_STEP:
-            case PluginDatainjectionModel::OTHERS_STEP:
+            case PluginDatainjectionCaModel::MAPPING_STEP:
+            case PluginDatainjectionCaModel::OTHERS_STEP:
                 return "#ffb832";
-            case PluginDatainjectionModel::READY_TO_USE_STEP:
+            case PluginDatainjectionCaModel::READY_TO_USE_STEP:
                 return "#2ec41f";
             default:
                 return "#ff4e4e";
@@ -125,9 +125,9 @@ class PluginDatainjectionDropdown
     public static function getFileEncodingValue()
     {
 
-        $values[PluginDatainjectionBackend::ENCODING_AUTO]      = __('Automatic detection', 'datainjection');
-        $values[PluginDatainjectionBackend::ENCODING_UFT8]      = __('UTF-8', 'datainjection');
-        $values[PluginDatainjectionBackend::ENCODING_ISO8859_1] = __('ISO8859-1', 'datainjection');
+        $values[PluginDatainjectionCaBackend::ENCODING_AUTO]      = __('Automatic detection', 'datainjection_ca');
+        $values[PluginDatainjectionCaBackend::ENCODING_UFT8]      = __('UTF-8', 'datainjection_ca');
+        $values[PluginDatainjectionCaBackend::ENCODING_ISO8859_1] = __('ISO8859-1', 'datainjection_ca');
 
         return $values;
     }
@@ -136,17 +136,17 @@ class PluginDatainjectionDropdown
     public static function portUnicityValues()
     {
 
-        $values[PluginDatainjectionCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER]
+        $values[PluginDatainjectionCaCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER]
                                            = __('Port number');
-        $values[PluginDatainjectionCommonInjectionLib::UNICITY_NETPORT_NAME]
+        $values[PluginDatainjectionCaCommonInjectionLib::UNICITY_NETPORT_NAME]
                                            = __('Name');
-        $values[PluginDatainjectionCommonInjectionLib::UNICITY_NETPORT_MACADDRESS]
+        $values[PluginDatainjectionCaCommonInjectionLib::UNICITY_NETPORT_MACADDRESS]
                                            = __('Mac address');
-        $values[PluginDatainjectionCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER_NAME]
+        $values[PluginDatainjectionCaCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER_NAME]
                                            = __('Port number') . "+" . __('Name');
-        $values[PluginDatainjectionCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER_MAC]
+        $values[PluginDatainjectionCaCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER_MAC]
                                            = __('Port number') . "+" . __('Mac address');
-        $values[PluginDatainjectionCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER_NAME_MAC]
+        $values[PluginDatainjectionCaCommonInjectionLib::UNICITY_NETPORT_LOGICAL_NUMBER_NAME_MAC]
                                            = __('Port number') . "+" . __('Name') . "+" .
                                              __('Mac address');
         return $values;

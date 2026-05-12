@@ -34,7 +34,7 @@ use function Safe\fopen;
 use function Safe\fread;
 use function Safe\unlink;
 
-class PluginDatainjectionBackendcsv extends PluginDatainjectionBackend implements PluginDatainjectionBackendInterface
+class PluginDatainjectionCaBackendcsv extends PluginDatainjectionCaBackend implements PluginDatainjectionCaBackendInterface
 {
     private $isHeaderPresent = true;
     private $file_handler    = null;
@@ -97,16 +97,16 @@ class PluginDatainjectionBackendcsv extends PluginDatainjectionBackend implement
         for ($c = 0; $c < $num; $c++) {
             $tmp = trim($data[$c]);
             switch ($encoding) {
-                case PluginDatainjectionBackend::ENCODING_ISO8859_1:
+                case PluginDatainjectionCaBackend::ENCODING_ISO8859_1:
                     $csv[0][] = $tmp === '' || $tmp === '0' ? Toolbox::encodeInUtf8($tmp) : $tmp;
                     break;
 
-                case PluginDatainjectionBackend::ENCODING_UFT8:
+                case PluginDatainjectionCaBackend::ENCODING_UFT8:
                     $csv[0][] = $tmp;
                     break;
 
                 default:
-                    $csv[0][] = PluginDatainjectionBackend::toUTF8($tmp);
+                    $csv[0][] = PluginDatainjectionCaBackend::toUTF8($tmp);
             }
         }
         return $csv;
@@ -133,7 +133,7 @@ class PluginDatainjectionBackendcsv extends PluginDatainjectionBackend implement
     public function read($numberOfLines = 1)
     {
 
-        $injectionData = new PluginDatainjectionData();
+        $injectionData = new PluginDatainjectionCaData();
         $this->openFile();
         $continue = true;
         $data     = false;
@@ -155,7 +155,7 @@ class PluginDatainjectionBackendcsv extends PluginDatainjectionBackend implement
     /**
     * Store the number of lines red from the file
     *
-    * @see plugins/datainjection/inc/PluginDatainjectionBackendInterface::storeNumberOfLines()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaBackendInterface::storeNumberOfLines()
    **/
     public function storeNumberOfLines()
     {
@@ -167,7 +167,7 @@ class PluginDatainjectionBackendcsv extends PluginDatainjectionBackend implement
             //If line is not empty
             if (
                 (count($data) > 1)
-                || ($data[0] != PluginDatainjectionCommonInjectionLib::EMPTY_VALUE)
+                || ($data[0] != PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE)
             ) {
                 $line = self::parseLine($fic, $data, $this->encoding);
                 if (count($line[0]) > 0) {
@@ -232,7 +232,7 @@ class PluginDatainjectionBackendcsv extends PluginDatainjectionBackend implement
         $line = [];
         if (
             (count($data) > 1)
-            || ($data[0] != PluginDatainjectionCommonInjectionLib::EMPTY_VALUE)
+            || ($data[0] != PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE)
         ) {
             $line = self::parseLine($this->file_handler, $data, $this->encoding);
         }

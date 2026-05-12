@@ -35,4 +35,4 @@ if (strpos($_SERVER['PHP_SELF'], "dropdownMandatory.php")) {
 }
 
 Session::checkCentralAccess();
-PluginDatainjectionInjectionType::showMandatoryCheckbox($_POST);
+PluginDatainjectionCaInjectionType::showMandatoryCheckbox($_POST);

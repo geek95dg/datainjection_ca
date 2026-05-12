@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionData
+class PluginDatainjectionCaData
 {
     private $injectionData;
 

@@ -30,7 +30,7 @@
 
 use Glpi\Form\Category;
 
-class PluginDatainjectionCategoryInjection extends Category implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaCategoryInjection extends Category implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -54,26 +54,26 @@ class PluginDatainjectionCategoryInjection extends Category implements PluginDat
     }
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
     */
     public function getOptions($primary_type = '')
     {
         $tab           = Search::getOptions(get_parent_class($this));
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $options['ignore_fields'] = $blacklist;
 
-        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
         $values = $this->fixCategoryTreeStructure($values);
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

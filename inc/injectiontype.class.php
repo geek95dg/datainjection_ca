@@ -33,7 +33,7 @@ use function Safe\json_decode;
 use function Safe\json_encode;
 use function Safe\preg_replace;
 
-class PluginDatainjectionInjectionType
+class PluginDatainjectionCaInjectionType
 {
     public const NO_VALUE = 'none';
 
@@ -73,7 +73,7 @@ class PluginDatainjectionInjectionType
                     }
                     $typename = get_parent_class($type);
                     $name     = '';
-                    if ($from != 'datainjection') {
+                    if ($from != 'datainjection_ca') {
                         $plugin->getFromDBbyDir($from);
                         $name = $plugin->getName() . ': ';
                     }
@@ -142,7 +142,7 @@ class PluginDatainjectionInjectionType
         }
 
         //Add null value
-        $values[self::NO_VALUE] = __('-------Choose a table-------', 'datainjection');
+        $values[self::NO_VALUE] = __('-------Choose a table-------', 'datainjection_ca');
 
         //Add primary_type to the list of availables types
         if (!is_a($p['primary_type'], CommonDBTM::class, true)) {
@@ -172,7 +172,7 @@ class PluginDatainjectionInjectionType
         );
 
         $p['itemtype'] = '__VALUE__';
-        $di_base_url   = plugin_datainjection_geturl();
+        $di_base_url   = plugin_datainjection_ca_geturl();
         $url_field     = $di_base_url . "ajax/dropdownChooseField.php";
         $toobserve     = "dropdown_data[" . $mapping_or_info->getID() . "][itemtype]$rand";
         $toupdate      = "span_field_" . $mappings_id;
@@ -212,7 +212,7 @@ class PluginDatainjectionInjectionType
         }
 
         $fields = [];
-        $fields[self::NO_VALUE] = __('-------Choose a field-------', 'datainjection');
+        $fields[self::NO_VALUE] = __('-------Choose a field-------', 'datainjection_ca');
 
         //By default field has no default value
         $mapping_value = self::NO_VALUE;
@@ -222,7 +222,7 @@ class PluginDatainjectionInjectionType
             if ($mapping_or_info['value'] != self::NO_VALUE) {
                 $mapping_value = $mapping_or_info['value'];
             }
-            $injectionClass = PluginDatainjectionCommonInjectionLib::getInjectionClassInstance($p['itemtype']);
+            $injectionClass = PluginDatainjectionCaCommonInjectionLib::getInjectionClassInstance($p['itemtype']);
 
             foreach ($injectionClass->getOptions($p['primary_type']) as $option) {
                 //If it's a real option (not a group label) and if field is not blacklisted
@@ -230,13 +230,13 @@ class PluginDatainjectionInjectionType
                 if (
                     is_array($option)
                     && isset($option['injectable'])
-                    && ($option['injectable'] == PluginDatainjectionCommonInjectionLib::FIELD_INJECTABLE)
+                    && ($option['injectable'] == PluginDatainjectionCaCommonInjectionLib::FIELD_INJECTABLE)
                 ) {
                     $fields[$option['linkfield']] = $option['name'];
 
                     if (
                         ($mapping_value == self::NO_VALUE)
-                        && ($p['called_by'] == 'PluginDatainjectionMapping')
+                        && ($p['called_by'] == 'PluginDatainjectionCaMapping')
                         && self::isEqual($option, $mapping_or_info)
                     ) {
                         $mapping_value = $option['linkfield'];
@@ -256,7 +256,7 @@ class PluginDatainjectionInjectionType
         );
 
         $p['value'] = '__VALUE__';
-        $url = plugin_datainjection_geturl() . "ajax/dropdownMandatory.php";
+        $url = plugin_datainjection_ca_geturl() . "ajax/dropdownMandatory.php";
         Ajax::updateItem(
             "span_mandatory_" . $mapping_or_info['id'],
             $url,
@@ -337,7 +337,7 @@ class PluginDatainjectionInjectionType
         }
 
         if (
-            $options['called_by'] == 'PluginDatainjectionInfo' || (
+            $options['called_by'] == 'PluginDatainjectionCaInfo' || (
                 $options['primary_type'] == $options['itemtype']
                 && !in_array($options['value'], self::NON_MANDATORY_FIELDS)
             )
@@ -375,12 +375,12 @@ class PluginDatainjectionInjectionType
         }
 
         $used  = [];
-        $table = (($p['called_by'] == 'PluginDatainjectionMapping') ? "glpi_plugin_datainjection_mappings"
-                                                              : "glpi_plugin_datainjection_infos");
+        $table = (($p['called_by'] == 'PluginDatainjectionCaMapping') ? "glpi_plugin_datainjection_ca_mappings"
+                                                              : "glpi_plugin_datainjection_ca_infos");
 
         $datas = getAllDataFromTable($table, ['models_id' => $mapping_or_info['models_id']]);
 
-        $injectionClass = PluginDatainjectionCommonInjectionLib::getInjectionClassInstance($p['itemtype']);
+        $injectionClass = PluginDatainjectionCaCommonInjectionLib::getInjectionClassInstance($p['itemtype']);
         $options        = $injectionClass->getOptions();
 
         foreach ($datas as $data) {

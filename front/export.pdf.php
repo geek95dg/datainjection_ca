@@ -28,6 +28,6 @@
  * -------------------------------------------------------------------------
  */
 
-Session::checkRight(PluginDatainjectionClientInjection::$rightname, READ);
+Session::checkRight(PluginDatainjectionCaClientInjection::$rightname, READ);
 
-PluginDatainjectionModel::exportAsPDF($_GET['models_id']);
+PluginDatainjectionCaModel::exportAsPDF($_GET['models_id']);
