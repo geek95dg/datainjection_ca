@@ -79,7 +79,8 @@ abstract class PluginDatainjectionBackend
     public static function getInstance($type)
     {
         $allowedBackends = [
-            'csv' => PluginDatainjectionBackendcsv::class,
+            'csv'  => PluginDatainjectionBackendcsv::class,
+            'xlsx' => PluginDatainjectionBackendxlsx::class,
         ];
 
         if (!isset($allowedBackends[$type])) {

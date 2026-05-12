@@ -724,13 +724,18 @@ class PluginDatainjectionModel extends CommonDBTM
             'initial_step' => self::INITIAL_STEP,
             'session_user_id' => Session::getLoginUserID(),
             'injection_types' => PluginDatainjectionInjectionType::getItemtypes(),
+            'file_types' => [
+                'csv'  => __('CSV', 'datainjection'),
+                'xlsx' => __('XLSX (Excel)', 'datainjection'),
+            ],
             'item' => $this,
         ];
 
         TemplateRenderer::getInstance()->display('@datainjection/model_advanced_form.html.twig', $data);
 
         if ($ID > 0) {
-            $tmp = self::getInstance('csv');
+            $filetype = $this->fields['filetype'] ?? 'csv';
+            $tmp      = self::getInstance($filetype) ?: self::getInstance('csv');
             $tmp->showAdditionnalForm($this);
         }
 
@@ -836,7 +841,8 @@ class PluginDatainjectionModel extends CommonDBTM
     public function cleanDBonPurge()
     {
 
-        $itemtypes = ["PluginDatainjectionModelcsv", "PluginDatainjectionMapping",
+        $itemtypes = ["PluginDatainjectionModelcsv", "PluginDatainjectionModelxlsx",
+            "PluginDatainjectionMapping",
             "PluginDatainjectionInfo",
         ];
 
@@ -997,8 +1003,12 @@ class PluginDatainjectionModel extends CommonDBTM
 
         //If file has not the right extension, reject it and delete if
         if ($this->specific_model->checkFileName($original_filename)) {
-            $message  = __s('File format is wrong', 'datainjection');
-            $message .= "<br>" . __s('Extension csv required', 'datainjection');
+            $message      = __s('File format is wrong', 'datainjection');
+            $expectedExt  = $this->fields['filetype'] ?? 'csv';
+            $message     .= "<br>" . sprintf(
+                __s('Extension %s required', 'datainjection'),
+                $expectedExt,
+            );
             if (!$webservice) {
                 Session::addMessageAfterRedirect($message, true, ERROR, false);
             }

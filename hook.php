@@ -53,6 +53,7 @@ function plugin_datainjection_install()
             plugin_datainjection_migration_264_270($migration);
             plugin_datainjection_migration_2121_2122($migration);
             plugin_datainjection_migration_2141_2150($migration);
+            plugin_datainjection_migration_xlsx_support($DB, $default_charset, $default_collation, $default_key_sign);
             break;
 
         case 0:
@@ -89,6 +90,15 @@ function plugin_datainjection_install()
                      `delimiter` varchar(1) NOT NULL default ';',
                      `is_header_present` tinyint NOT NULL default '1',
                      PRIMARY KEY  (`ID`)
+                   ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
+            $DB->doQuery($query);
+
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxs` (
+                     `id` int {$default_key_sign} NOT NULL auto_increment,
+                     `models_id` int {$default_key_sign} NOT NULL,
+                     `itemtype` varchar(255) NOT NULL default '',
+                     `is_header_present` tinyint NOT NULL default '1',
+                     PRIMARY KEY  (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
@@ -173,6 +183,7 @@ function plugin_datainjection_install()
             plugin_datainjection_migration_290_2100($migration);
             plugin_datainjection_migration_2121_2122($migration);
             plugin_datainjection_migration_2141_2150($migration);
+            plugin_datainjection_migration_xlsx_support($DB, $default_charset, $default_collation, $default_key_sign);
             break;
 
         default:
@@ -190,6 +201,7 @@ function plugin_datainjection_uninstall()
 
     $tables = ["glpi_plugin_datainjection_models",
         "glpi_plugin_datainjection_modelcsvs",
+        "glpi_plugin_datainjection_modelxlsxs",
         "glpi_plugin_datainjection_mappings",
         "glpi_plugin_datainjection_infos",
         "glpi_plugin_datainjection_filetype",
@@ -214,6 +226,25 @@ function plugin_datainjection_uninstall()
 
     plugin_init_datainjection();
     return true;
+}
+
+function plugin_datainjection_migration_xlsx_support(
+    $DB,
+    string $default_charset,
+    string $default_collation,
+    string $default_key_sign
+): void {
+    if (!$DB->tableExists('glpi_plugin_datainjection_modelxlsxs')) {
+        $DB->doQuery(
+            "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxs` (
+                `id` int {$default_key_sign} NOT NULL auto_increment,
+                `models_id` int {$default_key_sign} NOT NULL,
+                `itemtype` varchar(255) NOT NULL default '',
+                `is_header_present` tinyint NOT NULL default '1',
+                PRIMARY KEY  (`id`)
+              ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;",
+        );
+    }
 }
 
 function plugin_datainjection_migration_2141_2150(Migration $migration)

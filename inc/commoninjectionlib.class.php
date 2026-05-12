@@ -334,6 +334,16 @@ class PluginDatainjectionCommonInjectionLib
     public static function getItemtypeByInjectionClass($injectionClass)
     {
 
+        // Custom assets all share the glpi_assets_assets table, so getTable()
+        // alone is not enough to derive the itemtype. Per-definition injection
+        // classes can declare their stable itemtype explicitly.
+        if (method_exists($injectionClass, 'getInjectionItemtype')) {
+            $itemtype = $injectionClass->getInjectionItemtype();
+            if (!empty($itemtype)) {
+                return $itemtype;
+            }
+        }
+
         return Toolbox::ucfirst(getItemTypeForTable($injectionClass->getTable()));
     }
 
@@ -347,6 +357,19 @@ class PluginDatainjectionCommonInjectionLib
     */
     public static function getInjectionClassInstance($itemtype)
     {
+
+        // Custom asset itemtypes (e.g. \Glpi\CustomAsset\MyAsset) are
+        // resolved through the registry, which lazily builds a per-definition
+        // injection class.
+        if (
+            class_exists('PluginDatainjectionCustomAssetRegistry')
+            && PluginDatainjectionCustomAssetRegistry::isCustomAssetItemtype($itemtype)
+        ) {
+            $injectionClass = PluginDatainjectionCustomAssetRegistry::getInjectionClassForItemtype($itemtype);
+            if ($injectionClass !== null) {
+                return new $injectionClass();
+            }
+        }
 
         if (!isPluginItemType($itemtype)) {
             $itemtype = (new ReflectionClass($itemtype))->getShortName(); // get shortname of class when full namespaced class given (from GLPI)
