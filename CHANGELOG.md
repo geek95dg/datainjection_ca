@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.1] - 2026-05-12
+
+### Added
+
+- Logger falls through to PHP's `error_log()` when `<GLPI_LOG_DIR>/datainjection.log` cannot be written, so messages are never silently dropped.
+- `register_shutdown_function` traps fatal errors originating inside the plugin and routes them through the same logger — captures the 500-class failures that bypass our try/catch wrappers.
+
+## [2.16.0] - 2026-05-12
+
+### Added
+
+- Custom-asset support: every GLPI 11 `AssetDefinition` is exposed as its own injectable type and per-definition JSON custom fields become mappable columns. Definition rows are scoped via `assets_assetdefinitions_id` so two definitions cannot collide on a shared identifier.
+- XLSX import path via a pure-PHP `ZipArchive` + `SimpleXML` reader (no external dependency). Companion table `glpi_plugin_datainjection_modelxlsxs` and an idempotent migration for existing installs.
+- File-based logger `PluginDatainjectionLogger` writing to `<GLPI_LOG_DIR>/datainjection.log` with timestamp, level, user id and JSON context. Size-based rotation at 5 MB, up to 3 retained segments.
+- Catch-all wrappers around `getTabNameForItem` / `displayTabContentForItem` so tab AJAX errors surface a "see datainjection.log" notice instead of a 500.
+- `tools/check-install.php` diagnostic for verifying GLPI discovers the plugin.
+
+### Changed
+
+- Bumped to `2.16.0` so GLPI prefers this fork over upstream `2.15.x`.
+- Author set to `geek95dg`; manifest links point at this repo.
+- Minimum GLPI version lowered to `11.0.0` (was `11.0.5`).
+- `setup.php` and `hook.php` no longer use `Safe\define` / `Safe\mkdir`, removing a hard dependency on `thecodingmachine/safe` being loaded before the plugin's setup file is included.
+
 ## [2.15.6] - 2026-05-05
 
 ### Fixed

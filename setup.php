@@ -36,7 +36,7 @@
 // is fine — and it lets `glpi:plugin:install` succeed regardless of how the
 // plugin is deployed.
 
-define('PLUGIN_DATAINJECTION_VERSION', '2.16.0');
+define('PLUGIN_DATAINJECTION_VERSION', '2.16.1');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_DATAINJECTION_MIN_GLPI", "11.0.0");
@@ -46,6 +46,39 @@ define("PLUGIN_DATAINJECTION_MAX_GLPI", "11.0.99");
 if (!defined("PLUGIN_DATAINJECTION_UPLOAD_DIR")) {
     define("PLUGIN_DATAINJECTION_UPLOAD_DIR", GLPI_PLUGIN_DOC_DIR . "/datainjection/");
 }
+
+// Eagerly include the logger so it's available before GLPI's plugin
+// autoloader has wired everything up — and so the shutdown handler keeps
+// working after autoloading is torn down at request end.
+require_once __DIR__ . '/inc/logger.class.php';
+
+// Catch fatals that bypass our try/catch wrappers (PHP parse errors,
+// uncaught exceptions inside GLPI's tab AJAX loader, etc.). Without this
+// the failure becomes a generic 500 with no plugin breadcrumb.
+register_shutdown_function(static function (): void {
+    $err = error_get_last();
+    if (!is_array($err)) {
+        return;
+    }
+    $fatal_types = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;
+    if (!($err['type'] & $fatal_types)) {
+        return;
+    }
+    // Only log if the failure traces through datainjection code, otherwise
+    // we noisily claim every site-wide fatal.
+    $file = (string) ($err['file'] ?? '');
+    if (strpos($file, __DIR__) === false) {
+        return;
+    }
+    try {
+        PluginDatainjectionLogger::error(
+            'fatal: ' . ($err['message'] ?? 'unknown'),
+            ['where' => $file . ':' . ($err['line'] ?? '?')],
+        );
+    } catch (\Throwable $e) {
+        @error_log('[datainjection] fatal in ' . $file . ':' . ($err['line'] ?? '?') . ' — ' . ($err['message'] ?? ''));
+    }
+});
 
 function plugin_init_datainjection()
 {
