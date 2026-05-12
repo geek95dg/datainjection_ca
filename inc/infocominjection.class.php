@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaInfocomInjection extends Infocom implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionInfocomInjection extends Infocom implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -57,7 +57,7 @@ class PluginDatainjectionCaInfocomInjection extends Infocom implements PluginDat
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -103,7 +103,7 @@ class PluginDatainjectionCaInfocomInjection extends Infocom implements PluginDat
         $tab[58]['checktype']   = 'decimal';
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [20, 21, 86];
 
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
@@ -120,7 +120,7 @@ class PluginDatainjectionCaInfocomInjection extends Infocom implements PluginDat
             "multiline_text"   => [16],
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
@@ -161,7 +161,7 @@ class PluginDatainjectionCaInfocomInjection extends Infocom implements PluginDat
         ) {
             if (
                 isset($values['Infocom'][$date])
-                && ($values['Infocom'][$date] == PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE)
+                && ($values['Infocom'][$date] == PluginDatainjectionCommonInjectionLib::EMPTY_VALUE)
             ) {
                 $values['Infocom'][$date] = "NULL";
             }
@@ -190,11 +190,11 @@ class PluginDatainjectionCaInfocomInjection extends Infocom implements PluginDat
     }
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

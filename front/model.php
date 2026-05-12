@@ -31,16 +31,16 @@
 Session::checkLoginUser();
 
 Html::header(
-    PluginDatainjectionCaModel::getTypeName(),
+    PluginDatainjectionModel::getTypeName(),
     '',
     "tools",
     "plugindatainjectionmenu",
     "model",
 );
 
-$model = new PluginDatainjectionCaModel();
+$model = new PluginDatainjectionModel();
 $model->checkGlobal(READ);
 
-Search::show('PluginDatainjectionCaModel');
+Search::show('PluginDatainjectionModel');
 
 Html::footer();

@@ -31,35 +31,35 @@
 // Intentionally NOT importing `Safe\mkdir` — see setup.php for the rationale.
 // Plain PHP `mkdir` (the global-namespace form below) is used instead.
 
-function plugin_datainjectionca_install()
+function plugin_datainjection_install()
 {
     /** @var DBmysql $DB */
     global $DB;
 
     include_once __DIR__ . "/inc/profile.class.php";
 
-    $migration = new Migration(PLUGIN_DATAINJECTION_CA_VERSION);
+    $migration = new Migration(PLUGIN_DATAINJECTION_VERSION);
 
     $default_charset = DBConnection::getDefaultCharset();
     $default_collation = DBConnection::getDefaultCollation();
     $default_key_sign = DBConnection::getDefaultPrimaryKeySignOption();
 
-    switch (plugin_datainjectionca_needUpdateOrInstall()) {
+    switch (plugin_datainjection_needUpdateOrInstall()) {
         case -1:
             // Migrations from version 2.2.0+
-            plugin_datainjectionca_update220_230();
-            plugin_datainjectionca_upgrade23_240($migration);
-            plugin_datainjectionca_migration_24_250($migration);
-            plugin_datainjectionca_migration_251_252($migration);
-            plugin_datainjectionca_migration_264_270($migration);
-            plugin_datainjectionca_migration_2121_2122($migration);
-            plugin_datainjectionca_migration_2141_2150($migration);
-            plugin_datainjectionca_migration_xlsx_support($DB, $default_charset, $default_collation, $default_key_sign);
+            plugin_datainjection_update220_230();
+            plugin_datainjection_upgrade23_240($migration);
+            plugin_datainjection_migration_24_250($migration);
+            plugin_datainjection_migration_251_252($migration);
+            plugin_datainjection_migration_264_270($migration);
+            plugin_datainjection_migration_2121_2122($migration);
+            plugin_datainjection_migration_2141_2150($migration);
+            plugin_datainjection_migration_xlsx_support($DB, $default_charset, $default_collation, $default_key_sign);
             break;
 
         case 0:
             // Plugin installation
-            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjectionca_models` (
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_models` (
                      `id` int {$default_key_sign} NOT NULL auto_increment,
                      `name` varchar(255) NOT NULL,
                      `comment` text NULL,
@@ -84,7 +84,7 @@ function plugin_datainjectionca_install()
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
-            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjectionca_modelcsvs` (
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelcsvs` (
                      `id` int {$default_key_sign} NOT NULL auto_increment,
                      `models_id` int {$default_key_sign} NOT NULL,
                      `itemtype` varchar(255) NOT NULL default '',
@@ -94,7 +94,7 @@ function plugin_datainjectionca_install()
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
-            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjectionca_modelxlsxs` (
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxs` (
                      `id` int {$default_key_sign} NOT NULL auto_increment,
                      `models_id` int {$default_key_sign} NOT NULL,
                      `itemtype` varchar(255) NOT NULL default '',
@@ -103,7 +103,7 @@ function plugin_datainjectionca_install()
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
-            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjectionca_mappings` (
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_mappings` (
                      `id` INT {$default_key_sign} NOT NULL AUTO_INCREMENT PRIMARY KEY ,
                      `models_id` INT {$default_key_sign} NOT NULL ,
                      `itemtype` varchar(255) NOT NULL default '',
@@ -114,7 +114,7 @@ function plugin_datainjectionca_install()
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
-            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjectionca_infos` (
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_infos` (
                      `id` INT {$default_key_sign} NOT NULL AUTO_INCREMENT PRIMARY KEY ,
                      `models_id` INT {$default_key_sign} NOT NULL ,
                      `itemtype` varchar(255) NOT NULL default '',
@@ -123,11 +123,11 @@ function plugin_datainjectionca_install()
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
-            if (!is_dir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR)) {
-                @\mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
+            if (!is_dir(PLUGIN_DATAINJECTION_UPLOAD_DIR)) {
+                @\mkdir(PLUGIN_DATAINJECTION_UPLOAD_DIR);
             }
 
-            PluginDatainjectionCaProfile::createFirstAccess($_SESSION["glpiactiveprofile"]["id"]);
+            PluginDatainjectionProfile::createFirstAccess($_SESSION["glpiactiveprofile"]["id"]);
 
             // Force reload of session profile rights
             Session::reloadCurrentProfile();
@@ -137,8 +137,8 @@ function plugin_datainjectionca_install()
             // Migrations from version prior to 2.2.0
 
             //When updating, check if the upload folder is already present
-            if (!is_dir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR)) {
-                @\mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
+            if (!is_dir(PLUGIN_DATAINJECTION_UPLOAD_DIR)) {
+                @\mkdir(PLUGIN_DATAINJECTION_UPLOAD_DIR);
             }
 
             //Old temporary directory, needs to be removed !
@@ -151,7 +151,7 @@ function plugin_datainjectionca_install()
                 && !$DB->fieldExists("glpi_plugin_data_injection_models", "recursive")
             ) {
                 // Update
-                plugin_datainjectionca_update131_14();
+                plugin_datainjection_update131_14();
             }
 
             if (
@@ -162,29 +162,29 @@ function plugin_datainjectionca_install()
                 $migration->executeMigration();
             }
 
-            if (!$DB->tableExists("glpi_plugin_datainjectionca_models")) {
-                plugin_datainjectionca_update15_170();
+            if (!$DB->tableExists("glpi_plugin_datainjection_models")) {
+                plugin_datainjection_update15_170();
             }
 
-            if (!$DB->tableExists("glpi_plugin_datainjectionca_modelcsvs")) {
-                plugin_datainjectionca_update170_20();
+            if (!$DB->tableExists("glpi_plugin_datainjection_modelcsvs")) {
+                plugin_datainjection_update170_20();
             }
 
-            plugin_datainjectionca_update210_220();
+            plugin_datainjection_update210_220();
 
-            plugin_datainjectionca_update220_230();
+            plugin_datainjection_update220_230();
 
-            plugin_datainjectionca_upgrade23_240($migration);
+            plugin_datainjection_upgrade23_240($migration);
 
-            plugin_datainjectionca_migration_24_250($migration);
+            plugin_datainjection_migration_24_250($migration);
 
-            plugin_datainjectionca_migration_251_252($migration);
+            plugin_datainjection_migration_251_252($migration);
 
-            plugin_datainjectionca_migration_264_270($migration);
-            plugin_datainjectionca_migration_290_2100($migration);
-            plugin_datainjectionca_migration_2121_2122($migration);
-            plugin_datainjectionca_migration_2141_2150($migration);
-            plugin_datainjectionca_migration_xlsx_support($DB, $default_charset, $default_collation, $default_key_sign);
+            plugin_datainjection_migration_264_270($migration);
+            plugin_datainjection_migration_290_2100($migration);
+            plugin_datainjection_migration_2121_2122($migration);
+            plugin_datainjection_migration_2141_2150($migration);
+            plugin_datainjection_migration_xlsx_support($DB, $default_charset, $default_collation, $default_key_sign);
             break;
 
         default:
@@ -195,18 +195,18 @@ function plugin_datainjectionca_install()
 }
 
 
-function plugin_datainjectionca_uninstall()
+function plugin_datainjection_uninstall()
 {
     /** @var DBmysql $DB */
     global $DB;
 
-    $tables = ["glpi_plugin_datainjectionca_models",
-        "glpi_plugin_datainjectionca_modelcsvs",
-        "glpi_plugin_datainjectionca_modelxlsxs",
-        "glpi_plugin_datainjectionca_mappings",
-        "glpi_plugin_datainjectionca_infos",
-        "glpi_plugin_datainjectionca_filetype",
-        "glpi_plugin_datainjectionca_profiles",
+    $tables = ["glpi_plugin_datainjection_models",
+        "glpi_plugin_datainjection_modelcsvs",
+        "glpi_plugin_datainjection_modelxlsxs",
+        "glpi_plugin_datainjection_mappings",
+        "glpi_plugin_datainjection_infos",
+        "glpi_plugin_datainjection_filetype",
+        "glpi_plugin_datainjection_profiles",
     ];
 
     foreach ($tables as $table) {
@@ -217,27 +217,27 @@ function plugin_datainjectionca_uninstall()
 
     // Remove plugin rights from all profiles
     $profileRight = new ProfileRight();
-    foreach (PluginDatainjectionCaProfile::getAllRights() as $right) {
+    foreach (PluginDatainjectionProfile::getAllRights() as $right) {
         $profileRight->deleteByCriteria(['name' => $right['field']]);
     }
 
-    if (is_dir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR)) {
-        Toolbox::deleteDir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
+    if (is_dir(PLUGIN_DATAINJECTION_UPLOAD_DIR)) {
+        Toolbox::deleteDir(PLUGIN_DATAINJECTION_UPLOAD_DIR);
     }
 
-    plugin_init_datainjectionca();
+    plugin_init_datainjection();
     return true;
 }
 
-function plugin_datainjectionca_migration_xlsx_support(
+function plugin_datainjection_migration_xlsx_support(
     $DB,
     string $default_charset,
     string $default_collation,
     string $default_key_sign
 ): void {
-    if (!$DB->tableExists('glpi_plugin_datainjectionca_modelxlsxs')) {
+    if (!$DB->tableExists('glpi_plugin_datainjection_modelxlsxs')) {
         $DB->doQuery(
-            "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjectionca_modelxlsxs` (
+            "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxs` (
                 `id` int {$default_key_sign} NOT NULL auto_increment,
                 `models_id` int {$default_key_sign} NOT NULL,
                 `itemtype` varchar(255) NOT NULL default '',
@@ -248,10 +248,10 @@ function plugin_datainjectionca_migration_xlsx_support(
     }
 }
 
-function plugin_datainjectionca_migration_2141_2150(Migration $migration)
+function plugin_datainjection_migration_2141_2150(Migration $migration)
 {
     $migration->addField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'replace_multiline_value',
         'bool',
     );
@@ -259,24 +259,24 @@ function plugin_datainjectionca_migration_2141_2150(Migration $migration)
     $migration->executeMigration();
 }
 
-function plugin_datainjectionca_migration_2121_2122(Migration $migration)
+function plugin_datainjection_migration_2121_2122(Migration $migration)
 {
     //remove useless field
-    $migration->dropField("glpi_plugin_datainjectionca_models", "perform_network_connection");
+    $migration->dropField("glpi_plugin_datainjection_models", "perform_network_connection");
 
     //remove related display pref
-    $migration->updateDisplayPrefs([], ["PluginDatainjectionCaModel" => [9]]);
+    $migration->updateDisplayPrefs([], ["PluginDatainjectionModel" => [9]]);
     $migration->executeMigration();
 }
 
-function plugin_datainjectionca_migration_290_2100(Migration $migration)
+function plugin_datainjection_migration_290_2100(Migration $migration)
 {
     /** @var DBmysql $DB */
     global $DB;
 
     $migration->addPostQuery(
         $DB->buildUpdate(
-            'glpi_plugin_datainjectionca_mappings',
+            'glpi_plugin_datainjection_mappings',
             [
                 'value' => 'date_creation',
             ],
@@ -292,14 +292,14 @@ function plugin_datainjectionca_migration_290_2100(Migration $migration)
 }
 
 
-function plugin_datainjectionca_migration_264_270(Migration $migration)
+function plugin_datainjection_migration_264_270(Migration $migration)
 {
     /** @var DBmysql $DB */
     global $DB;
 
     $migration->addPostQuery(
         $DB->buildUpdate(
-            'glpi_plugin_datainjectionca_mappings',
+            'glpi_plugin_datainjection_mappings',
             [
                 'value' => 'licenseid',
             ],
@@ -315,44 +315,44 @@ function plugin_datainjectionca_migration_264_270(Migration $migration)
 }
 
 
-function plugin_datainjectionca_migration_251_252(Migration $migration)
+function plugin_datainjection_migration_251_252(Migration $migration)
 {
     /** @var DBmysql $DB */
     global $DB;
 
     if (
-        $DB->tableExists('glpi_plugin_datainjectionca_models')
-        && $DB->fieldExists('glpi_plugin_datainjectionca_models', 'date_mod')
+        $DB->tableExists('glpi_plugin_datainjection_models')
+        && $DB->fieldExists('glpi_plugin_datainjection_models', 'date_mod')
     ) {
         $migration->changeField(
-            'glpi_plugin_datainjectionca_models',
+            'glpi_plugin_datainjection_models',
             'date_mod',
             'date_mod',
             'timestamp NULL DEFAULT NULL',
         );
-        $migration->migrationOneTable('glpi_plugin_datainjectionca_models');
+        $migration->migrationOneTable('glpi_plugin_datainjection_models');
     }
 
     $migration->executeMigration();
 }
 
-function plugin_datainjectionca_migration_24_250(Migration $migration)
+function plugin_datainjection_migration_24_250(Migration $migration)
 {
     /** @var DBmysql $DB */
     global $DB;
 
     if (
-        $DB->tableExists('glpi_plugin_datainjectionca_models')
-        && !$DB->fieldExists('glpi_plugin_datainjectionca_models', 'date_creation')
+        $DB->tableExists('glpi_plugin_datainjection_models')
+        && !$DB->fieldExists('glpi_plugin_datainjection_models', 'date_creation')
     ) {
-        $migration->addField('glpi_plugin_datainjectionca_models', 'date_creation', 'timestamp');
-        $migration->addKey('glpi_plugin_datainjectionca_models', 'date_creation');
-        $migration->migrationOneTable('glpi_plugin_datainjectionca_models');
+        $migration->addField('glpi_plugin_datainjection_models', 'date_creation', 'timestamp');
+        $migration->addKey('glpi_plugin_datainjection_models', 'date_creation');
+        $migration->migrationOneTable('glpi_plugin_datainjection_models');
     }
 
     //Migrate OSes infos
     //TODO use DB->update in 9.3
-    $query = "UPDATE `glpi_plugin_datainjectionca_mappings`
+    $query = "UPDATE `glpi_plugin_datainjection_mappings`
              SET `itemtype`='Item_OperatingSystem'
              WHERE `itemtype`='Computer'
                 AND `value` IN (
@@ -366,27 +366,27 @@ function plugin_datainjectionca_migration_24_250(Migration $migration)
     $migration->executeMigration();
 }
 
-function plugin_datainjectionca_upgrade23_240(Migration $migration)
+function plugin_datainjection_upgrade23_240(Migration $migration)
 {
     /** @var DBmysql $DB */
     global $DB;
 
-    if ($DB->tableExists('glpi_plugin_datainjectionca_profiles')) {
-        if ($DB->fieldExists('glpi_plugin_datainjectionca_profiles', 'ID')) {
-            $migration->changeField('glpi_plugin_datainjectionca_profiles', 'ID', 'id', 'autoincrement');
-            $migration->migrationOneTable('glpi_plugin_datainjectionca_profiles');
+    if ($DB->tableExists('glpi_plugin_datainjection_profiles')) {
+        if ($DB->fieldExists('glpi_plugin_datainjection_profiles', 'ID')) {
+            $migration->changeField('glpi_plugin_datainjection_profiles', 'ID', 'id', 'autoincrement');
+            $migration->migrationOneTable('glpi_plugin_datainjection_profiles');
         }
 
-        PluginDatainjectionCaProfile::migrateProfiles();
+        PluginDatainjectionProfile::migrateProfiles();
 
         //Drop profile table : no use anymore !
-        $migration->dropTable('glpi_plugin_datainjectionca_profiles');
+        $migration->dropTable('glpi_plugin_datainjection_profiles');
     }
 
     $migration->executeMigration();
 }
 
-function plugin_datainjectionca_update131_14()
+function plugin_datainjection_update131_14()
 {
     /** @var DBmysql $DB */
     global $DB;
@@ -452,17 +452,17 @@ function plugin_datainjectionca_update131_14()
 }
 
 
-function plugin_datainjectionca_update15_170()
+function plugin_datainjection_update15_170()
 {
     /** @var DBmysql $DB */
     global $DB;
 
-    $tables = ["glpi_plugin_data_injection_models"     => "glpi_plugin_datainjectionca_models",
-        "glpi_plugin_data_injection_models_csv" => "glpi_plugin_datainjectionca_models_csv",
-        "glpi_plugin_data_injection_mappings"   => "glpi_plugin_datainjectionca_mappings",
-        "glpi_plugin_data_injection_infos"      => "glpi_plugin_datainjectionca_infos",
-        "glpi_plugin_data_injection_filetype"   => "glpi_plugin_datainjectionca_filetype",
-        "glpi_plugin_data_injection_profiles"   => "glpi_plugin_datainjectionca_profiles",
+    $tables = ["glpi_plugin_data_injection_models"     => "glpi_plugin_datainjection_models",
+        "glpi_plugin_data_injection_models_csv" => "glpi_plugin_datainjection_models_csv",
+        "glpi_plugin_data_injection_mappings"   => "glpi_plugin_datainjection_mappings",
+        "glpi_plugin_data_injection_infos"      => "glpi_plugin_datainjection_infos",
+        "glpi_plugin_data_injection_filetype"   => "glpi_plugin_datainjection_filetype",
+        "glpi_plugin_data_injection_profiles"   => "glpi_plugin_datainjection_profiles",
     ];
 
     foreach ($tables as $oldname => $newname) {
@@ -472,7 +472,7 @@ function plugin_datainjectionca_update15_170()
 }
 
 
-function plugin_datainjectionca_update170_20()
+function plugin_datainjection_update170_20()
 {
     /** @var DBmysql $DB */
     global $DB;
@@ -482,88 +482,88 @@ function plugin_datainjectionca_update170_20()
     $migration = new Migration('2.0');
 
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'ID',
         'id',
         'autoincrement',
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'type',
         'filetype',
         'string',
         ['value' => 'csv'],
     );
-    $migration->addField('glpi_plugin_datainjectionca_models', 'step', 'integer');
+    $migration->addField('glpi_plugin_datainjection_models', 'step', 'integer');
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'comments',
         'comment',
         'text',
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'device_type',
         'itemtype',
         'string',
         ['value' => ''],
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'FK_entities',
         'entities_id',
         "int {$default_key_sign} NOT NULL default '0'",
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'private',
         'is_private',
         'bool',
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'FK_users',
         'users_id',
         "int {$default_key_sign} NOT NULL default '0'",
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_models',
+        'glpi_plugin_datainjection_models',
         'recursive',
         'is_recursive',
         'bool',
     );
 
-    $migration->migrationOneTable('glpi_plugin_datainjectionca_models');
-    $query = "UPDATE `glpi_plugin_datainjectionca_models`
+    $migration->migrationOneTable('glpi_plugin_datainjection_models');
+    $query = "UPDATE `glpi_plugin_datainjection_models`
               SET `step` = '5'";
     $DB->doQuery($query);
 
-    $query = "UPDATE `glpi_plugin_datainjectionca_models`
+    $query = "UPDATE `glpi_plugin_datainjection_models`
               SET `filetype` = 'csv'";
     $DB->doQuery($query);
 
-    $migration->dropTable('glpi_plugin_datainjectionca_filetype');
+    $migration->dropTable('glpi_plugin_datainjection_filetype');
 
     $migration->renameTable(
-        'glpi_plugin_datainjectionca_models_csv',
-        'glpi_plugin_datainjectionca_modelcsvs',
+        'glpi_plugin_datainjection_models_csv',
+        'glpi_plugin_datainjection_modelcsvs',
     );
 
     $migration->changeField(
-        'glpi_plugin_datainjectionca_modelcsvs',
+        'glpi_plugin_datainjection_modelcsvs',
         'model_id',
         'models_id',
         "int {$default_key_sign} NOT NULL default '0'",
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_modelcsvs',
+        'glpi_plugin_datainjection_modelcsvs',
         'device_type',
         'itemtype',
         'string',
         ['value' => ''],
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_modelcsvs',
+        'glpi_plugin_datainjection_modelcsvs',
         'header_present',
         'is_header_present',
         'bool',
@@ -571,68 +571,68 @@ function plugin_datainjectionca_update170_20()
     );
 
     $migration->changeField(
-        'glpi_plugin_datainjectionca_mappings',
+        'glpi_plugin_datainjection_mappings',
         'mandatory',
         'is_mandatory',
         'bool',
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_mappings',
+        'glpi_plugin_datainjection_mappings',
         'type',
         'itemtype',
         'string',
         ['value' => ''],
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_mappings',
+        'glpi_plugin_datainjection_mappings',
         'model_id',
         'models_id',
         "int {$default_key_sign} NOT NULL default '0'",
     );
 
     $migration->changeField(
-        'glpi_plugin_datainjectionca_infos',
+        'glpi_plugin_datainjection_infos',
         'type',
         'itemtype',
         'string',
         ['value' => ''],
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_infos',
+        'glpi_plugin_datainjection_infos',
         'model_id',
         'models_id',
         "int {$default_key_sign} NOT NULL default '0'",
     );
     $migration->changeField(
-        'glpi_plugin_datainjectionca_infos',
+        'glpi_plugin_datainjection_infos',
         'mandatory',
         'is_mandatory',
         'bool',
     );
 
-    $glpitables = ['glpi_plugin_datainjectionca_models',
-        'glpi_plugin_datainjectionca_mappings',
-        'glpi_plugin_datainjectionca_modelcsvs',
-        'glpi_plugin_datainjectionca_infos',
-        'glpi_plugin_datainjectionca_profiles',
+    $glpitables = ['glpi_plugin_datainjection_models',
+        'glpi_plugin_datainjection_mappings',
+        'glpi_plugin_datainjection_modelcsvs',
+        'glpi_plugin_datainjection_infos',
+        'glpi_plugin_datainjection_profiles',
     ];
 
     foreach ($glpitables as $table) {
         $migration->changeField($table, 'ID', 'id', 'autoincrement');
     }
 
-    $migration->migrationOneTable('glpi_plugin_datainjectionca_mappings');
-    $migration->migrationOneTable('glpi_plugin_datainjectionca_infos');
-    $migration->migrationOneTable('glpi_plugin_datainjectionca_modelcsvs');
+    $migration->migrationOneTable('glpi_plugin_datainjection_mappings');
+    $migration->migrationOneTable('glpi_plugin_datainjection_infos');
+    $migration->migrationOneTable('glpi_plugin_datainjection_modelcsvs');
 
-    $query = "UPDATE `glpi_plugin_datainjectionca_mappings`
+    $query = "UPDATE `glpi_plugin_datainjection_mappings`
              SET `itemtype` = 'none' ,
                  `value`='none'
              WHERE `itemtype` = '-1'";
     $DB->doQuery($query);
 
-    $migration->migrationOneTable('glpi_plugin_datainjectionca_infos');
-    $query = "UPDATE `glpi_plugin_datainjectionca_infos`
+    $migration->migrationOneTable('glpi_plugin_datainjection_infos');
+    $query = "UPDATE `glpi_plugin_datainjection_infos`
              SET `itemtype` = 'none', `value` = 'none'
              WHERE `itemtype` = '-1'";
     $DB->doQuery($query);
@@ -1855,9 +1855,9 @@ function plugin_datainjectionca_update170_20()
         ],
     ];
 
-    $foreignkeys = Plugin::doHookFunction("plugin_datainjectionca_migratefields", $foreignkeys);
+    $foreignkeys = Plugin::doHookFunction("plugin_datainjection_migratefields", $foreignkeys);
     $query = "SELECT `itemtype`, `value`
-            FROM `glpi_plugin_datainjectionca_mappings`
+            FROM `glpi_plugin_datainjection_mappings`
             WHERE `itemtype` NOT IN ('none')
             GROUP BY `itemtype`,`value`";
 
@@ -1866,12 +1866,12 @@ function plugin_datainjectionca_update170_20()
             foreach ($foreignkeys[$data['value']] as $field_info) {
                 $table = getTableForItemType($data['itemtype']);
                 if (in_array($table, $field_info['tables'])) {
-                    $query = "UPDATE `glpi_plugin_datainjectionca_mappings`
+                    $query = "UPDATE `glpi_plugin_datainjection_mappings`
                          SET `value` = '" . $field_info['to'] . "'
                          WHERE `itemtype` = '" . $data['itemtype'] . "'
                            AND `value` = '" . $data['value'] . "'";
                     $DB->doQuery($query);
-                    $query = "UPDATE `glpi_plugin_datainjectionca_infos`
+                    $query = "UPDATE `glpi_plugin_datainjection_infos`
                          SET `value` = '" . $field_info['to'] . "'
                          WHERE `itemtype` = '" . $data['itemtype'] . "'
                           AND `value` = '" . $data['value'] . "'";
@@ -1882,14 +1882,14 @@ function plugin_datainjectionca_update170_20()
     }
 }
 
-function plugin_datainjectionca_update210_220()
+function plugin_datainjection_update210_220()
 {
     /** @var DBmysql $DB */
     global $DB;
 
     foreach (
-        ['glpi_plugin_datainjectionca_mappings',
-            'glpi_plugin_datainjectionca_infos',
+        ['glpi_plugin_datainjection_mappings',
+            'glpi_plugin_datainjection_infos',
         ] as $table
     ) {
         $move = ['TicketCategory'     => 'ITILCategory',
@@ -1910,13 +1910,13 @@ function plugin_datainjectionca_update210_220()
         $DB->doQuery($query);
     }
 }
-function plugin_datainjectionca_update220_230()
+function plugin_datainjection_update220_230()
 {
     /** @var DBmysql $DB */
     global $DB;
 
-    if (countElementsInTable("glpi_plugin_datainjectionca_models", ['entities_id' => -1])) {
-        $query = "UPDATE `glpi_plugin_datainjectionca_models`
+    if (countElementsInTable("glpi_plugin_datainjection_models", ['entities_id' => -1])) {
+        $query = "UPDATE `glpi_plugin_datainjection_models`
                 SET `is_private` = '1',
                     `entities_id` = '0',
                     `is_recursive` = '1'
@@ -1930,7 +1930,7 @@ function plugin_datainjectionca_update220_230()
  * @param string $hook_name
  * @param array $params
 **/
-function plugin_datainjectionca_loadHook($hook_name, $params = [])
+function plugin_datainjection_loadHook($hook_name, $params = [])
 {
     /** @var array $PLUGIN_HOOKS */
     global $PLUGIN_HOOKS;
@@ -1951,17 +1951,17 @@ function plugin_datainjectionca_loadHook($hook_name, $params = [])
 }
 
 
-function plugin_datainjectionca_needUpdateOrInstall()
+function plugin_datainjection_needUpdateOrInstall()
 {
     /** @var DBmysql $DB */
     global $DB;
 
     //Install plugin
-    if (!$DB->tableExists('glpi_plugin_datainjectionca_models')) {
+    if (!$DB->tableExists('glpi_plugin_datainjection_models')) {
         return 0;
     }
 
-    if ($DB->tableExists("glpi_plugin_datainjectionca_modelcsvs")) {
+    if ($DB->tableExists("glpi_plugin_datainjection_modelcsvs")) {
         return -1;
     }
 
@@ -1974,12 +1974,12 @@ function plugin_datainjectionca_needUpdateOrInstall()
  *
  * @param string $itemtype
 **/
-function plugin_datainjectionca_addDefaultWhere($itemtype)
+function plugin_datainjection_addDefaultWhere($itemtype)
 {
 
     switch ($itemtype) {
-        case 'PluginDatainjectionCaModel':
-            $models = PluginDatainjectionCaModel::getModels(
+        case 'PluginDatainjectionModel':
+            $models = PluginDatainjectionModel::getModels(
                 Session::getLoginUserID(),
                 'name',
                 $_SESSION['glpiactive_entity'],
@@ -1990,7 +1990,7 @@ function plugin_datainjectionca_addDefaultWhere($itemtype)
                 foreach ($models as $model) {
                     $tab[] = $model['id'];
                 }
-                return "`glpi_plugin_datainjectionca_models`.`id` IN ('" . implode("','", $tab) . "')";
+                return "`glpi_plugin_datainjection_models`.`id` IN ('" . implode("','", $tab) . "')";
             } else {
                 return "1 = 0"; //no model available -> force WHERE clause to get no result
             }

@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaItem_SoftwareVersionInjection extends Item_SoftwareVersion implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionItem_SoftwareVersionInjection extends Item_SoftwareVersion implements PluginDatainjectionInjectionInterface
 {
     public static function getTypeName($nb = 0)
     {
@@ -68,7 +68,7 @@ class PluginDatainjectionCaItem_SoftwareVersionInjection extends Item_SoftwareVe
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -113,12 +113,12 @@ class PluginDatainjectionCaItem_SoftwareVersionInjection extends Item_SoftwareVe
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

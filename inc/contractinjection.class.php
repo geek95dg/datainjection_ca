@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaContractInjection extends Contract implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionContractInjection extends Contract implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionCaContractInjection extends Contract implements PluginD
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -93,7 +93,7 @@ class PluginDatainjectionCaContractInjection extends Contract implements PluginD
         $tab[29]['relationfield']  = $tab[29]['linkfield'];
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [12, 13, 20, 41, 42, 43, 44, 45, 72];
 
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
@@ -108,17 +108,17 @@ class PluginDatainjectionCaContractInjection extends Contract implements PluginD
             "multiline_text"   => [16 ,90],
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

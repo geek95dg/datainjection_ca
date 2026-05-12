@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaGroup_UserInjection extends Group_User implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionGroup_UserInjection extends Group_User implements PluginDatainjectionInjectionInterface
 {
     public static function getTypeName($nb = 0)
     {
@@ -67,7 +67,7 @@ class PluginDatainjectionCaGroup_UserInjection extends Group_User implements Plu
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -81,7 +81,7 @@ class PluginDatainjectionCaGroup_UserInjection extends Group_User implements Plu
         $tab[4]['displaytype']  = 'dropdown';
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [4];
 
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
@@ -89,17 +89,17 @@ class PluginDatainjectionCaGroup_UserInjection extends Group_User implements Plu
             "dropdown" => [4],
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

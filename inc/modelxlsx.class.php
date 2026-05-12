@@ -13,13 +13,13 @@
 
 use Glpi\Application\View\TemplateRenderer;
 
-class PluginDatainjectionCaModelxlsx extends CommonDBChild
+class PluginDatainjectionModelxlsx extends CommonDBChild
 {
-    public static $rightname = 'plugin_datainjectionca_model';
+    public static $rightname = 'plugin_datainjection_model';
     public $specific_fields;
 
     // From CommonDBChild
-    public static $itemtype  = 'PluginDatainjectionCaModel';
+    public static $itemtype  = 'PluginDatainjectionModel';
     public static $items_id  = 'models_id';
     public $dohistory        = true;
 
@@ -53,9 +53,9 @@ class PluginDatainjectionCaModelxlsx extends CommonDBChild
      * Excel when pasted and let users round-trip the headers without
      * needing a real .xlsx writer in PHP.
      */
-    public function showSample(PluginDatainjectionCaModel $model)
+    public function showSample(PluginDatainjectionModel $model)
     {
-        $headers = PluginDatainjectionCaMapping::getMappingsSortedByRank($model->fields['id']);
+        $headers = PluginDatainjectionMapping::getMappingsSortedByRank($model->fields['id']);
         $sample  = implode("\t", $headers) . "\n";
         $name    = str_replace(' ', '_', $model->getName());
 
@@ -104,7 +104,7 @@ class PluginDatainjectionCaModelxlsx extends CommonDBChild
         return $id;
     }
 
-    public function showAdditionnalForm(PluginDatainjectionCaModel $model, $options = [])
+    public function showAdditionnalForm(PluginDatainjectionModel $model, $options = [])
     {
         $id      = $this->getFromDBByModelID($model->fields['id']);
         $canedit = $this->can($id, UPDATE);
@@ -114,7 +114,7 @@ class PluginDatainjectionCaModelxlsx extends CommonDBChild
             'is_header_present' => $this->isHeaderPresent(),
         ];
 
-        TemplateRenderer::getInstance()->display('@datainjectionca/modelxlsx_additional_form.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjection/modelxlsx_additional_form.html.twig', $data);
     }
 
     public function saveFields($fields)

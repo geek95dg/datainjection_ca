@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaContract_SupplierInjection extends Contract_Supplier implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionContract_SupplierInjection extends Contract_Supplier implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionCaContract_SupplierInjection extends Contract_Supplier 
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -82,12 +82,12 @@ class PluginDatainjectionCaContract_SupplierInjection extends Contract_Supplier 
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

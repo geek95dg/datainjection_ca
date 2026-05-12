@@ -1,54 +1,29 @@
-# Datainjection (Custom Assets fork) — `datainjectionca`
+# Datainjection (Custom Assets fork)
 
-Fork of the upstream `pluginsGLPI/datainjection` plugin that adds:
+Fork of [pluginsGLPI/datainjection](https://github.com/pluginsGLPI/datainjection) that adds:
 
-- **GLPI 11 custom-asset support** — every `AssetDefinition` row is exposed as its own injectable type and per-definition custom fields stored in the JSON `glpi_assets_assets.custom_fields` column are surfaced as extra mappable columns.
-- **XLSX (.xlsx) import path** — pure-PHP reader using `ZipArchive` + `SimpleXML`, no external dependency.
+- **GLPI 11 custom-asset support** — every `AssetDefinition` is exposed as its own injectable type, and per-definition custom fields stored in the JSON `glpi_assets_assets.custom_fields` column are surfaced as extra mappable columns.
+- **XLSX (.xlsx) import path** — pure-PHP reader using `ZipArchive` + `SimpleXML`, no external dependency required.
 
-This fork ships under `<glpi_root>/plugins/` and is intentionally renamed so it can coexist with the upstream `datainjection` plugin.
-
----
+This fork keeps the **same plugin key (`datainjection`) and directory name as upstream** — it is a drop-in replacement. Bumped to **`2.16.0`** so that GLPI prefers it over the upstream `2.15.x` series.
 
 ## Installation
 
-> **The plugin's directory on disk MUST be named `datainjectionca` — no underscore, no other casing.**
-> GLPI 11 enforces `PLUGIN_KEY_PATTERN = '/^[a-z0-9]+$/i'` in `Plugin::loadPluginSetupFile()`. The repo on GitHub keeps the `datainjection_ca` name for branding, but the deployed folder must drop the underscore.
-
 ```bash
-# 1. Clone the repo to a working location
-git clone https://github.com/geek95dg/datainjection_ca.git ~/github/datainjection_ca
+# Drop the repo in as <glpi_root>/plugins/datainjection — same name as upstream.
+git clone https://github.com/geek95dg/datainjection_ca.git /var/www/html/glpi/plugins/datainjection
 
-# 2. Make it available under GLPI as `datainjectionca`
-ln -s ~/github/datainjection_ca /var/www/html/glpi/plugins/datainjectionca
-#   - or -
-cp -r ~/github/datainjection_ca /var/www/html/glpi/plugins/datainjectionca
-
-# 3. (Re)build the GLPI cache so the new plugin is discovered
 sudo -u www-data php /var/www/html/glpi/bin/console cache:clear
-
-# 4. List plugins — `datainjectionca` should appear with state "Not installed"
-sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:list
-
-# 5. Install and activate
-sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:install datainjectionca
-sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:activate datainjectionca
+sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:install datainjection
+sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:activate datainjection
 ```
 
-### Troubleshooting
-
-| Symptom | Cause |
-|---|---|
-| `Invalid plugin directory "datainjection_ca"` | You passed the underscored name. Use `datainjectionca`. |
-| `Invalid plugin directory "datainjectionca"` | Folder on disk has underscore (or wrong case). Run `ls /var/www/html/glpi/plugins/` and verify the directory is literally `datainjectionca`. |
-| Plugin missing from `glpi:plugin:list` | Folder is not under any of GLPI's plugin directories (`/var/www/html/glpi/plugins` or `/var/www/html/glpi/marketplace`), OR `setup.php` is missing inside it, OR the cache is stale — re-run `cache:clear`. |
-| `plugin_version_datainjectionca method must be defined!` | `setup.php` wasn't loaded — usually a permissions issue. Ensure `www-data` can read the folder and `setup.php`. |
-
----
+> If you already have the upstream `datainjection` plugin installed under `marketplace/`, GLPI will pick whichever directory comes first in `GLPI_PLUGINS_DIRECTORIES`. Either remove the upstream copy or rely on the higher version number — but expect a routine `Plugin::isUpToDate` upgrade pass on activation.
 
 ## What's imported
 
 - Native assets: Computer, Monitor, Printer, NetworkEquipment, Phone, Peripheral, etc.
-- **GLPI 11 custom assets** (any `AssetDefinition`), including custom fields.
+- **GLPI 11 custom assets** (any `AssetDefinition`), including custom fields stored in the JSON `custom_fields` column.
 - Management: Contract, Contact, Supplier, Document, License.
 - Configuration: User, Group, Entity, Profile, Location.
 - Inventory: Software, Cartridge, Consumable, Budget, NetworkPort, VLAN.
@@ -57,7 +32,12 @@ sudo -u www-data php /var/www/html/glpi/bin/console glpi:plugin:activate datainj
 ## Supported file formats
 
 - **CSV** — pick a delimiter and whether the first row is a header.
-- **XLSX** — first worksheet, with shared and inline strings.
+- **XLSX** — first worksheet; shared and inline strings handled.
+
+## Compatibility
+
+- GLPI **11.0.0 – 11.0.99**
+- PHP **8.2+**
 
 ## License
 

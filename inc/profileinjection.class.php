@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaProfileInjection extends Profile implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionProfileInjection extends Profile implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionCaProfileInjection extends Profile implements PluginDat
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -80,35 +80,35 @@ class PluginDatainjectionCaProfileInjection extends Profile implements PluginDat
         switch ($field_name) {
             case 'right_rw':
                 return (in_array($data, ['r', 'w'])
-                 ? PluginDatainjectionCaCommonInjectionLib::SUCCESS
-                 : PluginDatainjectionCaCommonInjectionLib::TYPE_MISMATCH);
+                 ? PluginDatainjectionCommonInjectionLib::SUCCESS
+                 : PluginDatainjectionCommonInjectionLib::TYPE_MISMATCH);
 
             case 'right_r':
-                return (($data == 'r') ? PluginDatainjectionCaCommonInjectionLib::SUCCESS
-                             : PluginDatainjectionCaCommonInjectionLib::TYPE_MISMATCH);
+                return (($data == 'r') ? PluginDatainjectionCommonInjectionLib::SUCCESS
+                             : PluginDatainjectionCommonInjectionLib::TYPE_MISMATCH);
 
             case 'right_w':
-                return (($data == 'w') ? PluginDatainjectionCaCommonInjectionLib::SUCCESS
-                             : PluginDatainjectionCaCommonInjectionLib::TYPE_MISMATCH);
+                return (($data == 'w') ? PluginDatainjectionCommonInjectionLib::SUCCESS
+                             : PluginDatainjectionCommonInjectionLib::TYPE_MISMATCH);
 
             case 'interface':
                 return (in_array($data, ['helpdesk', 'central'])
-                 ? PluginDatainjectionCaCommonInjectionLib::SUCCESS
-                 : PluginDatainjectionCaCommonInjectionLib::TYPE_MISMATCH);
+                 ? PluginDatainjectionCommonInjectionLib::SUCCESS
+                 : PluginDatainjectionCommonInjectionLib::TYPE_MISMATCH);
 
             default:
-                return PluginDatainjectionCaCommonInjectionLib::SUCCESS;
+                return PluginDatainjectionCommonInjectionLib::SUCCESS;
         }
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

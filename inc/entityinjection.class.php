@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaEntityInjection extends Entity implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionEntityInjection extends Entity implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionCaEntityInjection extends Entity implements PluginDatai
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -68,7 +68,7 @@ class PluginDatainjectionCaEntityInjection extends Entity implements PluginDatai
         $tab           = Search::getOptions(get_parent_class($this));
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [14, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
             42, 43, 44, 45, 47, 48, 49,50, 51, 52, 53, 54, 55, 91, 92, 93,
         ];
@@ -78,23 +78,23 @@ class PluginDatainjectionCaEntityInjection extends Entity implements PluginDatai
             "dropdown"       => [9],
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $data = $lib->processAddOrUpdate();
         // Only the `name`, `entities_id`, and `comment` fields are taken into account when creating an entity.
         // The IF forces an update of the entity to insert the other fields.
         if (
             count(array_diff_key($values, array_flip(['name', 'entities_id', 'comment']))) > 0
-            && $data['type'] === PluginDatainjectionCaCommonInjectionLib::IMPORT_ADD
+            && $data['type'] === PluginDatainjectionCommonInjectionLib::IMPORT_ADD
         ) {
             $lib->processAddOrUpdate();
         }
@@ -214,7 +214,7 @@ class PluginDatainjectionCaEntityInjection extends Entity implements PluginDatai
 
 
     /**
-    * @param PluginDatainjectionCaInjectionInterface $injectionClass
+    * @param PluginDatainjectionInjectionInterface $injectionClass
     * @param array $values
     * @param array $options
    **/

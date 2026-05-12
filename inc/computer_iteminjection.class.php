@@ -30,7 +30,7 @@
 
 use Glpi\Asset\Asset_PeripheralAsset;
 
-class PluginDatainjectionCaComputer_ItemInjection implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionComputer_ItemInjection implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -67,7 +67,7 @@ class PluginDatainjectionCaComputer_ItemInjection implements PluginDatainjection
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -104,12 +104,12 @@ class PluginDatainjectionCaComputer_ItemInjection implements PluginDatainjection
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

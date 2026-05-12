@@ -37,15 +37,15 @@
             <div class="row">
                 <div class="hr-text mt-2 mb-5">
                     <i class="fa-2x ti ti-adjustments-alt"></i>
-                    <span>{{ __('Client Injection Configuration', 'datainjectionca') }}</span>
+                    <span>{{ __('Client Injection Configuration', 'datainjection') }}</span>
                 </div>
                 <div class="col-12">
                     {% if models|length > 0 %}
                         {{ fields.dropdownField(
-                            'PluginDatainjectionCaModel',
+                            'PluginDatainjectionModel',
                             'dropdown_models',
                             0,
-                            __('Model', 'datainjectionca'),
+                            __('Model', 'datainjection'),
                             {
                                 'add_field_class'   : 'col-sm-12',
                                 'input_class'       : 'col-6 col-sm-6',
@@ -53,9 +53,9 @@
                             }
                         ) }}
                     {% else %}
-                        {% set text = __('No model currently available', 'datainjectionca') %}
+                        {% set text = __('No model currently available', 'datainjection') %}
                         {% if can_create_model %}
-                            {% set text = text ~ '. ' ~ __('You can start the model creation by hitting the button', 'datainjectionca') ~ ': ' ~ model_type_name %}
+                            {% set text = text ~ '. ' ~ __('You can start the model creation by hitting the button', 'datainjection') ~ ': ' ~ model_type_name %}
                         {% endif %}
                         {{ alerts.alert_info(text) }}
                     {% endif %}
