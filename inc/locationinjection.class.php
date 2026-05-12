@@ -90,7 +90,7 @@ class PluginDatainjectionCaLocationInjection extends Location implements PluginD
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
     */
     public function getOptions($primary_type = '')
     {
@@ -109,7 +109,7 @@ class PluginDatainjectionCaLocationInjection extends Location implements PluginD
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {

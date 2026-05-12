@@ -106,7 +106,7 @@ class PluginDatainjectionCaCustomAssetRegistry
     /**
      * Build (if needed) and return all injection class names for custom assets.
      *
-     * @return array Map of injection class name => 'datainjection_ca'
+     * @return array Map of injection class name => 'datainjectionca'
      */
     public static function getInjectableTypes(): array
     {
@@ -114,7 +114,7 @@ class PluginDatainjectionCaCustomAssetRegistry
         foreach (self::getDefinitions() as $defId => $definition) {
             $cls = self::ensureInjectionClass($defId);
             if ($cls !== null) {
-                $types[$cls] = 'datainjection_ca';
+                $types[$cls] = 'datainjectionca';
             }
         }
         return $types;

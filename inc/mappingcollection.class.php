@@ -51,7 +51,7 @@ class PluginDatainjectionCaMappingCollection
         global $DB;
 
         $sql = "SELECT *
-              FROM `glpi_plugin_datainjection_ca_mappings`
+              FROM `glpi_plugin_datainjectionca_mappings`
               WHERE `models_id` = '$models_id'
               ORDER BY `rank` ASC";
 

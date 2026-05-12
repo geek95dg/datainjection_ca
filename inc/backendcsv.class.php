@@ -155,7 +155,7 @@ class PluginDatainjectionCaBackendcsv extends PluginDatainjectionCaBackend imple
     /**
     * Store the number of lines red from the file
     *
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaBackendInterface::storeNumberOfLines()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaBackendInterface::storeNumberOfLines()
    **/
     public function storeNumberOfLines()
     {

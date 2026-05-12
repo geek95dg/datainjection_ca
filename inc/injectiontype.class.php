@@ -73,7 +73,7 @@ class PluginDatainjectionCaInjectionType
                     }
                     $typename = get_parent_class($type);
                     $name     = '';
-                    if ($from != 'datainjection_ca') {
+                    if ($from != 'datainjectionca') {
                         $plugin->getFromDBbyDir($from);
                         $name = $plugin->getName() . ': ';
                     }
@@ -142,7 +142,7 @@ class PluginDatainjectionCaInjectionType
         }
 
         //Add null value
-        $values[self::NO_VALUE] = __('-------Choose a table-------', 'datainjection_ca');
+        $values[self::NO_VALUE] = __('-------Choose a table-------', 'datainjectionca');
 
         //Add primary_type to the list of availables types
         if (!is_a($p['primary_type'], CommonDBTM::class, true)) {
@@ -172,7 +172,7 @@ class PluginDatainjectionCaInjectionType
         );
 
         $p['itemtype'] = '__VALUE__';
-        $di_base_url   = plugin_datainjection_ca_geturl();
+        $di_base_url   = plugin_datainjectionca_geturl();
         $url_field     = $di_base_url . "ajax/dropdownChooseField.php";
         $toobserve     = "dropdown_data[" . $mapping_or_info->getID() . "][itemtype]$rand";
         $toupdate      = "span_field_" . $mappings_id;
@@ -212,7 +212,7 @@ class PluginDatainjectionCaInjectionType
         }
 
         $fields = [];
-        $fields[self::NO_VALUE] = __('-------Choose a field-------', 'datainjection_ca');
+        $fields[self::NO_VALUE] = __('-------Choose a field-------', 'datainjectionca');
 
         //By default field has no default value
         $mapping_value = self::NO_VALUE;
@@ -256,7 +256,7 @@ class PluginDatainjectionCaInjectionType
         );
 
         $p['value'] = '__VALUE__';
-        $url = plugin_datainjection_ca_geturl() . "ajax/dropdownMandatory.php";
+        $url = plugin_datainjectionca_geturl() . "ajax/dropdownMandatory.php";
         Ajax::updateItem(
             "span_mandatory_" . $mapping_or_info['id'],
             $url,
@@ -375,8 +375,8 @@ class PluginDatainjectionCaInjectionType
         }
 
         $used  = [];
-        $table = (($p['called_by'] == 'PluginDatainjectionCaMapping') ? "glpi_plugin_datainjection_ca_mappings"
-                                                              : "glpi_plugin_datainjection_ca_infos");
+        $table = (($p['called_by'] == 'PluginDatainjectionCaMapping') ? "glpi_plugin_datainjectionca_mappings"
+                                                              : "glpi_plugin_datainjectionca_infos");
 
         $datas = getAllDataFromTable($table, ['models_id' => $mapping_or_info['models_id']]);
 

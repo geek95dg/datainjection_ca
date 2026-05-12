@@ -35,7 +35,7 @@ use function Safe\ob_start;
 
 class PluginDatainjectionCaMapping extends CommonDBTM
 {
-    public static $rightname = "plugin_datainjection_ca_model";
+    public static $rightname = "plugin_datainjectionca_model";
 
     /**
     * @param string $field
@@ -99,12 +99,12 @@ class PluginDatainjectionCaMapping extends CommonDBTM
     public static function showFormMappings(PluginDatainjectionCaModel $model)
     {
         $canedit = $model->can($model->fields['id'], UPDATE);
-        $lines = isset($_SESSION['datainjection_ca']['lines']) ? unserialize($_SESSION['datainjection_ca']['lines']) : [];
+        $lines = isset($_SESSION['datainjectionca']['lines']) ? unserialize($_SESSION['datainjectionca']['lines']) : [];
 
-        $show_preview = isset($_SESSION['datainjection_ca']['lines']) && !empty($lines);
+        $show_preview = isset($_SESSION['datainjectionca']['lines']) && !empty($lines);
         $preview_url = '';
         if ($show_preview) {
-            $preview_url = plugin_datainjection_ca_geturl() . "front/popup.php?popup=preview&models_id=" . $model->getID();
+            $preview_url = plugin_datainjectionca_geturl() . "front/popup.php?popup=preview&models_id=" . $model->getID();
         }
 
         $model->loadMappings();
@@ -123,7 +123,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
             ];
         }
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/mappings_form.html.twig', [
+        TemplateRenderer::getInstance()->display('@datainjectionca/mappings_form.html.twig', [
             'form_action'  => Toolbox::getItemTypeFormURL(self::class),
             'show_preview' => $show_preview,
             'preview_url'  => $preview_url,
@@ -149,7 +149,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
         $several = [];
         $query  = "SELECT `value`,
                         COUNT(*) AS counter
-                 FROM `glpi_plugin_datainjection_ca_mappings`
+                 FROM `glpi_plugin_datainjectionca_mappings`
                  WHERE `models_id` = '" . $models_id . "'
                        AND `value` NOT IN ('none')
                  GROUP BY `value`
@@ -172,7 +172,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
 
         $mappings = [];
         $query    = "SELECT `name`
-                   FROM `glpi_plugin_datainjection_ca_mappings`
+                   FROM `glpi_plugin_datainjectionca_mappings`
                    WHERE `models_id` = '" . $models_id . "'
                    ORDER BY `rank` ASC";
         foreach ($DB->doQuery($query) as $data) {

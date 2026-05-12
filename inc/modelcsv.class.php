@@ -60,7 +60,7 @@ use Glpi\Application\View\TemplateRenderer;
 
 class PluginDatainjectionCaModelcsv extends CommonDBChild
 {
-    public static $rightname = "plugin_datainjection_ca_model";
+    public static $rightname = "plugin_datainjectionca_model";
     public $specific_fields;
 
     // From CommonDBChild
@@ -155,7 +155,7 @@ class PluginDatainjectionCaModelcsv extends CommonDBChild
     *
     * @param int $models_id the model ID
     *
-    * @return int the ID of the row in glpi_plugin_datainjection_ca_modelcsv
+    * @return int the ID of the row in glpi_plugin_datainjectionca_modelcsv
    **/
     public function getFromDBByModelID($models_id)
     {
@@ -199,7 +199,7 @@ class PluginDatainjectionCaModelcsv extends CommonDBChild
             'delimiter' => $this->getDelimiter(),
         ];
 
-        TemplateRenderer::getInstance()->display('@datainjection_ca/modelcsv_additional_form.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjectionca/modelcsv_additional_form.html.twig', $data);
     }
 
 

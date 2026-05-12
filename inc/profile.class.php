@@ -37,12 +37,12 @@ class PluginDatainjectionCaProfile extends Profile
 
         $rights = [
             ['itemtype'  => 'PluginDatainjectionCaModel',
-                'label'     => __('Model management', 'datainjection_ca'),
-                'field'     => 'plugin_datainjection_ca_model',
+                'label'     => __('Model management', 'datainjectionca'),
+                'field'     => 'plugin_datainjectionca_model',
             ],
             ['itemtype'  => 'PluginDatainjectionCaModel',
-                'label'     => __('Injection of the file', 'datainjection_ca'),
-                'field'     => 'plugin_datainjection_ca_use',
+                'label'     => __('Injection of the file', 'datainjectionca'),
+                'field'     => 'plugin_datainjectionca_use',
                 'rights'    => [READ => __('Read')],
             ],
         ];
@@ -69,7 +69,7 @@ class PluginDatainjectionCaProfile extends Profile
 
         if ($item instanceof Profile) {
             if ($item->fields['interface'] == 'central') {
-                return self::createTabEntry(__('Data injection', 'datainjection_ca'), 0, $item::getType(), 'ti ti-download');
+                return self::createTabEntry(__('Data injection', 'datainjectionca'), 0, $item::getType(), 'ti ti-download');
             }
             return '';
         }
@@ -86,7 +86,7 @@ class PluginDatainjectionCaProfile extends Profile
             //In case there's no right datainjection for this profile, create it
             self::addDefaultProfileInfos(
                 $item->getID(),
-                ['plugin_datainjection_ca_model' => 0],
+                ['plugin_datainjectionca_model' => 0],
             );
             $profile->showForm($ID);
         }
@@ -129,8 +129,8 @@ class PluginDatainjectionCaProfile extends Profile
         self::addDefaultProfileInfos(
             $profiles_id,
             [
-                'plugin_datainjection_ca_model' => ALLSTANDARDRIGHT,
-                'plugin_datainjection_ca_use' => READ,
+                'plugin_datainjectionca_model' => ALLSTANDARDRIGHT,
+                'plugin_datainjectionca_use' => READ,
             ],
         );
     }
@@ -139,11 +139,11 @@ class PluginDatainjectionCaProfile extends Profile
     {
         /** @var DBmysql $DB */
         global $DB;
-        if (!$DB->tableExists('glpi_plugin_datainjection_ca_profiles')) {
+        if (!$DB->tableExists('glpi_plugin_datainjectionca_profiles')) {
             return true;
         }
 
-        $profiles = getAllDataFromTable('glpi_plugin_datainjection_ca_profiles');
+        $profiles = getAllDataFromTable('glpi_plugin_datainjectionca_profiles');
         foreach ($profiles as $id => $profile) {
             $query = "SELECT `id` FROM `glpi_profiles` WHERE `name`='" . $profile['name'] . "'";
             $result = $DB->doQuery($query);
@@ -161,11 +161,11 @@ class PluginDatainjectionCaProfile extends Profile
                         $value = 0;
                         break;
                 }
-                self::addDefaultProfileInfos($id, ['plugin_datainjection_ca_model' => $value]);
+                self::addDefaultProfileInfos($id, ['plugin_datainjectionca_model' => $value]);
                 if ($value > 0) {
-                    self::addDefaultProfileInfos($id, ['plugin_datainjection_ca_use' => READ]);
+                    self::addDefaultProfileInfos($id, ['plugin_datainjectionca_use' => READ]);
                 } else {
-                    self::addDefaultProfileInfos($id, ['plugin_datainjection_ca_model' => 0]);
+                    self::addDefaultProfileInfos($id, ['plugin_datainjectionca_model' => 0]);
                 }
             }
         }

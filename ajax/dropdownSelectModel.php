@@ -37,13 +37,13 @@ if (strpos($_SERVER['PHP_SELF'], "dropdownSelectModel.php")) {
 Session::checkCentralAccess();
 
 if (
-    isset($_SESSION['datainjection_ca']['models_id'])
-    && $_SESSION['datainjection_ca']['models_id'] != $_POST['models_id']
+    isset($_SESSION['datainjectionca']['models_id'])
+    && $_SESSION['datainjectionca']['models_id'] != $_POST['models_id']
 ) {
     PluginDatainjectionCaModel::cleanSessionVariables();
 }
 
-$_SESSION['datainjection_ca']['step'] = PluginDatainjectionCaClientInjection::STEP_UPLOAD;
+$_SESSION['datainjectionca']['step'] = PluginDatainjectionCaClientInjection::STEP_UPLOAD;
 $model = new PluginDatainjectionCaModel();
 
 if (

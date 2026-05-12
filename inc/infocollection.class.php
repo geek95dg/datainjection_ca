@@ -53,7 +53,7 @@ class PluginDatainjectionCaInfoCollection
         global $DB;
 
         $query = "SELECT *
-                FROM `glpi_plugin_datainjection_ca_infos`
+                FROM `glpi_plugin_datainjectionca_infos`
                 WHERE `models_id` = '" . $models_id . "'
                 ORDER BY `itemtype` ASC";
 

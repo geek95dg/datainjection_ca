@@ -34,11 +34,11 @@ class PluginDatainjectionCaDropdown
     {
 
         $date_format[PluginDatainjectionCaCommonInjectionLib::DATE_TYPE_DDMMYYYY]
-                                                          = __('dd-mm-yyyy', 'datainjection_ca');
+                                                          = __('dd-mm-yyyy', 'datainjectionca');
         $date_format[PluginDatainjectionCaCommonInjectionLib::DATE_TYPE_MMDDYYYY]
-                                                          = __('mm-dd-yyyy', 'datainjection_ca');
+                                                          = __('mm-dd-yyyy', 'datainjectionca');
         $date_format[PluginDatainjectionCaCommonInjectionLib::DATE_TYPE_YYYYMMDD]
-                                                          = __('yyyy-mm-dd', 'datainjection_ca');
+                                                          = __('yyyy-mm-dd', 'datainjectionca');
 
         return $date_format;
     }
@@ -56,11 +56,11 @@ class PluginDatainjectionCaDropdown
     {
 
         $float_format[PluginDatainjectionCaCommonInjectionLib::FLOAT_TYPE_DOT]
-                                                          = __('1 234.56', 'datainjection_ca');
+                                                          = __('1 234.56', 'datainjectionca');
         $float_format[PluginDatainjectionCaCommonInjectionLib::FLOAT_TYPE_COMMA]
-                                                          = __('1 234,56', 'datainjection_ca');
+                                                          = __('1 234,56', 'datainjectionca');
         $float_format[PluginDatainjectionCaCommonInjectionLib::FLOAT_TYPE_DOT_AND_COM]
-                                                          = __('1,234.56', 'datainjection_ca');
+                                                          = __('1,234.56', 'datainjectionca');
 
         return $float_format;
     }
@@ -81,16 +81,16 @@ class PluginDatainjectionCaDropdown
     {
 
         $states[0]                                            = Dropdown::EMPTY_VALUE;
-        //$states[PluginDatainjectionCaModel::INITIAL_STEP] = __('Creation of the model on going', 'datainjection_ca');
-        $states[PluginDatainjectionCaModel::FILE_STEP]          = __('File to inject', 'datainjection_ca');
-        $states[PluginDatainjectionCaModel::MAPPING_STEP]       = __('Mappings', 'datainjection_ca');
+        //$states[PluginDatainjectionCaModel::INITIAL_STEP] = __('Creation of the model on going', 'datainjectionca');
+        $states[PluginDatainjectionCaModel::FILE_STEP]          = __('File to inject', 'datainjectionca');
+        $states[PluginDatainjectionCaModel::MAPPING_STEP]       = __('Mappings', 'datainjectionca');
         $states[PluginDatainjectionCaModel::OTHERS_STEP]        = __(
             'Additional Information',
-            'datainjection_ca',
+            'datainjectionca',
         );
         $states[PluginDatainjectionCaModel::READY_TO_USE_STEP]  = __(
             'Model available for use',
-            'datainjection_ca',
+            'datainjectionca',
         );
         return $states;
     }
@@ -125,9 +125,9 @@ class PluginDatainjectionCaDropdown
     public static function getFileEncodingValue()
     {
 
-        $values[PluginDatainjectionCaBackend::ENCODING_AUTO]      = __('Automatic detection', 'datainjection_ca');
-        $values[PluginDatainjectionCaBackend::ENCODING_UFT8]      = __('UTF-8', 'datainjection_ca');
-        $values[PluginDatainjectionCaBackend::ENCODING_ISO8859_1] = __('ISO8859-1', 'datainjection_ca');
+        $values[PluginDatainjectionCaBackend::ENCODING_AUTO]      = __('Automatic detection', 'datainjectionca');
+        $values[PluginDatainjectionCaBackend::ENCODING_UFT8]      = __('UTF-8', 'datainjectionca');
+        $values[PluginDatainjectionCaBackend::ENCODING_ISO8859_1] = __('ISO8859-1', 'datainjectionca');
 
         return $values;
     }

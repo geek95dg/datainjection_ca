@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-Session::checkRight('plugin_datainjection_ca_model', UPDATE);
+Session::checkRight('plugin_datainjectionca_model', UPDATE);
 
 /* Update mappings */
 if (isset($_POST["update"])) {
@@ -57,7 +57,7 @@ if (isset($_POST["update"])) {
         Session::addMessageAfterRedirect(
             __s(
                 'One link field must be selected: it will be used to check if data already exists',
-                'datainjection_ca',
+                'datainjectionca',
             ),
             true,
             ERROR,
@@ -76,11 +76,11 @@ if (isset($_POST["update"])) {
             Session::addMessageAfterRedirect(
                 __s(
                     "This step allows you to add informations not present in the file. You'll be asked for theses informations while using the model.",
-                    'datainjection_ca',
+                    'datainjectionca',
                 ),
             );
         }
-        unset($_SESSION['datainjection_ca']['lines']);
+        unset($_SESSION['datainjectionca']['lines']);
     }
 }
 

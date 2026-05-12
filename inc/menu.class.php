@@ -30,12 +30,12 @@
 
 class PluginDatainjectionCaMenu extends CommonGLPI
 {
-    public static $rightname = 'plugin_datainjection_ca_use';
+    public static $rightname = 'plugin_datainjectionca_use';
 
     public static function getMenuName()
     {
 
-        return __('Data injection', 'datainjection_ca');
+        return __('Data injection', 'datainjectionca');
     }
 
     public static function getMenuContent()
@@ -53,12 +53,12 @@ class PluginDatainjectionCaMenu extends CommonGLPI
 
         if (Session::haveRight(static::$rightname, READ)) {
             $image_import  = "<i class='fas fa-upload' title='";
-            $image_import .= __('Injection of the file', 'datainjection_ca');
-            $image_import .= "' alt='" . __('Injection of the file', 'datainjection_ca') . "'></i>";
+            $image_import .= __('Injection of the file', 'datainjectionca');
+            $image_import .= "' alt='" . __('Injection of the file', 'datainjectionca') . "'></i>";
 
             $menu['options'] = [
                 'client' => [
-                    'title' => __('Injection of the file', 'datainjection_ca'),
+                    'title' => __('Injection of the file', 'datainjectionca'),
                     'page'  => $injectionFormUrl,
                     'icon'  => 'ti ti-file-download',
                 ],
@@ -73,14 +73,14 @@ class PluginDatainjectionCaMenu extends CommonGLPI
             $model_name  = PluginDatainjectionCaModel::getTypeName(Session::getPluralNumber());
             $image_model = "<i class='" . PluginDatainjectionCaModel::getIcon() . "' title='$model_name' alt='$model_name'></i>";
 
-            if (Session::haveRight('plugin_datainjection_ca_model', READ)) {
+            if (Session::haveRight('plugin_datainjectionca_model', READ)) {
                 $menu['options']['model']['title'] = $model_name;
                 $menu['options']['model']['page'] = Toolbox::getItemTypeSearchUrl('PluginDatainjectionCaModel', false);
                 $menu['options']['model']['links']['search'] = Toolbox::getItemTypeSearchUrl('PluginDatainjectionCaModel', false);
                 $menu['options']['client']['links'][$image_model]  = Toolbox::getItemTypeSearchUrl('PluginDatainjectionCaModel', false);
             }
 
-            if (Session::haveRight('plugin_datainjection_ca_model', UPDATE) || Session::haveRight('plugin_datainjection_ca_model', CREATE)) {
+            if (Session::haveRight('plugin_datainjectionca_model', UPDATE) || Session::haveRight('plugin_datainjectionca_model', CREATE)) {
                 $menu['options']['model']['links']['add'] = Toolbox::getItemTypeFormUrl('PluginDatainjectionCaModel', false);
                 $menu['options']['client']['links'][$image_model]  = Toolbox::getItemTypeSearchUrl('PluginDatainjectionCaModel', false);
             }

@@ -59,7 +59,7 @@ class PluginDatainjectionCaInterfaceTypeInjection extends InterfaceType implemen
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {

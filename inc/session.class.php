@@ -44,14 +44,14 @@ class PluginDatainjectionCaSession
     public static function getParam($param)
     {
 
-        if (!isset($_SESSION['datainjection_ca'][$param])) {
+        if (!isset($_SESSION['datainjectionca'][$param])) {
             return false;
         }
         if (in_array($param, ['results', 'error_lines', 'injection_lines', 'injection_results', 'injection_error_lines'])) {
-            $fic = $_SESSION['datainjection_ca'][$param];
+            $fic = $_SESSION['datainjectionca'][$param];
             return file_get_contents(GLPI_TMP_DIR . '/' . $fic);
         }
-        return $_SESSION['datainjection_ca'][$param];
+        return $_SESSION['datainjectionca'][$param];
     }
 
 
@@ -67,17 +67,17 @@ class PluginDatainjectionCaSession
     {
 
         if (in_array($param, ['results', 'error_lines', 'injection_lines', 'injection_results', 'injection_error_lines'])) {
-            if (isset($_SESSION['datainjection_ca'][$param])) {
-                $old_fic = GLPI_TMP_DIR . '/' . $_SESSION['datainjection_ca'][$param];
+            if (isset($_SESSION['datainjectionca'][$param])) {
+                $old_fic = GLPI_TMP_DIR . '/' . $_SESSION['datainjectionca'][$param];
                 if (file_exists($old_fic)) {
                     unlink($old_fic);
                 }
             }
             $fic = Session::getLoginUserID() . '_' . $param . '_' . microtime(true);
             file_put_contents(GLPI_TMP_DIR . '/' . $fic, $results);
-            $_SESSION['datainjection_ca'][$param] = $fic;
+            $_SESSION['datainjectionca'][$param] = $fic;
         } else {
-            $_SESSION['datainjection_ca'][$param] = $results;
+            $_SESSION['datainjectionca'][$param] = $results;
         }
     }
 
@@ -92,13 +92,13 @@ class PluginDatainjectionCaSession
 
         $file_params = ['results', 'error_lines', 'injection_lines', 'injection_results', 'injection_error_lines'];
         foreach ($file_params as $param) {
-            if (isset($_SESSION['datainjection_ca'][$param])) {
-                $fic = GLPI_TMP_DIR . '/' . $_SESSION['datainjection_ca'][$param];
+            if (isset($_SESSION['datainjectionca'][$param])) {
+                $fic = GLPI_TMP_DIR . '/' . $_SESSION['datainjectionca'][$param];
                 if (file_exists($fic)) {
                     unlink($fic);
                 }
             }
         }
-        unset($_SESSION['datainjection_ca']);
+        unset($_SESSION['datainjectionca']);
     }
 }

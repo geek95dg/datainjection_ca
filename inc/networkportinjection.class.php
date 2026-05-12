@@ -62,7 +62,7 @@ class PluginDatainjectionCaNetworkportInjection extends NetworkPort implements P
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -91,7 +91,7 @@ class PluginDatainjectionCaNetworkportInjection extends NetworkPort implements P
         $tab[53]['name']          = sprintf(
             __('%1$s: %2$s'),
             __('Connected to'),
-            __('Port MAC address', 'datainjection_ca'),
+            __('Port MAC address', 'datainjectionca'),
         );
         $tab[53]['field']         = 'netmac';
         $tab[53]['table']         = getTableForItemType('NetworkPort');
@@ -169,7 +169,7 @@ class PluginDatainjectionCaNetworkportInjection extends NetworkPort implements P
 
 
     /**
-    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {

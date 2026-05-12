@@ -29,14 +29,14 @@
 {% if infos|length > 0 or has_sample or comment %}
     <div class="hr-text mt-2 mb-5">
         <i class="fa-2x ti ti-file-download"></i>
-        <span>{{ __('Complementary information', 'datainjection_ca') ~ ' (' ~ __('Choose a file', 'datainjection_ca') ~ ')' }}</span>
+        <span>{{ __('Complementary information', 'datainjectionca') ~ ' (' ~ __('Choose a file', 'datainjectionca') ~ ')' }}</span>
     </div>
 
     {% if has_sample %}
         <div class="text-center mt-3">
             <a href="{{ model.getFormURL() }}?sample={{ model.getField('id') }}" class="btn btn-outline-secondary">
                 <i class="ti ti-download"></i> &nbsp;
-                {{ __('Download file sample', 'datainjection_ca') }}
+                {{ __('Download file sample', 'datainjectionca') }}
             </a>
         </div>
     {% endif %}

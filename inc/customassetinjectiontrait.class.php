@@ -85,7 +85,7 @@ trait PluginDatainjectionCaCustomAssetInjectionTrait
                 'field'       => $linkfield,
                 'linkfield'   => $linkfield,
                 'name'        => sprintf(
-                    __('%1$s (custom field)', 'datainjection_ca'),
+                    __('%1$s (custom field)', 'datainjectionca'),
                     $field['label'],
                 ),
                 'datatype'    => 'string',

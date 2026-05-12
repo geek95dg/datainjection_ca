@@ -35,7 +35,7 @@ use function Safe\ob_get_clean;
 
 class PluginDatainjectionCaInfo extends CommonDBTM
 {
-    public static $rightname = "plugin_datainjection_ca_model";
+    public static $rightname = "plugin_datainjectionca_model";
 
     public function getEmpty()
     {
@@ -84,9 +84,9 @@ class PluginDatainjectionCaInfo extends CommonDBTM
              Toolbox::getItemTypeFormURL(self::class) . "'>";
             echo "<table class='tab_cadre_fixe'>";
             echo "<tr>";
-            echo "<th>" . __s('Tables', 'datainjection_ca') . "</th>";
+            echo "<th>" . __s('Tables', 'datainjectionca') . "</th>";
             echo "<th>" . _sn('Field', 'Fields', 2) . "</th>";
-            echo "<th>" . __s('Mandatory information', 'datainjection_ca') . "</th>";
+            echo "<th>" . __s('Mandatory information', 'datainjectionca') . "</th>";
             echo "</tr>";
 
             echo "<tr class='tab_bg_1'>";
@@ -142,9 +142,9 @@ class PluginDatainjectionCaInfo extends CommonDBTM
             if ($canedit) {
                 echo "<th>&nbsp;</th>";
             }
-            echo "<th>" . __s('Tables', 'datainjection_ca') . "</th>";
-            echo "<th>" . __s('Fields', 'datainjection_ca') . "</th>";
-            echo "<th>" . __s('Mandatory information', 'datainjection_ca') . "</th>";
+            echo "<th>" . __s('Tables', 'datainjectionca') . "</th>";
+            echo "<th>" . __s('Fields', 'datainjectionca') . "</th>";
+            echo "<th>" . __s('Mandatory information', 'datainjectionca') . "</th>";
             echo "</tr>";
 
             foreach ($model->getInfos() as $info) {
@@ -249,7 +249,7 @@ class PluginDatainjectionCaInfo extends CommonDBTM
     public static function showAdditionalInformationsForm(PluginDatainjectionCaModel $model)
     {
         $infos = getAllDataFromTable(
-            'glpi_plugin_datainjection_ca_infos',
+            'glpi_plugin_datainjectionca_infos',
             ['models_id' => $model->getField('id')],
         );
 
@@ -262,7 +262,7 @@ class PluginDatainjectionCaInfo extends CommonDBTM
             $info->fields = $info_data;
 
             ob_start();
-            self::displayAdditionalInformation($info, $_SESSION['datainjection_ca']['infos'] ?? []);
+            self::displayAdditionalInformation($info, $_SESSION['datainjectionca']['infos'] ?? []);
             $rendered_infos[] = ob_get_clean();
         }
 
@@ -273,14 +273,14 @@ class PluginDatainjectionCaInfo extends CommonDBTM
             'modeltype' => $modeltype,
             'has_sample' => $modeltype->haveSample(),
             'comment' => $model->fields['comment'],
-            'session_infos' => $_SESSION['datainjection_ca']['infos'] ?? [],
+            'session_infos' => $_SESSION['datainjectionca']['infos'] ?? [],
         ];
 
         // Store models_id in session for future usage
-        $_SESSION['datainjection_ca']['models_id'] = $model->getField('id');
+        $_SESSION['datainjectionca']['models_id'] = $model->getField('id');
 
         // Render the Twig template
-        TemplateRenderer::getInstance()->display('@datainjection_ca/infoadditionnalinfo.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjectionca/infoadditionnalinfo.html.twig', $data);
 
         // Show the upload file form
         $options['models_id'] = $model->getField('id');
@@ -329,8 +329,8 @@ class PluginDatainjectionCaInfo extends CommonDBTM
 
         $name = "info[" . $option['linkfield'] . "]";
 
-        if (isset($_SESSION['datainjection_ca']['infos'][$option['linkfield']])) {
-            $value = $_SESSION['datainjection_ca']['infos'][$option['linkfield']];
+        if (isset($_SESSION['datainjectionca']['infos'][$option['linkfield']])) {
+            $value = $_SESSION['datainjectionca']['infos'][$option['linkfield']];
         } else {
             $value = '';
         }

@@ -262,7 +262,7 @@ class PluginDatainjectionCaCommonInjectionLib
             $status_check = false;
             $this->results[self::ACTION_CHECK][] = [
                 self::FAILED,
-                __('No mandatory field is defined for this model', 'datainjection_ca'),
+                __('No mandatory field is defined for this model', 'datainjectionca'),
             ];
         }
         return $status_check;
@@ -2112,7 +2112,7 @@ class PluginDatainjectionCaCommonInjectionLib
         if ($item->dohistory) {
             $changes[0] = 0;
 
-            $changes[2] = $add ? __('Add from CSV file', 'datainjection_ca') : __('Update from CSV file', 'datainjection_ca');
+            $changes[2] = $add ? __('Add from CSV file', 'datainjectionca') : __('Update from CSV file', 'datainjectionca');
             $changes[1] = "";
             Log::history($item->fields['id'], get_class($item), $changes);
         }
@@ -2151,47 +2151,47 @@ class PluginDatainjectionCaCommonInjectionLib
 
         switch ($type) {
             case self::ERROR_CANNOT_IMPORT:
-                $message = __('No right to import data', 'datainjection_ca');
+                $message = __('No right to import data', 'datainjectionca');
                 break;
 
             case self::ERROR_CANNOT_UPDATE:
-                $message = __('No right to update data', 'datainjection_ca');
+                $message = __('No right to update data', 'datainjectionca');
                 break;
 
             case self::ERROR_FIELDSIZE_EXCEEDED:
-                $message = __('Size of the inserted value is to expansive', 'datainjection_ca');
+                $message = __('Size of the inserted value is to expansive', 'datainjectionca');
                 break;
 
             case self::ERROR_IMPORT_REFUSED:
-                $message = __('Import not allowed', 'datainjection_ca');
+                $message = __('Import not allowed', 'datainjectionca');
                 break;
 
             case self::FAILED:
-                $message = __('Import failed', 'datainjection_ca');
+                $message = __('Import failed', 'datainjectionca');
                 break;
 
             case self::MANDATORY:
-                $message = __('At least one mandatory field is not present', 'datainjection_ca');
+                $message = __('At least one mandatory field is not present', 'datainjectionca');
                 break;
 
             case self::SUCCESS:
-                $message = __('Data to insert are correct', 'datainjection_ca');
+                $message = __('Data to insert are correct', 'datainjectionca');
                 break;
 
             case self::TYPE_MISMATCH:
-                $message = __('One data is not the good type', 'datainjection_ca');
+                $message = __('One data is not the good type', 'datainjectionca');
                 break;
 
             case self::WARNING:
-                $message = __('Warning', 'datainjection_ca');
+                $message = __('Warning', 'datainjectionca');
                 break;
 
             case self::WARNING_NOTFOUND:
-                $message = __('Data not found', 'datainjection_ca');
+                $message = __('Data not found', 'datainjectionca');
                 break;
 
             default:
-                $message = __('Undetermined', 'datainjection_ca');
+                $message = __('Undetermined', 'datainjectionca');
                 break;
         }
 
