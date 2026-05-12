@@ -21,7 +21,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionCaCustomAssetRegistry
+class PluginDatainjectionCustomAssetRegistry
 {
     /** Cache of definition rows keyed by definition id. */
     private static ?array $definitions = null;
@@ -106,7 +106,7 @@ class PluginDatainjectionCaCustomAssetRegistry
     /**
      * Build (if needed) and return all injection class names for custom assets.
      *
-     * @return array Map of injection class name => 'datainjectionca'
+     * @return array Map of injection class name => 'datainjection'
      */
     public static function getInjectableTypes(): array
     {
@@ -114,7 +114,7 @@ class PluginDatainjectionCaCustomAssetRegistry
         foreach (self::getDefinitions() as $defId => $definition) {
             $cls = self::ensureInjectionClass($defId);
             if ($cls !== null) {
-                $types[$cls] = 'datainjectionca';
+                $types[$cls] = 'datainjection';
             }
         }
         return $types;
@@ -178,7 +178,7 @@ class PluginDatainjectionCaCustomAssetRegistry
     /**
      * Build a per-definition injection class via eval. The generated class
      * extends the asset's dynamic class and uses the common trait that
-     * implements PluginDatainjectionCaInjectionInterface.
+     * implements PluginDatainjectionInjectionInterface.
      */
     public static function ensureInjectionClass(int $defId): ?string
     {
@@ -198,11 +198,11 @@ class PluginDatainjectionCaCustomAssetRegistry
         }
 
         $suffix         = self::sanitizeIdentifier($def['system_name']);
-        $injectionClass = 'PluginDatainjectionCaCustomAsset' . $suffix . 'Injection';
+        $injectionClass = 'PluginDatainjectionCustomAsset' . $suffix . 'Injection';
 
         // Traits are not always handled by GLPI's plugin autoloader, so
         // include the file manually before generating the class.
-        if (!trait_exists('PluginDatainjectionCaCustomAssetInjectionTrait', false)) {
+        if (!trait_exists('PluginDatainjectionCustomAssetInjectionTrait', false)) {
             $traitFile = __DIR__ . '/customassetinjectiontrait.class.php';
             if (is_file($traitFile)) {
                 require_once $traitFile;
@@ -211,8 +211,8 @@ class PluginDatainjectionCaCustomAssetRegistry
 
         if (!class_exists($injectionClass, false)) {
             $code = sprintf(
-                'class %s extends \\%s implements PluginDatainjectionCaInjectionInterface {'
-                . ' use PluginDatainjectionCaCustomAssetInjectionTrait;'
+                'class %s extends \\%s implements PluginDatainjectionInjectionInterface {'
+                . ' use PluginDatainjectionCustomAssetInjectionTrait;'
                 . ' public static function getDefinitionId(): int { return %d; }'
                 . ' }',
                 $injectionClass,

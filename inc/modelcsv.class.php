@@ -58,13 +58,13 @@ use Glpi\Application\View\TemplateRenderer;
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionCaModelcsv extends CommonDBChild
+class PluginDatainjectionModelcsv extends CommonDBChild
 {
-    public static $rightname = "plugin_datainjectionca_model";
+    public static $rightname = "plugin_datainjection_model";
     public $specific_fields;
 
     // From CommonDBChild
-    public static $itemtype  = 'PluginDatainjectionCaModel';
+    public static $itemtype  = 'PluginDatainjectionModel';
     public static $items_id  = 'models_id';
     public $dohistory        = true;
 
@@ -110,12 +110,12 @@ class PluginDatainjectionCaModelcsv extends CommonDBChild
     /**
     * Display Sample
     *
-    * @param PluginDatainjectionCaModel $model     PluginDatainjectionCaModel object
+    * @param PluginDatainjectionModel $model     PluginDatainjectionModel object
    **/
-    public function showSample(PluginDatainjectionCaModel $model)
+    public function showSample(PluginDatainjectionModel $model)
     {
 
-        $headers = PluginDatainjectionCaMapping::getMappingsSortedByRank($model->fields['id']);
+        $headers = PluginDatainjectionMapping::getMappingsSortedByRank($model->fields['id']);
         $sample = '"' . implode('"' . $this->getDelimiter() . '"', $headers) . "\"\n";
 
         header(
@@ -155,7 +155,7 @@ class PluginDatainjectionCaModelcsv extends CommonDBChild
     *
     * @param int $models_id the model ID
     *
-    * @return int the ID of the row in glpi_plugin_datainjectionca_modelcsv
+    * @return int the ID of the row in glpi_plugin_datainjection_modelcsv
    **/
     public function getFromDBByModelID($models_id)
     {
@@ -185,10 +185,10 @@ class PluginDatainjectionCaModelcsv extends CommonDBChild
 
 
     /**
-    * @param PluginDatainjectionCaModel $model              PluginDatainjectionCaModel object
+    * @param PluginDatainjectionModel $model              PluginDatainjectionModel object
     * @param array $options   array
    **/
-    public function showAdditionnalForm(PluginDatainjectionCaModel $model, $options = [])
+    public function showAdditionnalForm(PluginDatainjectionModel $model, $options = [])
     {
         $id = $this->getFromDBByModelID($model->fields['id']);
         $canedit = $this->can($id, UPDATE);
@@ -199,7 +199,7 @@ class PluginDatainjectionCaModelcsv extends CommonDBChild
             'delimiter' => $this->getDelimiter(),
         ];
 
-        TemplateRenderer::getInstance()->display('@datainjectionca/modelcsv_additional_form.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjection/modelcsv_additional_form.html.twig', $data);
     }
 
 

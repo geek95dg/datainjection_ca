@@ -33,9 +33,9 @@ use Glpi\Application\View\TemplateRenderer;
 use function Safe\ob_get_clean;
 use function Safe\ob_start;
 
-class PluginDatainjectionCaMapping extends CommonDBTM
+class PluginDatainjectionMapping extends CommonDBTM
 {
-    public static $rightname = "plugin_datainjectionca_model";
+    public static $rightname = "plugin_datainjection_model";
 
     /**
     * @param string $field
@@ -94,17 +94,17 @@ class PluginDatainjectionCaMapping extends CommonDBTM
 
 
     /**
-    * @param PluginDatainjectionCaModel $model  PluginDatainjectionCaModel object
+    * @param PluginDatainjectionModel $model  PluginDatainjectionModel object
    **/
-    public static function showFormMappings(PluginDatainjectionCaModel $model)
+    public static function showFormMappings(PluginDatainjectionModel $model)
     {
         $canedit = $model->can($model->fields['id'], UPDATE);
-        $lines = isset($_SESSION['datainjectionca']['lines']) ? unserialize($_SESSION['datainjectionca']['lines']) : [];
+        $lines = isset($_SESSION['datainjection']['lines']) ? unserialize($_SESSION['datainjection']['lines']) : [];
 
-        $show_preview = isset($_SESSION['datainjectionca']['lines']) && !empty($lines);
+        $show_preview = isset($_SESSION['datainjection']['lines']) && !empty($lines);
         $preview_url = '';
         if ($show_preview) {
-            $preview_url = plugin_datainjectionca_geturl() . "front/popup.php?popup=preview&models_id=" . $model->getID();
+            $preview_url = plugin_datainjection_geturl() . "front/popup.php?popup=preview&models_id=" . $model->getID();
         }
 
         $model->loadMappings();
@@ -113,7 +113,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
         foreach ($model->getMappings() as $mapping) {
             ob_start();
             $options = ['primary_type' => $model->fields['itemtype']];
-            PluginDatainjectionCaInjectionType::dropdownLinkedTypes($mapping, $options);
+            PluginDatainjectionInjectionType::dropdownLinkedTypes($mapping, $options);
             $dropdown_html = ob_get_clean();
 
             $mappings[] = [
@@ -123,7 +123,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
             ];
         }
 
-        TemplateRenderer::getInstance()->display('@datainjectionca/mappings_form.html.twig', [
+        TemplateRenderer::getInstance()->display('@datainjection/mappings_form.html.twig', [
             'form_action'  => Toolbox::getItemTypeFormURL(self::class),
             'show_preview' => $show_preview,
             'preview_url'  => $preview_url,
@@ -149,7 +149,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
         $several = [];
         $query  = "SELECT `value`,
                         COUNT(*) AS counter
-                 FROM `glpi_plugin_datainjectionca_mappings`
+                 FROM `glpi_plugin_datainjection_mappings`
                  WHERE `models_id` = '" . $models_id . "'
                        AND `value` NOT IN ('none')
                  GROUP BY `value`
@@ -172,7 +172,7 @@ class PluginDatainjectionCaMapping extends CommonDBTM
 
         $mappings = [];
         $query    = "SELECT `name`
-                   FROM `glpi_plugin_datainjectionca_mappings`
+                   FROM `glpi_plugin_datainjection_mappings`
                    WHERE `models_id` = '" . $models_id . "'
                    ORDER BY `rank` ASC";
         foreach ($DB->doQuery($query) as $data) {

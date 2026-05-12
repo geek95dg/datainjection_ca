@@ -60,7 +60,7 @@
 
 
 
-class PluginDatainjectionCaLocationInjection extends Location implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionLocationInjection extends Location implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -90,7 +90,7 @@ class PluginDatainjectionCaLocationInjection extends Location implements PluginD
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
     */
     public function getOptions($primary_type = '')
     {
@@ -98,23 +98,23 @@ class PluginDatainjectionCaLocationInjection extends Location implements PluginD
         $tab           = Search::getOptions(get_parent_class($this));
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [14];
 
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
         $options['displaytype']   = ["multiline_text" => [16]];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
         $values = $this->fixLocationTreeStructure($values);
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

@@ -31,7 +31,7 @@
 /**
  * Interface to be implemented for each injection backend
 **/
-interface PluginDatainjectionCaBackendInterface
+interface PluginDatainjectionBackendInterface
 {
     /**
     * Read from file
@@ -50,7 +50,7 @@ interface PluginDatainjectionCaBackendInterface
     /**
     * Export results to a file
    **/
-    //function export($file, PluginDatainjectionCaModel $model, $tab_result);
+    //function export($file, PluginDatainjectionModel $model, $tab_result);
 
 
     /**

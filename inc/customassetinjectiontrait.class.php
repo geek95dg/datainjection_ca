@@ -15,7 +15,7 @@
  * -------------------------------------------------------------------------
  */
 
-trait PluginDatainjectionCaCustomAssetInjectionTrait
+trait PluginDatainjectionCustomAssetInjectionTrait
 {
     public function isPrimaryType()
     {
@@ -58,24 +58,24 @@ trait PluginDatainjectionCaCustomAssetInjectionTrait
         }
 
         $options = [
-            'ignore_fields' => PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions($parent),
+            'ignore_fields' => PluginDatainjectionCommonInjectionLib::getBlacklistedOptions($parent),
             'displaytype'   => [
                 'dropdown' => $this->collectDropdownOptionIds($tab),
                 'user'     => $this->collectUserOptionIds($tab),
             ],
         ];
 
-        $tab = PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        $tab = PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
 
         // Append per-definition custom fields. We use option ids well above
         // the 1000 reserved range and outside the template/standard space.
         $defId         = static::getDefinitionId();
-        $customFields  = PluginDatainjectionCaCustomAssetRegistry::getCustomFields($defId);
+        $customFields  = PluginDatainjectionCustomAssetRegistry::getCustomFields($defId);
         $nextId        = 5000;
         $table         = method_exists($parent, 'getTable') ? $parent::getTable() : 'glpi_assets_assets';
 
         foreach ($customFields as $field) {
-            $linkfield = PluginDatainjectionCaCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX . $field['key'];
+            $linkfield = PluginDatainjectionCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX . $field['key'];
             $displaytype = $this->mapCustomFieldDisplayType($field['type']);
             $checktype   = $this->mapCustomFieldCheckType($field['type']);
 
@@ -85,11 +85,11 @@ trait PluginDatainjectionCaCustomAssetInjectionTrait
                 'field'       => $linkfield,
                 'linkfield'   => $linkfield,
                 'name'        => sprintf(
-                    __('%1$s (custom field)', 'datainjectionca'),
+                    __('%1$s (custom field)', 'datainjection'),
                     $field['label'],
                 ),
                 'datatype'    => 'string',
-                'injectable'  => PluginDatainjectionCaCommonInjectionLib::FIELD_INJECTABLE,
+                'injectable'  => PluginDatainjectionCommonInjectionLib::FIELD_INJECTABLE,
                 'displaytype' => $displaytype,
                 'checktype'   => $checktype,
             ];
@@ -110,7 +110,7 @@ trait PluginDatainjectionCaCustomAssetInjectionTrait
     }
 
     /**
-     * Hook called by PluginDatainjectionCaCommonInjectionLib::effectiveAddOrUpdate
+     * Hook called by PluginDatainjectionCommonInjectionLib::effectiveAddOrUpdate
      * for both add and update. We extract custom field values from $fields,
      * encode them into the `custom_fields` JSON column and persist via the
      * underlying asset class.
@@ -123,7 +123,7 @@ trait PluginDatainjectionCaCustomAssetInjectionTrait
      */
     public function customimport($fields, $add, $rights)
     {
-        $prefix      = PluginDatainjectionCaCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX;
+        $prefix      = PluginDatainjectionCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX;
         $prefixLen   = strlen($prefix);
         $customValues = [];
 
@@ -190,7 +190,7 @@ trait PluginDatainjectionCaCustomAssetInjectionTrait
 
         foreach ($values as $key => $value) {
             // Treat the canonical empty marker as "unset"
-            if ($value === PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE) {
+            if ($value === PluginDatainjectionCommonInjectionLib::EMPTY_VALUE) {
                 unset($current[$key]);
                 continue;
             }

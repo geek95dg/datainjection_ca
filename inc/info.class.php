@@ -33,14 +33,14 @@ use Glpi\Application\View\TemplateRenderer;
 use function Safe\ob_start;
 use function Safe\ob_get_clean;
 
-class PluginDatainjectionCaInfo extends CommonDBTM
+class PluginDatainjectionInfo extends CommonDBTM
 {
-    public static $rightname = "plugin_datainjectionca_model";
+    public static $rightname = "plugin_datainjection_model";
 
     public function getEmpty()
     {
-        $this->fields['itemtype']     = PluginDatainjectionCaInjectionType::NO_VALUE;
-        $this->fields['value']        = PluginDatainjectionCaInjectionType::NO_VALUE;
+        $this->fields['itemtype']     = PluginDatainjectionInjectionType::NO_VALUE;
+        $this->fields['value']        = PluginDatainjectionInjectionType::NO_VALUE;
         $this->fields['is_mandatory'] = 0;
 
         return true;
@@ -73,10 +73,10 @@ class PluginDatainjectionCaInfo extends CommonDBTM
     }
 
     /**
-    * @param PluginDatainjectionCaModel $model     PluginDatainjectionCaModel object
+    * @param PluginDatainjectionModel $model     PluginDatainjectionModel object
     * @param boolean $canedit   (false by default)
    **/
-    public static function showAddInfo(PluginDatainjectionCaModel $model, $canedit = false)
+    public static function showAddInfo(PluginDatainjectionModel $model, $canedit = false)
     {
 
         if ($canedit) {
@@ -84,20 +84,20 @@ class PluginDatainjectionCaInfo extends CommonDBTM
              Toolbox::getItemTypeFormURL(self::class) . "'>";
             echo "<table class='tab_cadre_fixe'>";
             echo "<tr>";
-            echo "<th>" . __s('Tables', 'datainjectionca') . "</th>";
+            echo "<th>" . __s('Tables', 'datainjection') . "</th>";
             echo "<th>" . _sn('Field', 'Fields', 2) . "</th>";
-            echo "<th>" . __s('Mandatory information', 'datainjectionca') . "</th>";
+            echo "<th>" . __s('Mandatory information', 'datainjection') . "</th>";
             echo "</tr>";
 
             echo "<tr class='tab_bg_1'>";
             echo "<td class='center'>";
             $infos_id                  = -1;
-            $info                      = new PluginDatainjectionCaInfo();
+            $info                      = new PluginDatainjectionInfo();
             $info->fields['id']        = -1;
             $info->fields['models_id'] = $model->fields['id'];
             $info->getEmpty();
 
-            $rand = PluginDatainjectionCaInjectionType::dropdownLinkedTypes(
+            $rand = PluginDatainjectionInjectionType::dropdownLinkedTypes(
                 $info,
                 ['primary_type'
                                                                         => $model->fields['itemtype'],
@@ -124,9 +124,9 @@ class PluginDatainjectionCaInfo extends CommonDBTM
     /**
     * Display additional information form from Model form
     *
-    * @param PluginDatainjectionCaModel $model
+    * @param PluginDatainjectionModel $model
     */
-    public static function showFormInfos(PluginDatainjectionCaModel $model)
+    public static function showFormInfos(PluginDatainjectionModel $model)
     {
 
         $canedit = $model->can($model->fields['id'], UPDATE);
@@ -142,9 +142,9 @@ class PluginDatainjectionCaInfo extends CommonDBTM
             if ($canedit) {
                 echo "<th>&nbsp;</th>";
             }
-            echo "<th>" . __s('Tables', 'datainjectionca') . "</th>";
-            echo "<th>" . __s('Fields', 'datainjectionca') . "</th>";
-            echo "<th>" . __s('Mandatory information', 'datainjectionca') . "</th>";
+            echo "<th>" . __s('Tables', 'datainjection') . "</th>";
+            echo "<th>" . __s('Fields', 'datainjection') . "</th>";
+            echo "<th>" . __s('Mandatory information', 'datainjection') . "</th>";
             echo "</tr>";
 
             foreach ($model->getInfos() as $info) {
@@ -160,7 +160,7 @@ class PluginDatainjectionCaInfo extends CommonDBTM
                     echo "</td>";
                 }
                 echo "<td class='center'>";
-                $rand = PluginDatainjectionCaInjectionType::dropdownLinkedTypes(
+                $rand = PluginDatainjectionInjectionType::dropdownLinkedTypes(
                     $info,
                     ['primary_type'
                                                                           => $model->fields['itemtype'],
@@ -218,8 +218,8 @@ class PluginDatainjectionCaInfo extends CommonDBTM
                 $info_infos['id'] = $id;
                 //If no field selected, reset other values
 
-                if ($info_infos['value'] == PluginDatainjectionCaInjectionType::NO_VALUE) {
-                    $info_infos['itemtype']     = PluginDatainjectionCaInjectionType::NO_VALUE;
+                if ($info_infos['value'] == PluginDatainjectionInjectionType::NO_VALUE) {
+                    $info_infos['itemtype']     = PluginDatainjectionInjectionType::NO_VALUE;
                     $info_infos['is_mandatory'] = 0;
                 } else {
                     $info_infos['is_mandatory'] = (isset($info_infos['is_mandatory']) ? 1 : 0);
@@ -237,23 +237,23 @@ class PluginDatainjectionCaInfo extends CommonDBTM
 
         $info->deleteByCriteria(
             ['models_id' => $models_id,
-                'value'     => PluginDatainjectionCaInjectionType::NO_VALUE,
+                'value'     => PluginDatainjectionInjectionType::NO_VALUE,
             ],
         );
     }
 
 
     /**
-    * @param PluginDatainjectionCaModel $model     PluginDatainjectionCaModel object
+    * @param PluginDatainjectionModel $model     PluginDatainjectionModel object
    **/
-    public static function showAdditionalInformationsForm(PluginDatainjectionCaModel $model)
+    public static function showAdditionalInformationsForm(PluginDatainjectionModel $model)
     {
         $infos = getAllDataFromTable(
-            'glpi_plugin_datainjectionca_infos',
+            'glpi_plugin_datainjection_infos',
             ['models_id' => $model->getField('id')],
         );
 
-        $modeltype = PluginDatainjectionCaModel::getInstance($model->getField('filetype'));
+        $modeltype = PluginDatainjectionModel::getInstance($model->getField('filetype'));
         $modeltype->getFromDBByModelID($model->getField('id'));
 
         $rendered_infos = [];
@@ -262,7 +262,7 @@ class PluginDatainjectionCaInfo extends CommonDBTM
             $info->fields = $info_data;
 
             ob_start();
-            self::displayAdditionalInformation($info, $_SESSION['datainjectionca']['infos'] ?? []);
+            self::displayAdditionalInformation($info, $_SESSION['datainjection']['infos'] ?? []);
             $rendered_infos[] = ob_get_clean();
         }
 
@@ -273,33 +273,33 @@ class PluginDatainjectionCaInfo extends CommonDBTM
             'modeltype' => $modeltype,
             'has_sample' => $modeltype->haveSample(),
             'comment' => $model->fields['comment'],
-            'session_infos' => $_SESSION['datainjectionca']['infos'] ?? [],
+            'session_infos' => $_SESSION['datainjection']['infos'] ?? [],
         ];
 
         // Store models_id in session for future usage
-        $_SESSION['datainjectionca']['models_id'] = $model->getField('id');
+        $_SESSION['datainjection']['models_id'] = $model->getField('id');
 
         // Render the Twig template
-        TemplateRenderer::getInstance()->display('@datainjectionca/infoadditionnalinfo.html.twig', $data);
+        TemplateRenderer::getInstance()->display('@datainjection/infoadditionnalinfo.html.twig', $data);
 
         // Show the upload file form
         $options['models_id'] = $model->getField('id');
         $options['confirm'] = 'process';
-        PluginDatainjectionCaClientInjection::showUploadFileForm($options);
+        PluginDatainjectionClientInjection::showUploadFileForm($options);
     }
 
 
     /**
-    * @param PluginDatainjectionCaInfo $info               PluginDatainjectionCaInfo object
+    * @param PluginDatainjectionInfo $info               PluginDatainjectionInfo object
     * @param array $values    array
     */
-    public static function displayAdditionalInformation(PluginDatainjectionCaInfo $info, $values = [])
+    public static function displayAdditionalInformation(PluginDatainjectionInfo $info, $values = [])
     {
 
         $injectionClass
-        = PluginDatainjectionCaCommonInjectionLib::getInjectionClassInstance($info->fields['itemtype']);
+        = PluginDatainjectionCommonInjectionLib::getInjectionClassInstance($info->fields['itemtype']);
         $option
-        = PluginDatainjectionCaCommonInjectionLib::findSearchOption(
+        = PluginDatainjectionCommonInjectionLib::findSearchOption(
             $injectionClass->getOptions($info->fields['itemtype']),
             $info->fields['value'],
         );
@@ -314,14 +314,14 @@ class PluginDatainjectionCaInfo extends CommonDBTM
     /**
      * Display command additional informations
      *
-     * @param PluginDatainjectionCaInfo $info
+     * @param PluginDatainjectionInfo $info
      * @param array $option
-     * @param PluginDatainjectionCaInjectionInterface $injectionClass
+     * @param PluginDatainjectionInjectionInterface $injectionClass
      *
      * @return void
      */
     public static function showAdditionalInformation(
-        PluginDatainjectionCaInfo $info,
+        PluginDatainjectionInfo $info,
         $option,
         $injectionClass,
         $values = []
@@ -329,8 +329,8 @@ class PluginDatainjectionCaInfo extends CommonDBTM
 
         $name = "info[" . $option['linkfield'] . "]";
 
-        if (isset($_SESSION['datainjectionca']['infos'][$option['linkfield']])) {
-            $value = $_SESSION['datainjectionca']['infos'][$option['linkfield']];
+        if (isset($_SESSION['datainjection']['infos'][$option['linkfield']])) {
+            $value = $_SESSION['datainjection']['infos'][$option['linkfield']];
         } else {
             $value = '';
         }
@@ -425,16 +425,16 @@ class PluginDatainjectionCaInfo extends CommonDBTM
 
 
     /**
-    * @param PluginDatainjectionCaInfo $info      PluginDatainjectionCaInfo object
+    * @param PluginDatainjectionInfo $info      PluginDatainjectionInfo object
     * @param string $value
    **/
-    public static function keepInfo(PluginDatainjectionCaInfo $info, $value)
+    public static function keepInfo(PluginDatainjectionInfo $info, $value)
     {
 
         $itemtype       = $info->getInfosType();
-        $injectionClass = PluginDatainjectionCaCommonInjectionLib::getInjectionClassInstance($itemtype);
+        $injectionClass = PluginDatainjectionCommonInjectionLib::getInjectionClassInstance($itemtype);
         $options        = $injectionClass->getOptions($itemtype);
-        $option         = PluginDatainjectionCaCommonInjectionLib::findSearchOption(
+        $option         = PluginDatainjectionCommonInjectionLib::findSearchOption(
             $options,
             $info->getValue(),
         );
@@ -444,12 +444,12 @@ class PluginDatainjectionCaInfo extends CommonDBTM
                 default:
                 case 'text':
                 case 'multiline_text':
-                    return $value != PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE;
+                    return $value != PluginDatainjectionCommonInjectionLib::EMPTY_VALUE;
 
                 case 'dropdown':
                 case 'user':
                 case 'contact':
-                    return $value != PluginDatainjectionCaCommonInjectionLib::DROPDOWN_EMPTY_VALUE;
+                    return $value != PluginDatainjectionCommonInjectionLib::DROPDOWN_EMPTY_VALUE;
             }
         }
     }

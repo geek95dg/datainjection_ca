@@ -38,5 +38,5 @@ $offset     = (int) ($_POST['offset'] ?? 0);
 $batch_size = (int) ($_POST['batch_size'] ?? 10);
 
 echo json_encode(
-    PluginDatainjectionCaClientInjection::processBatch($offset, $batch_size),
+    PluginDatainjectionClientInjection::processBatch($offset, $batch_size),
 );

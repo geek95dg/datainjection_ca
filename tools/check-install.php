@@ -5,20 +5,20 @@
  *
  * Run from the GLPI root, e.g.
  *
- *     sudo -u www-data php plugins/datainjectionca/tools/check-install.php
+ *     sudo -u www-data php plugins/datainjection/tools/check-install.php
  *
  * Reports exactly what GLPI sees: which plugin directories are scanned,
- * whether `datainjectionca` is present, and whether its setup.php exposes
- * the required `plugin_version_datainjectionca()` function.
+ * whether `datainjection` is present, and whether its setup.php exposes
+ * the required `plugin_version_datainjection()` function.
  */
 
-const EXPECTED_KEY = 'datainjectionca';
+const EXPECTED_KEY = 'datainjection';
 
 $glpiRoot = dirname(__DIR__, 3);
 $inc      = $glpiRoot . '/inc/includes.php';
 if (!is_file($inc)) {
     fwrite(STDERR, "Cannot find GLPI at {$glpiRoot}/inc/includes.php\n");
-    fwrite(STDERR, "Run this script from inside <glpi_root>/plugins/datainjectionca/tools/\n");
+    fwrite(STDERR, "Run this script from inside <glpi_root>/plugins/datainjection/tools/\n");
     exit(1);
 }
 include_once $inc;

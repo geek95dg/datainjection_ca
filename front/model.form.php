@@ -38,7 +38,7 @@ if (!isset($_GET["withtemplate"])) {
     $_GET["withtemplate"] = "";
 }
 
-$model = new PluginDatainjectionCaModel();
+$model = new PluginDatainjectionModel();
 $model->checkGlobal(READ);
 
 if (isset($_POST["add"])) {
@@ -47,8 +47,8 @@ if (isset($_POST["add"])) {
     $newID = $model->add($_POST);
 
     //Set display to the advanced options tab
-    Session::setActiveTab('PluginDatainjectionCaModel', 'PluginDatainjectionCaModel$3');
-    Html::redirect(Toolbox::getItemTypeFormURL('PluginDatainjectionCaModel') . "?id=$newID");
+    Session::setActiveTab('PluginDatainjectionModel', 'PluginDatainjectionModel$3');
+    Html::redirect(Toolbox::getItemTypeFormURL('PluginDatainjectionModel') . "?id=$newID");
 } elseif (isset($_POST["delete"])) {
     /* delete */
     $model->check($_POST['id'], DELETE);
@@ -60,7 +60,7 @@ if (isset($_POST["add"])) {
     $model->check($_POST['id'], UPDATE);
     $model->update($_POST);
 
-    $specific_model = PluginDatainjectionCaModel::getInstance('csv');
+    $specific_model = PluginDatainjectionModel::getInstance('csv');
     $specific_model->saveFields($_POST);
     Html::back();
 } elseif (isset($_POST["purge"])) {
@@ -81,14 +81,14 @@ if (isset($_POST["add"])) {
             $model->processUploadedFile(
                 [
                     'file_encoding' => 'csv',
-                    'mode'          => PluginDatainjectionCaModel::CREATION,
+                    'mode'          => PluginDatainjectionModel::CREATION,
                 ],
             )
         ) {
-            Session::setActiveTab('PluginDatainjectionCaModel', 'PluginDatainjectionCaModel$4');
+            Session::setActiveTab('PluginDatainjectionModel', 'PluginDatainjectionModel$4');
         } else {
             Session::addMessageAfterRedirect(
-                __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjectionca'),
+                __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjection'),
                 true,
                 ERROR,
                 true,
@@ -98,14 +98,14 @@ if (isset($_POST["add"])) {
     Html::back();
 } elseif (isset($_GET['sample'])) {
     $model->check($_GET['sample'], READ);
-    $modeltype = PluginDatainjectionCaModel::getInstance($model->getField('filetype'));
+    $modeltype = PluginDatainjectionModel::getInstance($model->getField('filetype'));
     $modeltype->getFromDBByModelID($model->getField('id'));
     $modeltype->showSample($model);
     return;
 }
 
 Html::header(
-    PluginDatainjectionCaModel::getTypeName(),
+    PluginDatainjectionModel::getTypeName(),
     '',
     "tools",
     "plugindatainjectionmenu",

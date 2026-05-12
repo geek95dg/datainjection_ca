@@ -28,6 +28,6 @@
  * -------------------------------------------------------------------------
  */
 
-Session::checkRight(PluginDatainjectionCaClientInjection::$rightname, READ);
+Session::checkRight(PluginDatainjectionClientInjection::$rightname, READ);
 
-PluginDatainjectionCaClientInjection::exportErrorsInCSV();
+PluginDatainjectionClientInjection::exportErrorsInCSV();

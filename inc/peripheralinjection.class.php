@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaPeripheralInjection extends Peripheral implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionPeripheralInjection extends Peripheral implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -59,7 +59,7 @@ class PluginDatainjectionCaPeripheralInjection extends Peripheral implements Plu
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -70,7 +70,7 @@ class PluginDatainjectionCaPeripheralInjection extends Peripheral implements Plu
         $tab[3]['linkfield'] = 'locations_id';
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [91, 92, 93];
 
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
@@ -81,17 +81,17 @@ class PluginDatainjectionCaPeripheralInjection extends Peripheral implements Plu
             "multiline_text" => [16, 90],
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

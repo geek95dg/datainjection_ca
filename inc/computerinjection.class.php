@@ -31,7 +31,7 @@
 
 
 /// Computer class
-class PluginDatainjectionCaComputerInjection extends Computer implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionComputerInjection extends Computer implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -61,7 +61,7 @@ class PluginDatainjectionCaComputerInjection extends Computer implements PluginD
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -75,10 +75,10 @@ class PluginDatainjectionCaComputerInjection extends Computer implements PluginD
         $tab[71]['linkfield'] = 'groups_id_normal';
 
         //specific for antiviruses
-        $tab[167]['name'] = __('Antivirus name', 'datainjectionca');
+        $tab[167]['name'] = __('Antivirus name', 'datainjection');
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [
             10, 11, 12, 13, 14, 15, 19, 34, 35, 36, 39,
             //OS fields
@@ -96,17 +96,17 @@ class PluginDatainjectionCaComputerInjection extends Computer implements PluginD
             "multiline_text" => [16, 90],
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

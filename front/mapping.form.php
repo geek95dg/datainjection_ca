@@ -28,19 +28,19 @@
  * -------------------------------------------------------------------------
  */
 
-Session::checkRight('plugin_datainjectionca_model', UPDATE);
+Session::checkRight('plugin_datainjection_model', UPDATE);
 
 /* Update mappings */
 if (isset($_POST["update"])) {
     $at_least_one_mandatory = false;
-    $mapping                = new PluginDatainjectionCaMapping();
+    $mapping                = new PluginDatainjectionMapping();
 
     foreach ($_POST['data'] as $id => $mapping_infos) {
         $mapping_infos['id'] = $id;
 
         //If no field selected, reset other values
-        if ($mapping_infos['value'] == PluginDatainjectionCaInjectionType::NO_VALUE) {
-            $mapping_infos['itemtype']     = PluginDatainjectionCaInjectionType::NO_VALUE;
+        if ($mapping_infos['value'] == PluginDatainjectionInjectionType::NO_VALUE) {
+            $mapping_infos['itemtype']     = PluginDatainjectionInjectionType::NO_VALUE;
             $mapping_infos['is_mandatory'] = 0;
         } else {
             $mapping_infos['is_mandatory'] = (isset($mapping_infos['is_mandatory']) ? 1 : 0);
@@ -57,30 +57,30 @@ if (isset($_POST["update"])) {
         Session::addMessageAfterRedirect(
             __s(
                 'One link field must be selected: it will be used to check if data already exists',
-                'datainjectionca',
+                'datainjection',
             ),
             true,
             ERROR,
             true,
         );
     } else {
-        $model = new PluginDatainjectionCaModel();
+        $model = new PluginDatainjectionModel();
         $model->getFromDB($_POST['models_id']);
 
-        if ($model->fields['step'] != PluginDatainjectionCaModel::READY_TO_USE_STEP) {
-            PluginDatainjectionCaModel::changeStep(
+        if ($model->fields['step'] != PluginDatainjectionModel::READY_TO_USE_STEP) {
+            PluginDatainjectionModel::changeStep(
                 $_POST['models_id'],
-                PluginDatainjectionCaModel::OTHERS_STEP,
+                PluginDatainjectionModel::OTHERS_STEP,
             );
-            Session::setActiveTab('PluginDatainjectionCaModel', 'PluginDatainjectionCaModel$5');
+            Session::setActiveTab('PluginDatainjectionModel', 'PluginDatainjectionModel$5');
             Session::addMessageAfterRedirect(
                 __s(
                     "This step allows you to add informations not present in the file. You'll be asked for theses informations while using the model.",
-                    'datainjectionca',
+                    'datainjection',
                 ),
             );
         }
-        unset($_SESSION['datainjectionca']['lines']);
+        unset($_SESSION['datainjection']['lines']);
     }
 }
 

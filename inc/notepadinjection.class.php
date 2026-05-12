@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionCaNotepadInjection extends Notepad implements PluginDatainjectionCaInjectionInterface
+class PluginDatainjectionNotepadInjection extends Notepad implements PluginDatainjectionInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -62,7 +62,7 @@ class PluginDatainjectionCaNotepadInjection extends Notepad implements PluginDat
     }
 
     /**
-     * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
+     * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
     **/
     public function getOptions($primary_type = '')
     {
@@ -87,17 +87,17 @@ class PluginDatainjectionCaNotepadInjection extends Notepad implements PluginDat
 
         ];
 
-        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($searchoptions, $options, $this);
+        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($searchoptions, $options, $this);
     }
 
 
     /**
-     * @see plugins/datainjectionca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
+     * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
     **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }
