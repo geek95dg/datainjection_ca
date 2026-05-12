@@ -87,16 +87,13 @@ class PluginDatainjectionClientInjection
             'models' => PluginDatainjectionModel::getModels(Session::getLoginUserID(), 'name', $_SESSION['glpiactive_entity'], false),
             'can_create_model' => Session::haveRight('plugin_datainjection_model', CREATE),
             'model_type_name' => PluginDatainjectionModel::getTypeName(),
-            // Coerce to int so the twig template never emits a bare
-            // `const modelId = ;` when the session has no value (which the
-            // browser parses as a SyntaxError).
-            'models_id' => (int) (PluginDatainjectionSession::getParam('models_id') ?: 0),
-            'step' => (int) (PluginDatainjectionSession::getParam('step') ?: 0),
+            'models_id' => PluginDatainjectionSession::getParam('models_id'),
+            'step' => PluginDatainjectionSession::getParam('step'),
             'upload_url' => $CFG_GLPI['root_doc'] . "/plugins/datainjection/ajax/dropdownSelectModel.php",
             'result_url' => $CFG_GLPI['root_doc'] . "/plugins/datainjection/ajax/results.php",
             'params' => ['models_id' => PluginDatainjectionSession::getParam('models_id')],
             'upload_step' => self::STEP_UPLOAD,
-            'result_step' => (int) self::STEP_RESULT,
+            'result_step' => self::STEP_RESULT,
         ]);
     }
 

@@ -5,12 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.16.3] - 2026-05-12
-
-### Fixed
-
-- `clientinjection.html.twig` no longer renders a bare `const modelId = ;` (and similarly for `step` / `resultStep`) when the corresponding session keys are unset, which was throwing `Uncaught SyntaxError: Unexpected token ';'` on every load of `front/clientinjection.form.php`. PHP-side, `models_id`, `step`, and `result_step` are coerced to `int` (defaulting to 0) before being passed to the template.
-
 ## [2.16.2] - 2026-05-12
 
 ### Changed
