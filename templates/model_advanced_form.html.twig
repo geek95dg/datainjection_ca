@@ -60,8 +60,10 @@
 
             {% if values['step'] == '' or values['step'] == initial_step %}
                 {{ fields.dropdownArrayField('itemtype', values['itemtype'], injection_types, __('Type of data to import', 'datainjection'), field_options) }}
+                {{ fields.dropdownArrayField('filetype', values['filetype']|default('csv'), file_types, __('File format', 'datainjection'), field_options) }}
             {% else %}
                 {{ fields.htmlField('itemtype', values['itemtype'], __('Type of data to import', 'datainjection'), field_options) }}
+                {{ fields.htmlField('filetype', values['filetype']|default('csv'), __('File format', 'datainjection'), field_options) }}
             {% endif %}
 
             {{ fields.textareaField('comment', values['comment'], __('Comments'), field_options) }}

@@ -218,6 +218,20 @@ function getTypesToInject(): void
         'PluginDatainjectionApplianceInjection'                   => 'datainjection',
         'PluginDatainjectionCertificateInjection'                 => 'datainjection',
     ];
+
+    // GLPI 11 custom assets: enumerate AssetDefinitions and expose each one
+    // as an injectable type. Failures (e.g. during install before tables
+    // exist) are swallowed so the plugin still boots.
+    try {
+        if (class_exists('PluginDatainjectionCustomAssetRegistry')) {
+            foreach (PluginDatainjectionCustomAssetRegistry::getInjectableTypes() as $cls => $origin) {
+                $INJECTABLE_TYPES[$cls] = $origin;
+            }
+        }
+    } catch (\Throwable $e) {
+        // Best effort; the plugin must still load if custom assets fail.
+    }
+
     //Add plugins
     Plugin::doHook('plugin_datainjection_populate');
 }
