@@ -222,10 +222,12 @@ class PluginDatainjectionCustomAssetRegistry
             try {
                 eval($code);
             } catch (\Throwable $e) {
-                Toolbox::logError(
-                    'datainjection: failed to build injection class for custom asset '
-                    . $def['system_name'] . ': ' . $e->getMessage(),
-                );
+                if (class_exists('PluginDatainjectionLogger')) {
+                    PluginDatainjectionLogger::exception(
+                        $e,
+                        'failed to build injection class for custom asset ' . $def['system_name'],
+                    );
+                }
                 return null;
             }
         }
