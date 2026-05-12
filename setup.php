@@ -28,8 +28,13 @@
  * -------------------------------------------------------------------------
  */
 
-use function Safe\define;
-use function Safe\mkdir;
+// Intentionally NOT using `use function Safe\define;` here. When this plugin
+// lives under `<glpi>/plugins/` (as opposed to `marketplace/`), GLPI does not
+// load the plugin's local composer autoload first, so `Safe\define` may not
+// be resolvable when setup.php is included. The Safe wrappers throw on error;
+// PHP's built-in `define`/`mkdir` only emit a warning. For our purposes that
+// is fine — and it lets `glpi:plugin:install` succeed regardless of how the
+// plugin is deployed.
 
 define('PLUGIN_DATAINJECTION_CA_VERSION', '2.15.6');
 
@@ -85,7 +90,7 @@ function plugin_init_datainjectionca()
 
         //If directory doesn't exists, create it
         if (!plugin_datainjectionca_checkDirectories()) {
-            @ mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
+            @\mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
         }
         $PLUGIN_HOOKS["config_page"]['datainjectionca'] = "front/clientinjection.form.php";
 

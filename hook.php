@@ -28,7 +28,8 @@
  * -------------------------------------------------------------------------
  */
 
-use function Safe\mkdir;
+// Intentionally NOT importing `Safe\mkdir` — see setup.php for the rationale.
+// Plain PHP `mkdir` (the global-namespace form below) is used instead.
 
 function plugin_datainjectionca_install()
 {
@@ -123,7 +124,7 @@ function plugin_datainjectionca_install()
             $DB->doQuery($query);
 
             if (!is_dir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR)) {
-                @ mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
+                @\mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
             }
 
             PluginDatainjectionCaProfile::createFirstAccess($_SESSION["glpiactiveprofile"]["id"]);
@@ -137,7 +138,7 @@ function plugin_datainjectionca_install()
 
             //When updating, check if the upload folder is already present
             if (!is_dir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR)) {
-                @ mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
+                @\mkdir(PLUGIN_DATAINJECTION_CA_UPLOAD_DIR);
             }
 
             //Old temporary directory, needs to be removed !
