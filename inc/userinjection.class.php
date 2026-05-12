@@ -30,7 +30,7 @@
 
 use function Safe\preg_split;
 
-class PluginDatainjectionUserInjection extends User implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaUserInjection extends User implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -73,7 +73,7 @@ class PluginDatainjectionUserInjection extends User implements PluginDatainjecti
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -114,7 +114,7 @@ class PluginDatainjectionUserInjection extends User implements PluginDatainjecti
         $tab[101]['relationfield'] = $tab[101]['linkfield'];
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [13, 14, 15, 17, 20, 23, 30, 31, 60, 61, 91, 92, 93];
 
         $options['ignore_fields']  = array_merge($blacklist, $notimportable);
@@ -133,17 +133,17 @@ class PluginDatainjectionUserInjection extends User implements PluginDatainjecti
             "password"       => [4],
         ];
 
-        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

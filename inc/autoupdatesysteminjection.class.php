@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionAutoUpdateSystemInjection extends AutoUpdateSystem implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaAutoUpdateSystemInjection extends AutoUpdateSystem implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -65,13 +65,13 @@ class PluginDatainjectionAutoUpdateSystemInjection extends AutoUpdateSystem impl
         $tab       = Search::getOptions(get_parent_class($this));
 
         //Remove some options because some fields cannot be imported
-        $blacklist = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable            = [];
         $options['ignore_fields'] = array_merge($blacklist, $notimportable);
 
         $options['displaytype']   = ["multiline_text" => [16]];
 
-        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
@@ -86,7 +86,7 @@ class PluginDatainjectionAutoUpdateSystemInjection extends AutoUpdateSystem impl
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

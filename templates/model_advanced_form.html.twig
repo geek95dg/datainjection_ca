@@ -43,7 +43,7 @@
             </div>
             {# Status Fields #}
             {% if not item.isNewItem() %}
-                {{ fields.htmlField('', status_label, __('Model status', 'datainjection'), field_options) }}
+                {{ fields.htmlField('', status_label, __('Model status', 'datainjection_ca'), field_options) }}
                 {{ fields.nullField() }}
             {% endif %}
 
@@ -59,35 +59,35 @@
             {{ fields.dropdownYesNo('is_recursive', values['is_recursive'], __('Child entities'), field_options) }}
 
             {% if values['step'] == '' or values['step'] == initial_step %}
-                {{ fields.dropdownArrayField('itemtype', values['itemtype'], injection_types, __('Type of data to import', 'datainjection'), field_options) }}
-                {{ fields.dropdownArrayField('filetype', values['filetype']|default('csv'), file_types, __('File format', 'datainjection'), field_options) }}
+                {{ fields.dropdownArrayField('itemtype', values['itemtype'], injection_types, __('Type of data to import', 'datainjection_ca'), field_options) }}
+                {{ fields.dropdownArrayField('filetype', values['filetype']|default('csv'), file_types, __('File format', 'datainjection_ca'), field_options) }}
             {% else %}
-                {{ fields.htmlField('itemtype', values['itemtype'], __('Type of data to import', 'datainjection'), field_options) }}
-                {{ fields.htmlField('filetype', values['filetype']|default('csv'), __('File format', 'datainjection'), field_options) }}
+                {{ fields.htmlField('itemtype', values['itemtype'], __('Type of data to import', 'datainjection_ca'), field_options) }}
+                {{ fields.htmlField('filetype', values['filetype']|default('csv'), __('File format', 'datainjection_ca'), field_options) }}
             {% endif %}
 
             {{ fields.textareaField('comment', values['comment'], __('Comments'), field_options) }}
 
-            {{ fields.dropdownYesNo('behavior_add', values['behavior_add'], __('Allow lines creation', 'datainjection'), field_options) }}
+            {{ fields.dropdownYesNo('behavior_add', values['behavior_add'], __('Allow lines creation', 'datainjection_ca'), field_options) }}
 
-            {{ fields.dropdownYesNo('behavior_update', values['behavior_update'], __('Allow lines update', 'datainjection'), field_options) }}
+            {{ fields.dropdownYesNo('behavior_update', values['behavior_update'], __('Allow lines update', 'datainjection_ca'), field_options) }}
 
             {# Advanced options part #}
             <div class="hr-text mt-5 mb-5">
                 <i class="fa-2x ti ti-adjustments-cog"></i>
-                <span>{{ __('Advanced options', 'datainjection') }}</span>
+                <span>{{ __('Advanced options', 'datainjection_ca') }}</span>
             </div>
 
-            {{ fields.dropdownYesNo('can_add_dropdown', values['can_add_dropdown'], __('Allow creation of dropdowns (Except Entity)', 'datainjection'), field_options) }}
+            {{ fields.dropdownYesNo('can_add_dropdown', values['can_add_dropdown'], __('Allow creation of dropdowns (Except Entity)', 'datainjection_ca'), field_options) }}
 
-            {{ fields.dropdownArrayField('date_format', values['date_format'], date_formats, __('Dates format', 'datainjection'), field_options) }}
+            {{ fields.dropdownArrayField('date_format', values['date_format'], date_formats, __('Dates format', 'datainjection_ca'), field_options) }}
 
-            {{ fields.dropdownYesNo('can_overwrite_if_not_empty', values['can_overwrite_if_not_empty'], __('Allow update of existing fields', 'datainjection'), field_options) }}
+            {{ fields.dropdownYesNo('can_overwrite_if_not_empty', values['can_overwrite_if_not_empty'], __('Allow update of existing fields', 'datainjection_ca'), field_options) }}
 
-            {{ fields.dropdownArrayField('float_format', values['float_format'], float_formats, __('Float format', 'datainjection'), field_options) }}
+            {{ fields.dropdownArrayField('float_format', values['float_format'], float_formats, __('Float format', 'datainjection_ca'), field_options) }}
 
-            {{ fields.dropdownArrayField('port_unicity', values['port_unicity'], port_unicity_values, __('Port unicity criteria', 'datainjection'), field_options) }}
+            {{ fields.dropdownArrayField('port_unicity', values['port_unicity'], port_unicity_values, __('Port unicity criteria', 'datainjection_ca'), field_options) }}
 
-            {{ fields.dropdownYesNo('replace_multiline_value', replace_multiline_value, __('Replacing the value of multiline text fields', 'datainjection'), field_options) }}
+            {{ fields.dropdownYesNo('replace_multiline_value', replace_multiline_value, __('Replacing the value of multiline text fields', 'datainjection_ca'), field_options) }}
         </div>
     </div>

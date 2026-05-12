@@ -34,7 +34,7 @@
 {% endif %}
     <div class="hr-text mt-5 mb-5">
         <i class="fa-2x ti ti-file-arrow-left"></i>
-        <span>{{ __('File to inject', 'datainjection') }}</span>
+        <span>{{ __('File to inject', 'datainjection_ca') }}</span>
     </div>
 
     <input type="hidden" name="id" value="{{ models_id }}">
@@ -42,7 +42,7 @@
     {{ fields.htmlField(
         'filename',
         '<input type="file" name="filename">',
-        __('Choose a file', 'datainjection'),
+        __('Choose a file', 'datainjection_ca'),
         {
             'add_field_class'   : 'col-sm-12',
             'label_class'       : 'col-5 col-sm-5',
@@ -53,7 +53,7 @@
         'file_encoding',
         2,
         file_encoding_values,
-        __('File encoding', 'datainjection'),
+        __('File encoding', 'datainjection_ca'),
         {
             'add_field_class'   : 'col-sm-12',
             'label_class'       : 'col-5 col-sm-5',
@@ -65,9 +65,9 @@
     <div class="center pt-2">
         {% if confirm %}
             {% if confirm == 'creation' %}
-                {% set message = __('Warning : existing mapped column will be overridden', 'datainjection') %}
+                {% set message = __('Warning : existing mapped column will be overridden', 'datainjection_ca') %}
             {% else %}
-                {% set message = __("Watch out, you're about to inject data into GLPI. Are you sure you want to do it ?", 'datainjection') %}
+                {% set message = __("Watch out, you're about to inject data into GLPI. Are you sure you want to do it ?", 'datainjection_ca') %}
             {% endif %}
             <input type="submit" class="btn btn-primary" name="upload" value="{{ submit_label }}" onclick="return window.confirm('{{ message }}');">
         {% else %}

@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionItem_OperatingsystemInjection extends Item_OperatingSystem implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaItem_OperatingsystemInjection extends Item_OperatingSystem implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -51,7 +51,7 @@ class PluginDatainjectionItem_OperatingsystemInjection extends Item_OperatingSys
     }
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
   **/
     public function getOptions($primary_type = '')
     {
@@ -76,7 +76,7 @@ class PluginDatainjectionItem_OperatingsystemInjection extends Item_OperatingSys
             ],
             "text" => [43, 44],
         ];
-        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($searchoptions, $options, $this);
+        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($searchoptions, $options, $this);
     }
 
     public function connectedTo()
@@ -89,19 +89,19 @@ class PluginDatainjectionItem_OperatingsystemInjection extends Item_OperatingSys
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }
 
 
     /**
-     * @param PluginDatainjectionInjectionInterface $injectionClass
+     * @param PluginDatainjectionCaInjectionInterface $injectionClass
      * @param array $values
      * @param array $options
     **/

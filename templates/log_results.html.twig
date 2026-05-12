@@ -32,16 +32,16 @@
     <div>
       <div class="hr-text mt-5 mb-5">
           <i class="fa-2x ti ti-progress-check"></i>
-          <span>{{ __('Array of successful injections', 'datainjection') }}</span>
+          <span>{{ __('Array of successful injections', 'datainjection_ca') }}</span>
       </div>
       <table class="table table-striped card-table table-hover">
         <thead>
           <tr>
             <th></th>
-            <th>{{ __('Line', 'datainjection') }}</th>
-            <th>{{ __('Data Import', 'datainjection') }}</th>
-            <th>{{ __('Injection type', 'datainjection') }}</th>
-            <th>{{ __('Object Identifier', 'datainjection') }}</th>
+            <th>{{ __('Line', 'datainjection_ca') }}</th>
+            <th>{{ __('Data Import', 'datainjection_ca') }}</th>
+            <th>{{ __('Injection type', 'datainjection_ca') }}</th>
+            <th>{{ __('Object Identifier', 'datainjection_ca') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -63,17 +63,17 @@
     <div>
       <div class="hr-text mt-5 mb-5">
           <i class="fa-2x ti ti-progress-x"></i>
-          <span>{{ __('Array of failed injections', 'datainjection') }}</span>
+          <span>{{ __('Array of failed injections', 'datainjection_ca') }}</span>
       </div>
       <table class="table table-striped card-table table-hover">
         <thead>
           <tr>
             <th></th>
-            <th>{{ __('Line', 'datainjection') }}</th>
-            <th>{{ __('Data check', 'datainjection') }}</th>
-            <th>{{ __('Data Import', 'datainjection') }}</th>
-            <th>{{ __('Injection type', 'datainjection') }}</th>
-            <th>{{ __('Object Identifier', 'datainjection') }}</th>
+            <th>{{ __('Line', 'datainjection_ca') }}</th>
+            <th>{{ __('Data check', 'datainjection_ca') }}</th>
+            <th>{{ __('Data Import', 'datainjection_ca') }}</th>
+            <th>{{ __('Injection type', 'datainjection_ca') }}</th>
+            <th>{{ __('Object Identifier', 'datainjection_ca') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -96,16 +96,16 @@
     <div>
       <div class="hr-text mt-5 mb-5">
           <i class="fa-2x ti ti-report"></i>
-          <span>{{ __('Global report', 'datainjection') }}</span>
+          <span>{{ __('Global report', 'datainjection_ca') }}</span>
       </div>
-      <p><em>{{ __('Number of lines processed', 'datainjection') }} : {{ nblines }}</em></p>
+      <p><em>{{ __('Number of lines processed', 'datainjection_ca') }} : {{ nblines }}</em></p>
       <table class="table table-striped card-table table-hover">
         <thead>
           <tr>
             <th></th>
-            <th>{{ __('Data Import', 'datainjection') }}</th>
-            <th>{{ __('Injection type', 'datainjection') }}</th>
-            <th>{{ __('Counter', 'datainjection') }}</th>
+            <th>{{ __('Data Import', 'datainjection_ca') }}</th>
+            <th>{{ __('Injection type', 'datainjection_ca') }}</th>
+            <th>{{ __('Counter', 'datainjection_ca') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -120,7 +120,7 @@
               {% endif %}
             </td>
             <td rowspan="{{ rowspan }}">
-              {% set label = call('PluginDatainjectionCommonInjectionLib::getLogLabel', [status])|raw %}
+              {% set label = call('PluginDatainjectionCaCommonInjectionLib::getLogLabel', [status])|raw %}
               {{ label }}
             </td>
             {% for type, value in types %}

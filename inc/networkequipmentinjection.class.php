@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionNetworkEquipmentInjection extends NetworkEquipment implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaNetworkEquipmentInjection extends NetworkEquipment implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTable($classname = null)
     {
@@ -60,7 +60,7 @@ class PluginDatainjectionNetworkEquipmentInjection extends NetworkEquipment impl
 
 
     /**
-     * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+     * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
      **/
     public function getOptions($primary_type = '')
     {
@@ -73,14 +73,14 @@ class PluginDatainjectionNetworkEquipmentInjection extends NetworkEquipment impl
         //Virtual type : need to be processed at the end !
         $tab[200]['table']         = 'glpi_networkequipments';
         $tab[200]['field']         = 'nb_ports';
-        $tab[200]['name']          = __('Number of ports', 'datainjection');
+        $tab[200]['name']          = __('Number of ports', 'datainjection_ca');
         $tab[200]['checktype']     = 'integer';
         $tab[200]['displaytype']   = 'virtual';
         $tab[200]['linkfield']     = 'nb_ports';
-        $tab[200]['injectable']    = PluginDatainjectionCommonInjectionLib::FIELD_VIRTUAL;
+        $tab[200]['injectable']    = PluginDatainjectionCaCommonInjectionLib::FIELD_VIRTUAL;
 
         //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist     = PluginDatainjectionCaCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
         $notimportable = [
             41,
             43,
@@ -116,17 +116,17 @@ class PluginDatainjectionNetworkEquipmentInjection extends NetworkEquipment impl
             "multiline_text" => [16, 90],
         ];
 
-        return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        return PluginDatainjectionCaCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
 
     /**
-     * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+     * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
      **/
     public function addOrUpdateObject($values = [], $options = [])
     {
 
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }
@@ -172,7 +172,7 @@ class PluginDatainjectionNetworkEquipmentInjection extends NetworkEquipment impl
             if (
                 isset($values['NetworkEquipment'][$int])
                 && (
-                    $values['NetworkEquipment'][$int] == PluginDatainjectionCommonInjectionLib::EMPTY_VALUE
+                    $values['NetworkEquipment'][$int] == PluginDatainjectionCaCommonInjectionLib::EMPTY_VALUE
                     || $values['NetworkEquipment'][$int] === 'NULL'
                 )
             ) {

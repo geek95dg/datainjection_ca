@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionInfoCollection
+class PluginDatainjectionCaInfoCollection
 {
     public $infosCollection;
 
@@ -53,12 +53,12 @@ class PluginDatainjectionInfoCollection
         global $DB;
 
         $query = "SELECT *
-                FROM `glpi_plugin_datainjection_infos`
+                FROM `glpi_plugin_datainjection_ca_infos`
                 WHERE `models_id` = '" . $models_id . "'
                 ORDER BY `itemtype` ASC";
 
         foreach ($DB->doQuery($query) as $data) {
-            $infos = new PluginDatainjectionInfo();
+            $infos = new PluginDatainjectionCaInfo();
             $infos->fields = $data;
             $this->infosCollection[] = $infos;
         }

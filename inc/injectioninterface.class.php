@@ -33,7 +33,7 @@
 /**
  * Interface to implement for each type to inject
 **/
-interface PluginDatainjectionInjectionInterface
+interface PluginDatainjectionCaInjectionInterface
 {
     /**
     * Tells datainjection is the type is a primary type or not

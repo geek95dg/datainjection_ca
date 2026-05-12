@@ -30,7 +30,7 @@
 
 
 
-class PluginDatainjectionItem_SoftwareLicenseInjection extends Item_SoftwareLicense implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCaItem_SoftwareLicenseInjection extends Item_SoftwareLicense implements PluginDatainjectionCaInjectionInterface
 {
     public static function getTypeName($nb = 0)
     {
@@ -68,7 +68,7 @@ class PluginDatainjectionItem_SoftwareLicenseInjection extends Item_SoftwareLice
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::getOptions()
    **/
     public function getOptions($primary_type = '')
     {
@@ -112,11 +112,11 @@ class PluginDatainjectionItem_SoftwareLicenseInjection extends Item_SoftwareLice
 
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+    * @see plugins/datainjection_ca/inc/PluginDatainjectionCaInjectionInterface::addOrUpdateObject()
    **/
     public function addOrUpdateObject($values = [], $options = [])
     {
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib = new PluginDatainjectionCaCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }

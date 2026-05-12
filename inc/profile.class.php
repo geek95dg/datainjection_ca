@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionProfile extends Profile
+class PluginDatainjectionCaProfile extends Profile
 {
     public static $rightname = "profile";
 
@@ -36,13 +36,13 @@ class PluginDatainjectionProfile extends Profile
     {
 
         $rights = [
-            ['itemtype'  => 'PluginDatainjectionModel',
-                'label'     => __('Model management', 'datainjection'),
-                'field'     => 'plugin_datainjection_model',
+            ['itemtype'  => 'PluginDatainjectionCaModel',
+                'label'     => __('Model management', 'datainjection_ca'),
+                'field'     => 'plugin_datainjection_ca_model',
             ],
-            ['itemtype'  => 'PluginDatainjectionModel',
-                'label'     => __('Injection of the file', 'datainjection'),
-                'field'     => 'plugin_datainjection_use',
+            ['itemtype'  => 'PluginDatainjectionCaModel',
+                'label'     => __('Injection of the file', 'datainjection_ca'),
+                'field'     => 'plugin_datainjection_ca_use',
                 'rights'    => [READ => __('Read')],
             ],
         ];
@@ -69,7 +69,7 @@ class PluginDatainjectionProfile extends Profile
 
         if ($item instanceof Profile) {
             if ($item->fields['interface'] == 'central') {
-                return self::createTabEntry(__('Data injection', 'datainjection'), 0, $item::getType(), 'ti ti-download');
+                return self::createTabEntry(__('Data injection', 'datainjection_ca'), 0, $item::getType(), 'ti ti-download');
             }
             return '';
         }
@@ -86,7 +86,7 @@ class PluginDatainjectionProfile extends Profile
             //In case there's no right datainjection for this profile, create it
             self::addDefaultProfileInfos(
                 $item->getID(),
-                ['plugin_datainjection_model' => 0],
+                ['plugin_datainjection_ca_model' => 0],
             );
             $profile->showForm($ID);
         }
@@ -125,12 +125,12 @@ class PluginDatainjectionProfile extends Profile
     public static function createFirstAccess($profiles_id)
     {
 
-        include_once Plugin::getPhpDir('datainjection') . "/inc/profile.class.php";
+        include_once __DIR__ . "/profile.class.php";
         self::addDefaultProfileInfos(
             $profiles_id,
             [
-                'plugin_datainjection_model' => ALLSTANDARDRIGHT,
-                'plugin_datainjection_use' => READ,
+                'plugin_datainjection_ca_model' => ALLSTANDARDRIGHT,
+                'plugin_datainjection_ca_use' => READ,
             ],
         );
     }
@@ -139,11 +139,11 @@ class PluginDatainjectionProfile extends Profile
     {
         /** @var DBmysql $DB */
         global $DB;
-        if (!$DB->tableExists('glpi_plugin_datainjection_profiles')) {
+        if (!$DB->tableExists('glpi_plugin_datainjection_ca_profiles')) {
             return true;
         }
 
-        $profiles = getAllDataFromTable('glpi_plugin_datainjection_profiles');
+        $profiles = getAllDataFromTable('glpi_plugin_datainjection_ca_profiles');
         foreach ($profiles as $id => $profile) {
             $query = "SELECT `id` FROM `glpi_profiles` WHERE `name`='" . $profile['name'] . "'";
             $result = $DB->doQuery($query);
@@ -161,11 +161,11 @@ class PluginDatainjectionProfile extends Profile
                         $value = 0;
                         break;
                 }
-                self::addDefaultProfileInfos($id, ['plugin_datainjection_model' => $value]);
+                self::addDefaultProfileInfos($id, ['plugin_datainjection_ca_model' => $value]);
                 if ($value > 0) {
-                    self::addDefaultProfileInfos($id, ['plugin_datainjection_use' => READ]);
+                    self::addDefaultProfileInfos($id, ['plugin_datainjection_ca_use' => READ]);
                 } else {
-                    self::addDefaultProfileInfos($id, ['plugin_datainjection_model' => 0]);
+                    self::addDefaultProfileInfos($id, ['plugin_datainjection_ca_model' => 0]);
                 }
             }
         }

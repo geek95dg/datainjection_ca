@@ -18,7 +18,7 @@
  * -------------------------------------------------------------------------
  */
 
-class PluginDatainjectionBackendxlsx extends PluginDatainjectionBackend implements PluginDatainjectionBackendInterface
+class PluginDatainjectionCaBackendxlsx extends PluginDatainjectionCaBackend implements PluginDatainjectionCaBackendInterface
 {
     private bool $isHeaderPresent = true;
 
@@ -61,7 +61,7 @@ class PluginDatainjectionBackendxlsx extends PluginDatainjectionBackend implemen
 
     public function read($numberOfLines = 1)
     {
-        $injectionData = new PluginDatainjectionData();
+        $injectionData = new PluginDatainjectionCaData();
         $this->loadWorkbook();
 
         $total = is_array($this->rows) ? count($this->rows) : 0;

@@ -33,7 +33,7 @@ use Glpi\Features\AssignableItem;
 use function Safe\preg_match;
 use function Safe\preg_replace;
 
-class PluginDatainjectionCommonInjectionLib
+class PluginDatainjectionCaCommonInjectionLib
 {
     //Injection results
     private $results = [];
@@ -153,7 +153,7 @@ class PluginDatainjectionCommonInjectionLib
     /**
     * Constructor : store all needed options into the library
     *
-    * @param PluginDatainjectionInjectionInterface $injectionClass            class which represents the itemtype to injection
+    * @param PluginDatainjectionCaInjectionInterface $injectionClass            class which represents the itemtype to injection
     *                                   (in 0.80, will be directly the itemtype class)
     * @param array|null $values              array values to injection into GLPI
     * @param array|null $injection_options   array options that can be used during the injection
@@ -216,7 +216,7 @@ class PluginDatainjectionCommonInjectionLib
     * Check and add fields for itemtype which depend on other itemtypes
     * (for example SoftwareLicense needs to be linked to a Software)
     *
-    * @param PluginDatainjectionInjectionInterface $injectionClass class to use for injection
+    * @param PluginDatainjectionCaInjectionInterface $injectionClass class to use for injection
    **/
     public function areTypeMandatoryFieldsOK($injectionClass)
     {
@@ -262,7 +262,7 @@ class PluginDatainjectionCommonInjectionLib
             $status_check = false;
             $this->results[self::ACTION_CHECK][] = [
                 self::FAILED,
-                __('No mandatory field is defined for this model', 'datainjection'),
+                __('No mandatory field is defined for this model', 'datainjection_ca'),
             ];
         }
         return $status_check;
@@ -297,7 +297,7 @@ class PluginDatainjectionCommonInjectionLib
     public static function getItemtypeInstanceByInjection($injectionClassName)
     {
 
-        if (!is_a($injectionClassName, PluginDatainjectionInjectionInterface::class, true)) {
+        if (!is_a($injectionClassName, PluginDatainjectionCaInjectionInterface::class, true)) {
             throw new HttpException(500, 'Class ' . $injectionClassName . ' is not a valid class');
         }
         $injection = self::getItemtypeByInjectionClass(new $injectionClassName());
@@ -353,7 +353,7 @@ class PluginDatainjectionCommonInjectionLib
     *
     * @param string $itemtype  the itemtype
     *
-    * @return PluginDatainjectionInjectionInterface the injection class instance
+    * @return PluginDatainjectionCaInjectionInterface the injection class instance
     */
     public static function getInjectionClassInstance($itemtype)
     {
@@ -362,10 +362,10 @@ class PluginDatainjectionCommonInjectionLib
         // resolved through the registry, which lazily builds a per-definition
         // injection class.
         if (
-            class_exists('PluginDatainjectionCustomAssetRegistry')
-            && PluginDatainjectionCustomAssetRegistry::isCustomAssetItemtype($itemtype)
+            class_exists('PluginDatainjectionCaCustomAssetRegistry')
+            && PluginDatainjectionCaCustomAssetRegistry::isCustomAssetItemtype($itemtype)
         ) {
-            $injectionClass = PluginDatainjectionCustomAssetRegistry::getInjectionClassForItemtype($itemtype);
+            $injectionClass = PluginDatainjectionCaCustomAssetRegistry::getInjectionClassForItemtype($itemtype);
             if ($injectionClass !== null) {
                 return new $injectionClass();
             }
@@ -373,12 +373,12 @@ class PluginDatainjectionCommonInjectionLib
 
         if (!isPluginItemType($itemtype)) {
             $itemtype = (new ReflectionClass($itemtype))->getShortName(); // get shortname of class when full namespaced class given (from GLPI)
-            $injectionClass = 'PluginDatainjection' . ucfirst($itemtype) . 'Injection';
+            $injectionClass = 'PluginDatainjectionCa' . ucfirst($itemtype) . 'Injection';
         } else {
             $injectionClass = ucfirst($itemtype) . 'Injection';
         }
 
-        if (!is_a($injectionClass, PluginDatainjectionInjectionInterface::class, true)) {
+        if (!is_a($injectionClass, PluginDatainjectionCaInjectionInterface::class, true)) {
             throw new HttpException(500, 'Class ' . $injectionClass . ' is not a valid class');
         }
         return new $injectionClass();
@@ -585,7 +585,7 @@ class PluginDatainjectionCommonInjectionLib
     /**
     * Get the ID associated with a value from the CSV file
     *
-    * @param PluginDatainjectionInjectionInterface|null $injectionClass
+    * @param PluginDatainjectionCaInjectionInterface|null $injectionClass
     * @param string $itemtype               itemtype of the values to inject
     * @param array $searchOption           option associated with the field to check
     * @param string $field                  the field to check
@@ -1348,7 +1348,7 @@ class PluginDatainjectionCommonInjectionLib
     /**
     * Check one data
     *
-    * @param PluginDatainjectionInjectionInterface $injectionClass the injection class
+    * @param PluginDatainjectionCaInjectionInterface $injectionClass the injection class
     * @param array $option the option associated with the field
     * @param string $field_name the field name
     * @param mixed $data the data to check
@@ -1666,7 +1666,7 @@ class PluginDatainjectionCommonInjectionLib
     /**
     * Perform data injection into GLPI DB
     *
-    * @param PluginDatainjectionInjectionInterface $injectionClass class which represents the object to inject
+    * @param PluginDatainjectionCaInjectionInterface $injectionClass class which represents the object to inject
     * @param CommonDBTM $item the CommonDBTM object representing the itemtype to inject
     * @param array|string|false $values the values to inject
     * @param boolean $add true to insert an object, false to update an existing object
@@ -2112,7 +2112,7 @@ class PluginDatainjectionCommonInjectionLib
         if ($item->dohistory) {
             $changes[0] = 0;
 
-            $changes[2] = $add ? __('Add from CSV file', 'datainjection') : __('Update from CSV file', 'datainjection');
+            $changes[2] = $add ? __('Add from CSV file', 'datainjection_ca') : __('Update from CSV file', 'datainjection_ca');
             $changes[1] = "";
             Log::history($item->fields['id'], get_class($item), $changes);
         }
@@ -2151,47 +2151,47 @@ class PluginDatainjectionCommonInjectionLib
 
         switch ($type) {
             case self::ERROR_CANNOT_IMPORT:
-                $message = __('No right to import data', 'datainjection');
+                $message = __('No right to import data', 'datainjection_ca');
                 break;
 
             case self::ERROR_CANNOT_UPDATE:
-                $message = __('No right to update data', 'datainjection');
+                $message = __('No right to update data', 'datainjection_ca');
                 break;
 
             case self::ERROR_FIELDSIZE_EXCEEDED:
-                $message = __('Size of the inserted value is to expansive', 'datainjection');
+                $message = __('Size of the inserted value is to expansive', 'datainjection_ca');
                 break;
 
             case self::ERROR_IMPORT_REFUSED:
-                $message = __('Import not allowed', 'datainjection');
+                $message = __('Import not allowed', 'datainjection_ca');
                 break;
 
             case self::FAILED:
-                $message = __('Import failed', 'datainjection');
+                $message = __('Import failed', 'datainjection_ca');
                 break;
 
             case self::MANDATORY:
-                $message = __('At least one mandatory field is not present', 'datainjection');
+                $message = __('At least one mandatory field is not present', 'datainjection_ca');
                 break;
 
             case self::SUCCESS:
-                $message = __('Data to insert are correct', 'datainjection');
+                $message = __('Data to insert are correct', 'datainjection_ca');
                 break;
 
             case self::TYPE_MISMATCH:
-                $message = __('One data is not the good type', 'datainjection');
+                $message = __('One data is not the good type', 'datainjection_ca');
                 break;
 
             case self::WARNING:
-                $message = __('Warning', 'datainjection');
+                $message = __('Warning', 'datainjection_ca');
                 break;
 
             case self::WARNING_NOTFOUND:
-                $message = __('Data not found', 'datainjection');
+                $message = __('Data not found', 'datainjection_ca');
                 break;
 
             default:
-                $message = __('Undetermined', 'datainjection');
+                $message = __('Undetermined', 'datainjection_ca');
                 break;
         }
 
@@ -2204,7 +2204,7 @@ class PluginDatainjectionCommonInjectionLib
     public static function addToSearchOptions(
         array $type_searchOptions,
         array $options,
-        PluginDatainjectionInjectionInterface $injectionClass
+        PluginDatainjectionCaInjectionInterface $injectionClass
     ) {
 
         self::addTemplateSearchOptions($injectionClass, $type_searchOptions);
@@ -2309,7 +2309,7 @@ class PluginDatainjectionCommonInjectionLib
     /**
     * Add necessary search options for template management
     *
-    * @param PluginDatainjectionInjectionInterface $injectionClass the injection class to use
+    * @param PluginDatainjectionCaInjectionInterface $injectionClass the injection class to use
     * @param array $tab the options tab, as an array (passed as a reference)
     *
     * @return void nothing
@@ -2347,7 +2347,7 @@ class PluginDatainjectionCommonInjectionLib
     /**
     * If itemtype injection needs to process things after data is written in DB
     *
-    * @param PluginDatainjectionInjectionInterface $injectionClass the injection class to use
+    * @param PluginDatainjectionCaInjectionInterface $injectionClass the injection class to use
     * @param  $add true if an item is created, false if it's an update
     *
     * @return void nothing

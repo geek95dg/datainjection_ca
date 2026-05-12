@@ -32,14 +32,14 @@ Session::checkLoginUser();
 
 switch ($_GET["popup"]) {
     case "preview":
-        Html::popHeader(__('See the file', 'datainjection'), $_SERVER['PHP_SELF']);
-        PluginDatainjectionModel::showPreviewMappings($_GET['models_id']);
+        Html::popHeader(__('See the file', 'datainjection_ca'), $_SERVER['PHP_SELF']);
+        PluginDatainjectionCaModel::showPreviewMappings($_GET['models_id']);
         Html::popFooter();
         break;
 
     case "log":
-        Html::popHeader(__('Data injection report', 'datainjection'), $_SERVER['PHP_SELF']);
-        PluginDatainjectionModel::showLogResults($_GET['models_id']);
+        Html::popHeader(__('Data injection report', 'datainjection_ca'), $_SERVER['PHP_SELF']);
+        PluginDatainjectionCaModel::showLogResults($_GET['models_id']);
         Html::popFooter();
         break;
 }
