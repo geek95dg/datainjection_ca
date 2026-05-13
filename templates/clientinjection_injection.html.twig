@@ -58,6 +58,29 @@
         {{ __('Injection of the file', 'datainjection') }} — 0 / {{ nblines }} {{ __(' lines', 'datainjection') }}
     </div>
 
+    {# Hidden until the batch JS hits an error. Lets the user recover from
+       a stuck import without reinstalling the plugin. #}
+    <div id="injection_error" class="alert alert-danger mt-3" style="display:none;">
+        <strong>{{ __('Import failed', 'datainjection') }}</strong>
+        <div id="injection_error_message" class="mt-1 small text-break"></div>
+        <div class="small text-muted mt-2">
+            {{ __('Check /var/log/glpi/datainjection.log for the exception. Use the button below to clear the stuck session and start over.', 'datainjection') }}
+        </div>
+    </div>
+
+    {# Always-available abort button. Posts cancel=1 to the legacy
+       controller, which calls `PluginDatainjectionSession::removeParams()`
+       to wipe the stuck-import state from the session and redirects back
+       to the model picker. #}
+    <form method="post" action="{{ form_action }}" class="mt-3 text-end">
+        <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="cancel" value="1" />
+        <button type="submit" class="btn btn-outline-secondary">
+            <i class="ti ti-x me-1"></i>
+            {{ __('Abort and start over', 'datainjection') }}
+        </button>
+    </form>
+
 <script src="{{ plugin_url }}js/injection_progress.js"></script>
 <script>
     $(function() {

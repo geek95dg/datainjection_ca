@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.19] - 2026-05-13
+
+### Added
+
+- "Abort and start over" button on the injection progress page. Posts `cancel=1` to the legacy controller, which calls `PluginDatainjectionSession::removeParams()` to clear the stuck-import state and redirects back to the model picker. No more reinstalling the plugin to recover from a failed import.
+- In-page red error banner that surfaces when the batch loop reports a failure — shows the server-supplied error message and points at `/var/log/glpi/datainjection.log` for the trace.
+
+### Changed
+
+- `ajax/inject_batch.php` is now wrapped in `try/catch` + logger. On exception the endpoint returns a structured JSON error body (`{error: true, message: …, offset: …}`) with HTTP 500 instead of an empty 500 page. The progress-bar JS parses that body, shows the message in the error banner, and stops polling — so a server-side fault no longer leaves the bar spinning forever.
+- The progress-bar JS reads `xhr.responseJSON.message` (falling back to `responseText` then a generic label), so the user sees the actual reason instead of a flat "Error".
+
 ## [2.16.18] - 2026-05-13
 
 ### Fixed

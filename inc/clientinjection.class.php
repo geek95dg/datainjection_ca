@@ -167,12 +167,14 @@ class PluginDatainjectionClientInjection
         $result_url = $CFG_GLPI['root_doc'] . "/plugins/datainjection/ajax/results.php";
 
         TemplateRenderer::getInstance()->display('@datainjection/clientinjection_injection.html.twig', [
-            'model_name' => $model->fields['name'],
-            'nblines'    => $nblines,
-            'model_id'   => $model->fields['id'],
-            'batch_url'  => $batch_url,
-            'result_url' => $result_url,
-            'plugin_url' => plugin_datainjection_geturl(),
+            'model_name'  => $model->fields['name'],
+            'nblines'     => $nblines,
+            'model_id'    => $model->fields['id'],
+            'batch_url'   => $batch_url,
+            'result_url'  => $result_url,
+            'plugin_url'  => plugin_datainjection_geturl(),
+            // Where the "Abort and start over" button POSTs cancel=1.
+            'form_action' => Toolbox::getItemTypeFormURL(self::class),
         ]);
 
         echo "<span id='span_injection' name='span_injection'></span>";
