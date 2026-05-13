@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.10] - 2026-05-13
+
+### Fixed
+
+- `front/model.form.php` update branch hard-coded `PluginDatainjectionModel::getInstance('csv')`, which silently routed XLSX model updates into the CSV companion table (and never persisted XLSX-specific fields). It now picks the companion class based on the model's actual `filetype` and falls back to CSV only when the requested companion class is missing.
+- The upload branch passed `'file_encoding' => 'csv'` (a *filetype*, not an encoding). Switched to `PluginDatainjectionBackend::ENCODING_AUTO` so the backend's encoding detection actually runs.
+
+### Added
+
+- `front/model.form.php` is now wrapped in a top-level `try/catch` that logs the failing branch name (`add`/`update`/`upload`/`delete`/`purge`/`validate`/`sample`/`display`) plus a stack trace before re-throwing — so any 500 surfaces in `/var/log/glpi/datainjection.log` with a precise breadcrumb instead of just the generic "Wystąpił nieoczekiwany błąd" page.
+- Entry breadcrumb logging the request method, requested id, and POST keys.
+
 ## [2.16.9] - 2026-05-13
 
 ### Fixed
