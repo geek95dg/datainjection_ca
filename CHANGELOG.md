@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.12] - 2026-05-13
+
+### Fixed
+
+- Mappings page now lists fields for custom-asset itemtypes. Native injection classes (Computer, Monitor, …) hand-fill `linkfield` on every `Search::getOptions()` entry, so the common-injection library's `addToSearchOptions()` keeps them. GLPI's stock search options for `AssetDefinition` classes don't, and `addToSearchOptions()`'s "dedupe by linkfield" pass was therefore stripping *every* entry. `PluginDatainjectionCustomAssetBaseInjection::getOptions()` now populates `linkfield` defensively before calling `addToSearchOptions`: for the asset's own columns `linkfield = field`, for joined dropdown tables it's derived from the table name (`glpi_locations` → `locations_id`).
+- `front/model.form.php`'s top-level `try/catch` no longer logs `Glpi\Exception\RedirectException` as a plugin error. GLPI 11's `Html::redirect()` *throws* that exception as its normal mechanism for issuing a 302 (the outer `LegacyFileLoadController` catches it and converts it to a real redirect) — treating it as a failure produced noisy false-positive `ERROR` lines after every successful save / back / redirect.
+
+### Added
+
+- Breadcrumbs in `getOptions()` for custom assets: raw count from `Search::getOptions`, how many entries got a fresh `linkfield`, count surviving `addToSearchOptions`, and final count including custom fields. Makes "empty Fields dropdown" investigations measurable.
+
 ## [2.16.11] - 2026-05-13
 
 ### Fixed

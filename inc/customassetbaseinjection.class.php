@@ -139,6 +139,47 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             }
         }
 
+        // Custom-asset search options arrive WITHOUT `linkfield`, unlike
+        // the native classes (Computer, Monitor, …) where each injection
+        // class hand-fills it. `addToSearchOptions()` later filters out
+        // any option that has no `linkfield` (via its dedupe-by-linkfield
+        // pass), so without this step the field dropdown on the Mappings
+        // page comes back empty for every AssetDefinition. Two cases:
+        //
+        // 1. Option points at the asset's own table (glpi_assets_assets):
+        //    `linkfield = field` (the column name IS the column name).
+        // 2. Option points at a foreign dropdown table (glpi_locations,
+        //    glpi_manufacturers, glpi_states, glpi_users, …): derive the
+        //    FK column from the table name (`glpi_locations` →
+        //    `locations_id`). Falls back to skipping (option stays
+        //    non-injectable) when the table name doesn't follow that
+        //    convention.
+        $patched = 0;
+        foreach ($tab as $id => &$opt) {
+            if (!is_array($opt) || isset($opt['linkfield']) || !isset($opt['field']) || !isset($opt['table'])) {
+                continue;
+            }
+            if ($opt['table'] === self::$table) {
+                $opt['linkfield'] = $opt['field'];
+                $patched++;
+            } elseif (is_string($opt['table']) && str_starts_with($opt['table'], 'glpi_')) {
+                $stripped = substr($opt['table'], strlen('glpi_'));
+                if ($stripped !== '' && substr($stripped, -1) === 's') {
+                    $opt['linkfield'] = $stripped . '_id';
+                    $patched++;
+                }
+            }
+        }
+        unset($opt);
+
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('customAsset.getOptions: search options', [
+                'asset_class' => $assetClass,
+                'raw_count'   => count($tab),
+                'patched_linkfield' => $patched,
+            ]);
+        }
+
         $options = [
             'ignore_fields' => PluginDatainjectionCommonInjectionLib::getBlacklistedOptions($assetClass),
             'displaytype'   => [
@@ -148,6 +189,13 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         ];
 
         $tab = PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('customAsset.getOptions: after addToSearchOptions', [
+                'asset_class' => $assetClass,
+                'kept_count'  => count($tab),
+            ]);
+        }
 
         $defId        = static::getDefinitionId();
         $customFields = PluginDatainjectionCustomAssetRegistry::getCustomFields($defId);
@@ -173,6 +221,14 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                 'checktype'   => $checktype,
             ];
             $nextId++;
+        }
+
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('customAsset.getOptions: returning', [
+                'asset_class'         => $assetClass,
+                'total_count'         => count($tab),
+                'custom_field_count'  => count($customFields),
+            ]);
         }
 
         return $tab;
