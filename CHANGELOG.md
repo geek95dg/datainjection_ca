@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.20] - 2026-05-13
+
+### Fixed
+
+- **Abort button now actually aborts the stuck import.** `front/clientinjection.form.php` was checking `if (has session 'go')` *before* the explicit POST branches, so the cancel/finish POSTs were never reached while a stuck import was in flight. Reordered: explicit `cancel` / `finish` / `upload` now win first, then the session-bound `go (showInjectionForm)` branch.
+- **`Cannot instantiate abstract class Glpi\Asset\Asset` no longer kills imports at offset 0.** `PluginDatainjectionCommonInjectionLib::getFieldValue()`'s dropdown / relation case was doing `new getItemTypeForTable($table)()` blindly. For options whose `table = glpi_assets_assets`, the resolver returns the **abstract** `\Glpi\Asset\Asset` base (multiple per-definition concrete subclasses share the table), so the `new` fataled and took the whole batch with it. Added a `ReflectionClass::isAbstract()` short-circuit: the lookup is skipped and the raw value is passed through as text. Logged via `PluginDatainjectionLogger::warning`.
+- Cleaned up an `Undefined array key "filename"` warning emitted by the diagnostic logger inside the upload branch — it now logs only the available keys, never touches `$_FILES['filename']` directly after `readUploadedFile()` has already unset it.
+
 ## [2.16.19] - 2026-05-13
 
 ### Added

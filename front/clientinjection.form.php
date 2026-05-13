@@ -53,10 +53,18 @@ try {
         "client",
     );
 
-    if (isset($_SESSION['datainjection']['go'])) {
-        $di_log_branch = 'go (showInjectionForm)';
-        $model = unserialize($_SESSION['datainjection']['currentmodel']);
-        PluginDatainjectionClientInjection::showInjectionForm($model, $_SESSION['glpiactive_entity']);
+    // IMPORTANT branch ORDER:
+    //
+    // Explicit POST actions (cancel / finish / upload) MUST be checked
+    // BEFORE the session-bound "go (showInjectionForm)" branch. Otherwise
+    // the user who tries to abort a stuck import — `_SESSION['datainjection']['go']`
+    // is true while they click the Abort button — gets bounced straight
+    // back into `showInjectionForm()` because the session flag wins, and
+    // the cancel POST is never seen.
+    if (isset($_POST['finish']) || isset($_POST['cancel'])) {
+        $di_log_branch = isset($_POST['finish']) ? 'finish' : 'cancel';
+        PluginDatainjectionSession::removeParams();
+        Html::redirect(Toolbox::getItemTypeFormURL('PluginDatainjectionClientInjection'));
     } elseif (isset($_POST['upload'])) {
         $di_log_branch = 'upload';
         $model = new PluginDatainjectionModel();
@@ -106,9 +114,16 @@ try {
                 $_SESSION['datainjection']['step'] = PluginDatainjectionClientInjection::STEP_UPLOAD;
             }
         } else {
+            // Diagnostic only — do NOT touch $_FILES['filename'] beyond
+            // an isset check. readUploadedFile() unsets that key after a
+            // successful move (Symfony FileBag workaround), so by the time
+            // we land in this branch on a *later* request, accessing it
+            // would emit "Undefined array key" warnings.
             PluginDatainjectionLogger::warning('clientinjection.form.php: no usable file in $_FILES', [
-                'files_keys' => array_keys($_FILES),
-                'filename'   => $_FILES['filename'] ?? null,
+                'files_keys'    => array_keys($_FILES),
+                'filename_keys' => isset($_FILES['filename']) && is_array($_FILES['filename'])
+                    ? array_keys($_FILES['filename'])
+                    : null,
             ]);
             Session::addMessageAfterRedirect(
                 __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjection'),
@@ -119,10 +134,13 @@ try {
         }
 
         Html::back();
-    } elseif (isset($_POST['finish']) || isset($_POST['cancel'])) {
-        $di_log_branch = isset($_POST['finish']) ? 'finish' : 'cancel';
-        PluginDatainjectionSession::removeParams();
-        Html::redirect(Toolbox::getItemTypeFormURL('PluginDatainjectionClientInjection'));
+    } elseif (isset($_SESSION['datainjection']['go'])) {
+        // Session-bound: only reached when no explicit POST action above
+        // matched. That ordering lets the Abort button (cancel=1) reset a
+        // stuck import even when 'go' is still set.
+        $di_log_branch = 'go (showInjectionForm)';
+        $model = unserialize($_SESSION['datainjection']['currentmodel']);
+        PluginDatainjectionClientInjection::showInjectionForm($model, $_SESSION['glpiactive_entity']);
     } else {
         $di_log_branch = 'showForm';
         if (isset($_GET['id'])) { // Allow link to a model
