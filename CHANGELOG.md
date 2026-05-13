@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.9] - 2026-05-13
+
+### Fixed
+
+- `readUploadedFile()` no longer logs `Undefined array key "delimiter"` when uploading to an XLSX model. `delimiter` is a CSV-only column; the access is now guarded with `isset()` so xlsx models pass through cleanly.
+
+### Added
+
+- Breadcrumb logging on the upload path: `readUploadedFile` and `processUploadedFile` log entry, the moved temp filename, the backend's parsed line count, and any backend `read()` exception (with stack trace). When a model creation gets stuck somewhere after the upload, the log now shows exactly which step ran last.
+- Backend `read()` is wrapped in try/catch so a failure inside the XLSX parser surfaces as an `ERROR` line plus a user-facing GLPI message — instead of an unexplained "go back to upload step".
+
 ## [2.16.8] - 2026-05-13
 
 ### Fixed
