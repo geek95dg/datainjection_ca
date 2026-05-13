@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.14] - 2026-05-13
+
+### Fixed
+
+- Mappings page Fields dropdown now lists the standard `glpi_assets_assets` columns (Name, Serial, Inventory, Comments, Entity, Location, Status, Manufacturer, User, Group, Technician in charge, Group in charge, dates, deleted/template flags, …) for custom-asset itemtypes — `addToSearchOptions()` was stripping them on its way out. Hard-wired catalogue keyed on the live table schema (`$DB->fieldExists`) so the appended set adapts to whichever columns the install actually has — different GLPI versions and enabled capacities ship slightly different column sets.
+
+### Added
+
+- `PluginDatainjectionCustomAssetBaseInjection::nativeAssetFieldCatalog()` — declarative table of standard asset columns → search-option metadata (display type, check type, FK joined table). Easy to extend if a capacity introduces a column we should also map.
+- Breadcrumb `customAsset.getOptions: native fields appended | {"appended":N,"kept_count":M}` so the next investigation can tell at a glance whether the appender is doing work.
+
 ## [2.16.13] - 2026-05-13
 
 ### Changed
