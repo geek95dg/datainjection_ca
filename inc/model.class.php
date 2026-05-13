@@ -1035,6 +1035,12 @@ class PluginDatainjectionModel extends CommonDBTM
         $injectionData     = false;
         $delete_file       = ($options['delete_file'] ?? true);
 
+        PluginDatainjectionLogger::info('readUploadedFile: enter', [
+            'model_id'   => $this->fields['id'] ?? null,
+            'filetype'   => $this->fields['filetype'] ?? null,
+            'webservice' => (bool) $webservice,
+        ]);
+
         //Get model & model specific fields
         $this->loadSpecificModel();
 
@@ -1043,8 +1049,17 @@ class PluginDatainjectionModel extends CommonDBTM
             $original_filename           = $_FILES['filename']['name'];
             $temporary_uploaded_filename = $_FILES["filename"]["tmp_name"];
             $unique_filename             = tempnam(realpath(PLUGIN_DATAINJECTION_UPLOAD_DIR), "PWS");
+            PluginDatainjectionLogger::info('readUploadedFile: moving upload', [
+                'original_filename' => $original_filename,
+                'size'              => $_FILES['filename']['size'] ?? null,
+                'error'             => $_FILES['filename']['error'] ?? null,
+                'unique_filename'   => $unique_filename,
+            ]);
 
             if (!move_uploaded_file($temporary_uploaded_filename, $unique_filename)) {
+                PluginDatainjectionLogger::error('readUploadedFile: move_uploaded_file failed', [
+                    'target' => $unique_filename,
+                ]);
                 return ['status'  => PluginDatainjectionCommonInjectionLib::FAILED,
                     'message' => sprintf(
                         __s('Impossible to copy the file in %s', 'datainjection'),
@@ -1062,6 +1077,10 @@ class PluginDatainjectionModel extends CommonDBTM
                 __s('Extension %s required', 'datainjection'),
                 $expectedExt,
             );
+            PluginDatainjectionLogger::warning('readUploadedFile: file rejected (extension)', [
+                'filename'       => $original_filename,
+                'expected_ext'   => $expectedExt,
+            ]);
             if (!$webservice) {
                 Session::addMessageAfterRedirect($message, true, ERROR, false);
             }
@@ -1074,21 +1093,44 @@ class PluginDatainjectionModel extends CommonDBTM
             $backend = PluginDatainjectionBackend::getInstance($this->fields['filetype']);
             //Init backend with needed values
             $backend->init($unique_filename, $file_encoding);
-            $backend->setHeaderPresent($this->specific_model->fields['is_header_present']);
-            $backend->setDelimiter($this->specific_model->fields['delimiter']);
-
-            if (!$webservice) {
-                //Read n line from the CSV file if not webservice
-                $injectionData = $backend->read(20);
-            } else {
-                //Read the whole file
-                $injectionData = $backend->read(-1);
+            $backend->setHeaderPresent($this->specific_model->fields['is_header_present'] ?? 1);
+            // `delimiter` is a CSV-specific field; xlsx models don't store
+            // one. Guard the access — otherwise we trip an "Undefined array
+            // key" warning even though setDelimiter(null) would be a no-op
+            // on the xlsx backend.
+            if (isset($this->specific_model->fields['delimiter'])) {
+                $backend->setDelimiter($this->specific_model->fields['delimiter']);
             }
 
-            //Read the whole file and store the number of lines found
-            $backend->storeNumberOfLines();
+            try {
+                if (!$webservice) {
+                    //Read n line from the file if not webservice
+                    $injectionData = $backend->read(20);
+                } else {
+                    //Read the whole file
+                    $injectionData = $backend->read(-1);
+                }
+                $backend->storeNumberOfLines();
+            } catch (\Throwable $e) {
+                PluginDatainjectionLogger::exception($e, 'readUploadedFile: backend read failed');
+                if (!$webservice) {
+                    Session::addMessageAfterRedirect(
+                        __s('Could not read the uploaded file. See datainjection.log for details.', 'datainjection'),
+                        true,
+                        ERROR,
+                        false,
+                    );
+                }
+                return ['status' => ERROR, 'message' => $e->getMessage()];
+            }
+
             $_SESSION['datainjection']['lines']   = serialize($injectionData);
             $_SESSION['datainjection']['nblines'] = $backend->getNumberOfLines();
+
+            PluginDatainjectionLogger::info('readUploadedFile: backend parsed', [
+                'nblines'      => $backend->getNumberOfLines(),
+                'backendClass' => get_class($backend),
+            ]);
 
             if ($delete_file) {
                 $backend->deleteFile();
@@ -1096,6 +1138,7 @@ class PluginDatainjectionModel extends CommonDBTM
             $this->backend = $backend;
         }
         $this->injectionData = $injectionData;
+        PluginDatainjectionLogger::info('readUploadedFile: ok');
         return true;
     }
 
@@ -1126,10 +1169,16 @@ class PluginDatainjectionModel extends CommonDBTM
 
         $mode          = ($options['mode'] ?? self::PROCESS);
 
+        PluginDatainjectionLogger::info('processUploadedFile: enter', [
+            'model_id' => $this->fields['id'] ?? null,
+            'mode'     => $mode,
+        ]);
+
         //Get model & model specific fields
         $this->loadSpecificModel();
         $this->readUploadedFile($options);
         if (!$this->injectionData) {
+            PluginDatainjectionLogger::warning('processUploadedFile: no injectionData — aborting');
             return false;
         }
 
@@ -1141,6 +1190,10 @@ class PluginDatainjectionModel extends CommonDBTM
         }
         //There's an error
         if ($check['status'] != PluginDatainjectionCommonInjectionLib::SUCCESS && $mode == self::PROCESS) {
+            PluginDatainjectionLogger::warning('processUploadedFile: isFileCorrect failed', [
+                'status'        => $check['status'],
+                'error_message' => $check['error_message'] ?? null,
+            ]);
             Session::addMessageAfterRedirect(htmlspecialchars($check['error_message']), true, ERROR);
             return false;
         }
