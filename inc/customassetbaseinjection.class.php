@@ -280,15 +280,24 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $displaytype = $this->mapCustomFieldDisplayType($field['type']);
             $checktype   = $this->mapCustomFieldCheckType($field['type']);
 
+            // FK-typed custom fields (Location, Manufacturer, Group, …)
+            // store an ID in custom_fields JSON. CSVs/XLSXs contain the
+            // human-readable name (e.g. "CHO > IT-Stock"), so we need to
+            // tell the injection lib to resolve it to the corresponding ID
+            // before saving — that means: displaytype='dropdown' and
+            // `table` pointing at the joined dropdown table.
+            $fkTable = $this->customFieldFkTable($field);
+            if ($fkTable !== null) {
+                $displaytype = 'dropdown';
+                $checktype   = 'text';
+            }
+
             $tab[$nextId] = [
                 'id'          => $nextId,
-                'table'       => self::$table,
-                'field'       => $linkfield,
+                'table'       => $fkTable ?? self::$table,
+                'field'       => $fkTable !== null ? 'name' : $linkfield,
                 'linkfield'   => $linkfield,
-                'name'        => sprintf(
-                    __('%1$s (custom field)', 'datainjection'),
-                    $field['label'],
-                ),
+                'name'        => $field['label'],
                 'datatype'    => 'string',
                 'injectable'  => PluginDatainjectionCommonInjectionLib::FIELD_INJECTABLE,
                 'displaytype' => $displaytype,
@@ -415,6 +424,31 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         return (string) json_encode($current, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
+    /**
+     * For dropdown-typed custom fields, resolve the joined dropdown
+     * table from the field's `itemtype` (e.g. `Location` → `glpi_locations`)
+     * so the injection lib can look up by name and store the FK id.
+     * Returns null for non-dropdown / unknown types.
+     *
+     * @param array{type:string, itemtype:?string} $field
+     */
+    private function customFieldFkTable(array $field): ?string
+    {
+        $type = strtolower((string) ($field['type'] ?? ''));
+        if (!in_array($type, ['dropdown', 'foreignkey', 'foreign_key', 'itemlink'], true)) {
+            return null;
+        }
+        $itemtype = $field['itemtype'] ?? null;
+        if (!is_string($itemtype) || $itemtype === '' || !class_exists($itemtype)) {
+            return null;
+        }
+        try {
+            return $itemtype::getTable();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     private function mapCustomFieldDisplayType(string $type): string
     {
         return match (strtolower($type)) {
@@ -425,6 +459,9 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             'decimal', 'float'         => 'decimal',
             'text', 'string'           => 'text',
             'multiline_text', 'textarea' => 'multiline_text',
+            'dropdown', 'foreignkey', 'foreign_key', 'itemlink' => 'dropdown',
+            'url'                      => 'text',
+            'user'                     => 'user',
             default                    => 'text',
         };
     }

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.15] - 2026-05-13
+
+### Fixed
+
+- Custom-field rows in the Mappings → Fields dropdown now show the human label ("Lokalizacja", "Regal") instead of the internal `system_name` (`locations_id`, `custom_regal`), and drop the noisy `(custom field)` suffix. The registry now parses GLPI 11's actual `glpi_assets_customfielddefinitions` schema: `label` for the source-language name plus `translations` (JSON map) for the active locale, with a fallback chain `lang → en_GB → en → first non-empty → system_name`.
+- Custom fields that point at a foreign itemtype (Location, Manufacturer, Group, …) — including the capacity-supplied ones GLPI stores under `system_name="locations_id"` / `"groups_id"` / `"manufacturers_id"` in the `custom_fields` JSON column — are now exposed to the mapping form as proper dropdowns. The injection lib therefore looks up the value by name at import time (CSV/XLSX can carry "CHO > IT-Stock", not the raw ID) and stores the resolved FK id in `custom_fields[system_name]`.
+
+### Changed
+
+- `parseCustomFieldEntry()` now normalises GLPI 11's `type` column from a class FQCN (`Glpi\Asset\CustomFieldType\DropdownType`) to a short token (`dropdown`, `text`, `number`, `date`, `boolean`, `user`, `url`, …) so downstream switches don't depend on the full namespace.
+- `parseCustomFieldEntry()` now also surfaces the field's target `itemtype` (the FK target class) so the injection options can derive the joined table for name→ID lookups.
+
 ## [2.16.14] - 2026-05-13
 
 ### Fixed
