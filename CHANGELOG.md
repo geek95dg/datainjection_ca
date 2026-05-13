@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.21] - 2026-05-13
+
+### Fixed
+
+- **Custom-asset import no longer fails with `Table 'glpi.glpi_plugin_datainjection_customasset<defname>injections' doesn't exist`.** `PluginDatainjectionCommonInjectionLib::dataAlreadyInDB()` resolves the target table via `$injectionClass->getTable()`, and GLPI's `CommonDBTM::getTable()` derives the name from `static::class` (`getTableForItemType()`) rather than reading the inherited `public static $table` property. The registry-generated per-definition wrapper classes therefore fell through to GLPI's auto-pluralization and produced a nonexistent table name. Added an explicit `getTable()` override on `PluginDatainjectionCustomAssetBaseInjection` that always returns `glpi_assets_assets`, so every generated subclass resolves to the real shared custom-asset table.
+
 ## [2.16.20] - 2026-05-13
 
 ### Fixed

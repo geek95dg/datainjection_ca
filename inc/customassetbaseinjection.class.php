@@ -19,6 +19,21 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
     public static $table    = 'glpi_assets_assets';
     public static $rightname = '';
 
+    /**
+     * Force the shared `glpi_assets_assets` table for every generated
+     * subclass. GLPI's `CommonDBTM::getTable()` derives the table name from
+     * the class name via `getTableForItemType(static::class)` and ignores
+     * the inherited `public static $table` property — so a generated class
+     * named `PluginDatainjectionCustomAssetDrukarkimobilneInjection` would
+     * otherwise resolve to a non-existent
+     * `glpi_plugin_datainjection_customassetdrukarkimobilneinjections`
+     * table and break `dataAlreadyInDB()` lookups during import.
+     */
+    public static function getTable($classname = null)
+    {
+        return 'glpi_assets_assets';
+    }
+
     /** Overridden by generated subclasses. */
     public static function getDefinitionId(): int
     {
