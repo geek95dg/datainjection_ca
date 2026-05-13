@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.11] - 2026-05-13
+
+### Fixed
+
+- File upload (`front/model.form.php?upload=…`) no longer 500s with `FileNotFoundException: The file "/tmp/php…" does not exist`. Root cause: GLPI 11 routes the response through Symfony's HttpKernel; later in the request lifecycle (e.g. when `Html::back()` builds its redirect) Symfony re-constructs a `Request` from globals, walks `$_FILES`, and instantiates an `UploadedFile` whose ctor verifies `tmp_name` exists — but our `move_uploaded_file()` had already relocated the file out of `/tmp`, leaving a stale path. `readUploadedFile()` now drops `$_FILES['filename']` immediately after a successful move so the `FileBag` has nothing to validate.
+
 ## [2.16.10] - 2026-05-13
 
 ### Fixed

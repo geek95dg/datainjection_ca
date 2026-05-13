@@ -1067,6 +1067,18 @@ class PluginDatainjectionModel extends CommonDBTM
                     ),
                 ];
             }
+
+            // The file is now at $unique_filename; the original
+            // $_FILES['filename']['tmp_name'] points at /tmp/php… which no
+            // longer exists. GLPI 11 routes the response through Symfony's
+            // HttpKernel; later in the request lifecycle (e.g. when
+            // Html::back() builds its redirect) Symfony re-constructs a
+            // Request from globals, walks $_FILES and tries to instantiate
+            // an UploadedFile — whose ctor verifies tmp_name exists. With a
+            // stale path that throws FileNotFoundException and turns the
+            // upload page into a generic 500. Drop the entry so the
+            // FileBag has nothing to validate.
+            unset($_FILES['filename']);
         }
 
         //If file has not the right extension, reject it and delete if
