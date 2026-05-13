@@ -253,6 +253,24 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             ]);
         }
 
+        // GLPI 11's search-options pipeline strips the `glpi_assets_assets`
+        // native columns somewhere along the way for AssetDefinition
+        // classes — by the time `addToSearchOptions` returns, the dropdown
+        // is left with only group-label rows, so users can't map a CSV
+        // column to `name`/`serial`/`locations_id`/etc. Hard-wire the
+        // standard columns here, keyed on the live table schema so we
+        // adapt to whichever columns the install actually has (capacities
+        // such as Serial / NetworkPort / States add columns dynamically).
+        $nativeAppended = $this->appendNativeAssetFieldOptions($tab);
+
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('customAsset.getOptions: native fields appended', [
+                'asset_class' => $assetClass,
+                'appended'    => $nativeAppended,
+                'kept_count'  => count($tab),
+            ]);
+        }
+
         $defId        = static::getDefinitionId();
         $customFields = PluginDatainjectionCustomAssetRegistry::getCustomFields($defId);
         $nextId       = 5000;
@@ -452,6 +470,109 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             }
         }
         return $ids;
+    }
+
+    /**
+     * Catalogue of the standard fields on `glpi_assets_assets`. Mapped to
+     * the search-option metadata the injection lib needs: `name`, the
+     * display type (so the lib renders dropdown / user / date inputs in
+     * the mapping form), the check type (input validation), and for FK
+     * columns the joined dropdown table.
+     *
+     * Each entry is keyed by the column name on `glpi_assets_assets`.
+     *
+     * @return array<string, array{
+     *   name: string,
+     *   displaytype: string,
+     *   checktype:   string,
+     *   table?:      string
+     * }>
+     */
+    private function nativeAssetFieldCatalog(): array
+    {
+        return [
+            'name'              => ['name' => __('Name'),                          'displaytype' => 'text',     'checktype' => 'text'],
+            'serial'            => ['name' => __('Serial number'),                 'displaytype' => 'text',     'checktype' => 'text'],
+            'otherserial'       => ['name' => __('Inventory number'),              'displaytype' => 'text',     'checktype' => 'text'],
+            'contact'           => ['name' => __('Alternate username'),            'displaytype' => 'text',     'checktype' => 'text'],
+            'contact_num'       => ['name' => __('Alternate username number'),     'displaytype' => 'text',     'checktype' => 'text'],
+            'comment'           => ['name' => __('Comments'),                      'displaytype' => 'multiline_text', 'checktype' => 'text'],
+            'entities_id'       => ['name' => __('Entity'),                        'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_entities'],
+            'locations_id'      => ['name' => __('Location'),                      'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_locations'],
+            'states_id'         => ['name' => __('Status'),                        'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_states'],
+            'manufacturers_id'  => ['name' => __('Manufacturer'),                  'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_manufacturers'],
+            'users_id'          => ['name' => __('User'),                          'displaytype' => 'user',     'checktype' => 'text', 'table' => 'glpi_users'],
+            'groups_id'         => ['name' => __('Group'),                         'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_groups'],
+            'users_id_tech'     => ['name' => __('Technician in charge'),          'displaytype' => 'user',     'checktype' => 'text', 'table' => 'glpi_users'],
+            'groups_id_tech'    => ['name' => __('Group in charge'),               'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_groups'],
+            'date_creation'     => ['name' => __('Creation date'),                 'displaytype' => 'date',     'checktype' => 'date'],
+            'date_mod'          => ['name' => __('Last update'),                   'displaytype' => 'date',     'checktype' => 'date'],
+            'is_recursive'      => ['name' => __('Child entities'),                'displaytype' => 'bool',     'checktype' => 'bool'],
+            'is_deleted'        => ['name' => __('Deleted'),                       'displaytype' => 'bool',     'checktype' => 'bool'],
+            'is_dynamic'        => ['name' => __('Automatic inventory'),           'displaytype' => 'bool',     'checktype' => 'bool'],
+            'is_template'       => ['name' => __('Template'),                      'displaytype' => 'bool',     'checktype' => 'bool'],
+            'template_name'     => ['name' => __('Template name'),                 'displaytype' => 'text',     'checktype' => 'text'],
+        ];
+    }
+
+    /**
+     * Append injectable search-option entries for the standard columns of
+     * `glpi_assets_assets` that the live table actually has. Returns the
+     * number of entries appended. Entries already present in `$tab` with
+     * the same `linkfield` are left untouched, so a definition that
+     * already produced its own option for `name` (etc.) wins.
+     *
+     * @param array $tab passed by reference
+     */
+    private function appendNativeAssetFieldOptions(array &$tab): int
+    {
+        /** @var DBmysql|null $DB */
+        global $DB;
+
+        if (!isset($DB) || !is_object($DB)) {
+            return 0;
+        }
+
+        $existing_linkfields = [];
+        foreach ($tab as $opt) {
+            if (is_array($opt) && isset($opt['linkfield']) && is_string($opt['linkfield'])) {
+                $existing_linkfields[$opt['linkfield']] = true;
+            }
+        }
+
+        $catalog = $this->nativeAssetFieldCatalog();
+        $nextId  = 4000;
+        $count   = 0;
+        foreach ($catalog as $column => $meta) {
+            // Only expose columns that exist on the live table (different
+            // GLPI versions / enabled capacities ship slightly different
+            // column sets).
+            try {
+                if (!$DB->fieldExists(self::$table, $column)) {
+                    continue;
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+            if (isset($existing_linkfields[$column])) {
+                continue;
+            }
+            $entry = [
+                'id'          => $nextId,
+                'table'       => $meta['table'] ?? self::$table,
+                'field'       => ($meta['table'] ?? null) ? 'name' : $column,
+                'linkfield'   => $column,
+                'name'        => $meta['name'],
+                'datatype'    => 'string',
+                'injectable'  => PluginDatainjectionCommonInjectionLib::FIELD_INJECTABLE,
+                'displaytype' => $meta['displaytype'],
+                'checktype'   => $meta['checktype'],
+            ];
+            $tab[$nextId] = $entry;
+            $nextId++;
+            $count++;
+        }
+        return $count;
     }
 
     /**
