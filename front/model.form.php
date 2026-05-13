@@ -148,6 +148,18 @@ try {
     Html::footer();
     PluginDatainjectionLogger::info('model.form.php: ok', ['branch' => $di_log_branch]);
 } catch (\Throwable $e) {
+    // `Glpi\Exception\RedirectException` is GLPI 11's *normal* mechanism for
+    // issuing an HTTP 302 from inside a legacy front controller — `Html::redirect()`
+    // throws it, the outer LegacyFileLoadController catches it and converts it
+    // to a real redirect. It's not an error; logging it as one floods the
+    // file with false positives and adds noise to debugging real failures.
+    if (
+        $e instanceof \Glpi\Exception\RedirectException
+        || (is_object($e) && str_ends_with(get_class($e), 'RedirectException'))
+    ) {
+        throw $e;
+    }
+
     PluginDatainjectionLogger::exception($e, 'model.form.php failed (branch=' . $di_log_branch . ')');
     // Re-throw so GLPI still renders its generic error page — the user
     // already saw "Wystąpił nieoczekiwany błąd"; this just makes sure the
