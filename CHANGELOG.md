@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.6] - 2026-05-13
+
+### Fixed
+
+- `PluginDatainjectionCategoryInjection` no longer crashes with `Compile Error: Class PluginDatainjectionCategoryInjection cannot extend final class Glpi\Form\Category`. GLPI 11 emits `Glpi\Form\Category` as `final`, so the previous `extends Category` was a compile-time fatal during autoload — which is why the breadcrumb logging never had a chance to write anything: the class file dies before `plugin_init` returns. Refactored to the same composition pattern used for custom assets: extend `CommonTreeDropdown`, delegate `add()` / `update()` to a freshly-instantiated `Category` in `customimport()`.
+
+### Changed
+
+- `PluginDatainjectionLogger` now mirrors every `ERROR` / `WARN` to PHP's `error_log()` in addition to writing the dedicated log file — not only on file-write failure. When `/var/log/glpi/datainjection.log` is unwritable by the web user (common after `touch` as root), the tagged lines still surface in `php-fpm` / `apache2` error logs prefixed with `[datainjection]`. `INFO` is still only mirrored on file-write failure to keep volume reasonable.
+
 ## [2.16.5] - 2026-05-12
 
 ### Added

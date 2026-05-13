@@ -5,37 +5,38 @@
  * DataInjection plugin for GLPI
  * -------------------------------------------------------------------------
  *
- * LICENSE
+ * Form Category injection.
  *
- * This file is part of DataInjection.
+ * GLPI 11 emits `Glpi\Form\Category` as a `final` class, so we cannot
+ * `extends Category` directly — PHP refuses to compile such a class and
+ * the resulting fatal happens before any of our try/catch wrappers run.
  *
- * DataInjection is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * Instead we extend `CommonTreeDropdown` (the underlying type Category
+ * itself extends) and delegate the actual persist call to a freshly-
+ * instantiated Category in `customimport()`. Instantiating a final class
+ * is permitted; only extending it isn't.
  *
- * DataInjection is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with DataInjection. If not, see <http://www.gnu.org/licenses/>.
- * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2007-2023 by DataInjection plugin team.
- * @license   GPLv2 https://www.gnu.org/licenses/gpl-2.0.html
- * @link      https://github.com/pluginsGLPI/datainjection
+ * Same composition pattern used by `PluginDatainjectionCustomAssetBaseInjection`.
  * -------------------------------------------------------------------------
  */
 
-use Glpi\Form\Category;
-
-class PluginDatainjectionCategoryInjection extends Category implements PluginDatainjectionInjectionInterface
+class PluginDatainjectionCategoryInjection extends CommonTreeDropdown implements PluginDatainjectionInjectionInterface
 {
+    public const TARGET_CLASS = '\\Glpi\\Form\\Category';
+
     public static function getTable($classname = null)
     {
-        $parenttype = get_parent_class(self::class);
-        return $parenttype::getTable();
+        if (class_exists(self::TARGET_CLASS)) {
+            $cls = self::TARGET_CLASS;
+            return $cls::getTable();
+        }
+        // Fallback (older / form-less GLPI builds) — keep the convention.
+        return 'glpi_forms_categories';
+    }
+
+    public function getInjectionItemtype(): string
+    {
+        return ltrim(self::TARGET_CLASS, '\\');
     }
 
     public function isPrimaryType()
@@ -54,26 +55,35 @@ class PluginDatainjectionCategoryInjection extends Category implements PluginDat
     }
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
-    */
+     * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::getOptions()
+     */
     public function getOptions($primary_type = '')
     {
-        $tab           = Search::getOptions(get_parent_class($this));
+        $tab = [];
+        if (class_exists(self::TARGET_CLASS)) {
+            try {
+                $tab = Search::getOptions(self::TARGET_CLASS);
+            } catch (\Throwable $e) {
+                if (class_exists('PluginDatainjectionLogger')) {
+                    PluginDatainjectionLogger::exception($e, 'Search::getOptions failed for ' . self::TARGET_CLASS);
+                }
+                $tab = [];
+            }
+        }
 
-        //Remove some options because some fields cannot be imported
-        $blacklist     = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(get_parent_class($this));
+        $blacklist                = PluginDatainjectionCommonInjectionLib::getBlacklistedOptions(self::TARGET_CLASS);
         $options['ignore_fields'] = $blacklist;
 
         return PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
     }
 
     /**
-    * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
-   **/
+     * @see plugins/datainjection/inc/PluginDatainjectionInjectionInterface::addOrUpdateObject()
+     */
     public function addOrUpdateObject($values = [], $options = [])
     {
         $values = $this->fixCategoryTreeStructure($values);
-        $lib = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
+        $lib    = new PluginDatainjectionCommonInjectionLib($this, $values, $options);
         $lib->processAddOrUpdate();
         return $lib->getInjectionResults();
     }
@@ -81,11 +91,41 @@ class PluginDatainjectionCategoryInjection extends Category implements PluginDat
     public function fixCategoryTreeStructure($values)
     {
         if (isset($values['Category']['completename']) && !isset($values['Category']['name']) && !str_contains($values['Category']['completename'], '>')) {
-            $values['Category']['name'] = trim($values['Category']['completename']);
+            $values['Category']['name']                = trim($values['Category']['completename']);
             $values['Category']['forms_categories_id'] = '0';
-            $values['Category']['ancestors_cache'] = '[]';
+            $values['Category']['ancestors_cache']     = '[]';
         }
 
         return $values;
+    }
+
+    /**
+     * Delegate the actual DB write to the (final) target class. Mirrors the
+     * pattern used by `PluginDatainjectionCustomAssetBaseInjection`.
+     */
+    public function customimport($fields, $add, $rights)
+    {
+        $cls = self::TARGET_CLASS;
+        if (!class_exists($cls)) {
+            if (class_exists('PluginDatainjectionLogger')) {
+                PluginDatainjectionLogger::error('CategoryInjection: target class missing', ['target' => $cls]);
+            }
+            return false;
+        }
+
+        /** @var CommonDBTM $item */
+        $item = new $cls();
+
+        if ($add) {
+            unset($fields['id']);
+            $newID = $item->add($fields);
+            return $newID ?: false;
+        }
+
+        $id = (int) ($fields['id'] ?? 0);
+        if ($id <= 0) {
+            return false;
+        }
+        return $item->update($fields) ? $id : false;
     }
 }

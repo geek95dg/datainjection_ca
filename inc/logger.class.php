@@ -90,11 +90,13 @@ class PluginDatainjectionLogger
             $written = ($bytes !== false && $bytes > 0);
         }
 
-        // Always mirror to PHP's error_log so messages are never lost — even
-        // if GLPI_LOG_DIR is undefined, missing, or unwritable by the web
-        // user. Apache/php-fpm route this to /var/log/php-fpm/error.log,
-        // /var/log/apache2/error.log, or wherever error_log() points.
-        if (!$written) {
+        // Always also mirror ERROR / WARN to PHP's error_log so debugging
+        // never hits a blank wall: when the dedicated log file is unwritable
+        // (typical: `touch` as root, www-data can't write it) at least the
+        // tagged lines surface in /var/log/php-fpm/error.log etc. INFO is
+        // only mirrored on file-write failure to keep volume reasonable.
+        $always_mirror = ($level === 'ERROR' || $level === 'WARN');
+        if (!$written || $always_mirror) {
             @error_log('[datainjection] ' . $line);
         }
     }
