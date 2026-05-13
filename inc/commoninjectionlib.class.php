@@ -633,6 +633,31 @@ class PluginDatainjectionCommonInjectionLib
                 if (!is_a($tmptype, CommonDBTM::class, true)) {
                     return;
                 }
+                // `getItemTypeForTable('glpi_assets_assets')` resolves to
+                // the abstract base `\Glpi\Asset\Asset` (multiple concrete
+                // per-definition subclasses share that table). Trying to
+                // `new` an abstract class fatals with
+                // `Cannot instantiate abstract class …`, which under our
+                // custom-asset wrapper killed the entire import at offset 0.
+                // Skip the dropdown lookup in that case — the value will
+                // be passed through as-is via the fall-through below the
+                // switch (treated as a plain text value).
+                try {
+                    if ((new \ReflectionClass($tmptype))->isAbstract()) {
+                        if (class_exists('PluginDatainjectionLogger')) {
+                            PluginDatainjectionLogger::warning(
+                                'getFieldValue: skipping dropdown lookup for abstract class',
+                                ['table' => $searchOption['table'], 'itemtype' => $tmptype, 'linkfield' => $linkfield],
+                            );
+                        }
+                        $this->setValueForItemtype($itemtype, $linkfield, $value);
+                        return;
+                    }
+                } catch (\Throwable $e) {
+                    // ReflectionClass throws if the class doesn't exist —
+                    // fall through and let the original "is_a" check above
+                    // have already handled missing classes (it returned).
+                }
                 $item    = new $tmptype();
                 if ($item instanceof CommonTreeDropdown) {
                     // use findID instead of getID
