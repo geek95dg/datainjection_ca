@@ -690,6 +690,7 @@ class PluginDatainjectionModel extends CommonDBTM
 
     public function showAdvancedForm($ID, $options = [])
     {
+        PluginDatainjectionLogger::info('showAdvancedForm: enter', ['id' => $ID]);
         if ($ID > 0) {
             $this->check($ID, READ);
         } else {
@@ -731,11 +732,20 @@ class PluginDatainjectionModel extends CommonDBTM
             'item' => $this,
         ];
 
+        PluginDatainjectionLogger::info('showAdvancedForm: rendering twig', [
+            'id'             => $ID,
+            'injection_type_count' => is_array($data['injection_types']) ? count($data['injection_types']) : 0,
+        ]);
         TemplateRenderer::getInstance()->display('@datainjection/model_advanced_form.html.twig', $data);
+        PluginDatainjectionLogger::info('showAdvancedForm: twig rendered');
 
         if ($ID > 0) {
             $filetype = $this->fields['filetype'] ?? 'csv';
             $tmp      = self::getInstance($filetype) ?: self::getInstance('csv');
+            PluginDatainjectionLogger::info('showAdvancedForm: rendering additional form', [
+                'filetype' => $filetype,
+                'class'    => $tmp ? get_class($tmp) : null,
+            ]);
             $tmp->showAdditionnalForm($this);
         }
 
@@ -776,8 +786,17 @@ class PluginDatainjectionModel extends CommonDBTM
    **/
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
+        PluginDatainjectionLogger::info('getTabNameForItem: enter', [
+            'item'         => get_class($item),
+            'id'           => $item->fields['id'] ?? null,
+            'withtemplate' => $withtemplate,
+        ]);
         try {
-            return $this->doGetTabNameForItem($item, $withtemplate);
+            $result = $this->doGetTabNameForItem($item, $withtemplate);
+            PluginDatainjectionLogger::info('getTabNameForItem: ok', [
+                'tabs' => is_array($result) ? array_keys($result) : (string) $result,
+            ]);
+            return $result;
         } catch (\Throwable $e) {
             PluginDatainjectionLogger::exception($e, 'getTabNameForItem failed');
             return '';
@@ -811,8 +830,16 @@ class PluginDatainjectionModel extends CommonDBTM
 
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
+        PluginDatainjectionLogger::info('displayTabContentForItem: enter', [
+            'item'         => get_class($item),
+            'id'           => $item->fields['id'] ?? null,
+            'tabnum'       => $tabnum,
+            'withtemplate' => $withtemplate,
+        ]);
         try {
-            return self::doDisplayTabContentForItem($item, $tabnum, $withtemplate);
+            $result = self::doDisplayTabContentForItem($item, $tabnum, $withtemplate);
+            PluginDatainjectionLogger::info('displayTabContentForItem: ok', ['tabnum' => $tabnum]);
+            return $result;
         } catch (\Throwable $e) {
             PluginDatainjectionLogger::exception(
                 $e,

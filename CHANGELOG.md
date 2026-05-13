@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.5] - 2026-05-12
+
+### Added
+
+- Entry/exit breadcrumb logging on the heaviest tab callbacks (`getTabNameForItem`, `displayTabContentForItem`, `showAdvancedForm`, `PluginDatainjectionInjectionType::getItemtypes`) so the log shows where a failing page-load actually dies — even when the exception surfaces in GLPI's tab loader rather than our own code. Each line records the item class, id, tab number, and structural context (number of injectable types, twig render boundary, additional-form filetype).
+- Plugin-scoped `set_error_handler` that records non-fatal PHP warnings/notices originating in our files. Daisy-chains to the previous handler so it never blocks GLPI's own error reporting.
+
 ## [2.16.4] - 2026-05-12
 
 ### Fixed
