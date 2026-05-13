@@ -30,77 +30,118 @@
 
 Session::checkRight("plugin_datainjection_use", READ);
 
-Html::header(
-    __('Data injection', 'datainjection'),
-    $_SERVER["PHP_SELF"],
-    "tools",
-    "plugindatainjectionmenu",
-    "client",
-);
+// Wrap the controller exactly like model.form.php: every branch logs its
+// entry, and any \Throwable is caught, logged with a full trace, then
+// re-thrown so GLPI still renders its normal error page. `Glpi\Exception\
+// RedirectException` is GLPI's normal 302 signal and is NOT treated as
+// an error.
+$di_log_branch = 'idle';
+try {
+    PluginDatainjectionLogger::info('clientinjection.form.php: enter', [
+        'method'    => $_SERVER['REQUEST_METHOD'] ?? null,
+        'post_keys' => array_keys($_POST),
+        'get_keys'  => array_keys($_GET),
+        'has_go'    => isset($_SESSION['datainjection']['go']),
+        'has_files' => !empty($_FILES),
+    ]);
 
-if (isset($_SESSION['datainjection']['go'])) {
-    $model = unserialize($_SESSION['datainjection']['currentmodel']);
-    PluginDatainjectionClientInjection::showInjectionForm($model, $_SESSION['glpiactive_entity']);
-} elseif (isset($_POST['upload'])) {
-    $model = new PluginDatainjectionModel();
-    $model->can($_POST['id'], READ);
-    $_SESSION['datainjection']['infos'] = ($_POST['info'] ?? []);
+    Html::header(
+        __('Data injection', 'datainjection'),
+        $_SERVER["PHP_SELF"],
+        "tools",
+        "plugindatainjectionmenu",
+        "client",
+    );
 
-    //If additional informations provided : check if mandatory infos are present
-    if (!$model->checkMandatoryFields($_SESSION['datainjection']['infos'])) {
-        Session::addMessageAfterRedirect(
-            __s('One mandatory field is not filled', 'datainjection'),
-            true,
-            ERROR,
-            true,
-        );
-    } elseif (
-        isset($_FILES['filename']['name'])
-        && $_FILES['filename']['name']
-         && $_FILES['filename']['tmp_name']
-            && !$_FILES['filename']['error']
-               && $_FILES['filename']['size']
-    ) {
-        //Read file using automatic encoding detection, and do not delete file once readed
-        $options = [
-            'file_encoding' => $_POST['file_encoding'],
-            'mode'          => PluginDatainjectionModel::PROCESS,
-            'delete_file'   => false,
-        ];
-        $response = $model->processUploadedFile($options);
-        $model->cleanData();
+    if (isset($_SESSION['datainjection']['go'])) {
+        $di_log_branch = 'go (showInjectionForm)';
+        $model = unserialize($_SESSION['datainjection']['currentmodel']);
+        PluginDatainjectionClientInjection::showInjectionForm($model, $_SESSION['glpiactive_entity']);
+    } elseif (isset($_POST['upload'])) {
+        $di_log_branch = 'upload';
+        $model = new PluginDatainjectionModel();
+        $model->can($_POST['id'], READ);
+        $_SESSION['datainjection']['infos'] = ($_POST['info'] ?? []);
 
-        if ($response) {
-            //File uploaded successfully and matches the given model : switch to the import tab
-            $_SESSION['datainjection']['file_name']    = $_FILES['filename']['name'];
-            $_SESSION['datainjection']['step']         = PluginDatainjectionClientInjection::STEP_PROCESS;
-            //Store model in session for injection
-            $_SESSION['datainjection']['currentmodel'] = serialize($model);
-            $_SESSION['datainjection']['go']           = true;
+        //If additional informations provided : check if mandatory infos are present
+        if (!$model->checkMandatoryFields($_SESSION['datainjection']['infos'])) {
+            PluginDatainjectionLogger::warning('clientinjection.form.php: mandatory info missing');
+            Session::addMessageAfterRedirect(
+                __s('One mandatory field is not filled', 'datainjection'),
+                true,
+                ERROR,
+                true,
+            );
+        } elseif (
+            isset($_FILES['filename']['name'])
+            && $_FILES['filename']['name']
+             && $_FILES['filename']['tmp_name']
+                && !$_FILES['filename']['error']
+                   && $_FILES['filename']['size']
+        ) {
+            //Read file using automatic encoding detection, and do not delete file once readed
+            // file_encoding here should be an encoding constant (auto/utf-8/iso),
+            // not the model's filetype. Use AUTO if no explicit value supplied.
+            $file_encoding = $_POST['file_encoding'] ?? PluginDatainjectionBackend::ENCODING_AUTO;
+            $options = [
+                'file_encoding' => $file_encoding,
+                'mode'          => PluginDatainjectionModel::PROCESS,
+                'delete_file'   => false,
+            ];
+            $response = $model->processUploadedFile($options);
+            PluginDatainjectionLogger::info('clientinjection.form.php: processUploadedFile returned', [
+                'response' => (bool) $response,
+            ]);
+            $model->cleanData();
+
+            if ($response) {
+                //File uploaded successfully and matches the given model : switch to the import tab
+                $_SESSION['datainjection']['file_name']    = $_FILES['filename']['name'];
+                $_SESSION['datainjection']['step']         = PluginDatainjectionClientInjection::STEP_PROCESS;
+                //Store model in session for injection
+                $_SESSION['datainjection']['currentmodel'] = serialize($model);
+                $_SESSION['datainjection']['go']           = true;
+            } else {
+                //Go back to the file upload page
+                $_SESSION['datainjection']['step'] = PluginDatainjectionClientInjection::STEP_UPLOAD;
+            }
         } else {
-            //Got back to the file upload page
-            $_SESSION['datainjection']['step'] = PluginDatainjectionClientInjection::STEP_UPLOAD;
+            PluginDatainjectionLogger::warning('clientinjection.form.php: no usable file in $_FILES', [
+                'files_keys' => array_keys($_FILES),
+                'filename'   => $_FILES['filename'] ?? null,
+            ]);
+            Session::addMessageAfterRedirect(
+                __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjection'),
+                true,
+                ERROR,
+                true,
+            );
         }
+
+        Html::back();
+    } elseif (isset($_POST['finish']) || isset($_POST['cancel'])) {
+        $di_log_branch = isset($_POST['finish']) ? 'finish' : 'cancel';
+        PluginDatainjectionSession::removeParams();
+        Html::redirect(Toolbox::getItemTypeFormURL('PluginDatainjectionClientInjection'));
     } else {
-        Session::addMessageAfterRedirect(
-            __s('The file could not be found (Maybe it exceeds the maximum size allowed)', 'datainjection'),
-            true,
-            ERROR,
-            true,
-        );
+        $di_log_branch = 'showForm';
+        if (isset($_GET['id'])) { // Allow link to a model
+            PluginDatainjectionSession::setParam('models_id', $_GET['id']);
+        }
+        $clientInjection = new PluginDatainjectionClientInjection();
+        $clientInjection->title();
+        $clientInjection->showForm(0);
     }
 
-    Html::back();
-} elseif (isset($_POST['finish']) || isset($_POST['cancel'])) {
-    PluginDatainjectionSession::removeParams();
-    Html::redirect(Toolbox::getItemTypeFormURL('PluginDatainjectionClientInjection'));
-} else {
-    if (isset($_GET['id'])) { // Allow link to a model
-        PluginDatainjectionSession::setParam('models_id', $_GET['id']);
+    Html::footer();
+    PluginDatainjectionLogger::info('clientinjection.form.php: ok', ['branch' => $di_log_branch]);
+} catch (\Throwable $e) {
+    if (
+        $e instanceof \Glpi\Exception\RedirectException
+        || (is_object($e) && str_ends_with(get_class($e), 'RedirectException'))
+    ) {
+        throw $e;
     }
-    $clientInjection = new PluginDatainjectionClientInjection();
-    $clientInjection->title();
-    $clientInjection->showForm(0);
+    PluginDatainjectionLogger::exception($e, 'clientinjection.form.php failed (branch=' . $di_log_branch . ')');
+    throw $e;
 }
-
-Html::footer();

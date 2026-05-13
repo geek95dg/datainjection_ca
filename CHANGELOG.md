@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.17] - 2026-05-13
+
+### Added
+
+- `front/clientinjection.form.php` (the actual import UI) is now wrapped in the same `try/catch` + branch-label logger pattern as `front/model.form.php`. The 500 you currently see when the model finishes validation and the user opens the import page will be logged as `clientinjection.form.php failed (branch=…)` with a precise file:line + trace, instead of disappearing behind GLPI's generic "Wystąpił nieoczekiwany błąd" page. Branches: `go` (showInjectionForm), `upload`, `finish`, `cancel`, `showForm`. Entry breadcrumb records the request method, POST/GET keys, and whether the session already has `go` / files.
+- `customAsset.getOptions: returning` breadcrumb now includes `pairs` — a compact `linkfield=name` listing of every option that survived to the Mappings UI (capped at ~1500 chars). Lets us tell at a glance whether "Producent" / "Lokalizacja" / etc. are present, and whether anything is leaking a raw column name instead of a human label.
+
+### Changed
+
+- The clientinjection import branch no longer hard-codes `'file_encoding' => $_POST['file_encoding']` blindly; if that POST key is missing, it falls back to `PluginDatainjectionBackend::ENCODING_AUTO` instead of passing `null` into the backend.
+
 ## [2.16.16] - 2026-05-13
 
 ### Fixed

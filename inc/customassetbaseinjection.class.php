@@ -307,10 +307,28 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         }
 
         if (class_exists('PluginDatainjectionLogger')) {
+            // Pair every option (`linkfield` -> `name`) so we can verify
+            // from the log that, e.g., "Producent" / "Lokalizacja" /
+            // "Status" are all present, and that no entry ends up with
+            // its raw column name in the "Pola" dropdown. Compact form:
+            // `linkfield=name` joined by `, `, capped at ~1500 chars so a
+            // single rogue option doesn't blow up the log line.
+            $pairs = [];
+            foreach ($tab as $opt) {
+                if (!is_array($opt) || !isset($opt['linkfield'])) {
+                    continue;
+                }
+                $pairs[] = $opt['linkfield'] . '=' . (string) ($opt['name'] ?? '');
+            }
+            $pairs_str = implode(', ', $pairs);
+            if (strlen($pairs_str) > 1500) {
+                $pairs_str = substr($pairs_str, 0, 1500) . '…(' . count($pairs) . ' total)';
+            }
             PluginDatainjectionLogger::info('customAsset.getOptions: returning', [
                 'asset_class'         => $assetClass,
                 'total_count'         => count($tab),
                 'custom_field_count'  => count($customFields),
+                'pairs'               => $pairs_str,
             ]);
         }
 
