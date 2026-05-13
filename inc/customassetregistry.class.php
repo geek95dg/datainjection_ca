@@ -393,25 +393,102 @@ class PluginDatainjectionCustomAssetRegistry
             return null;
         }
 
-        $label = $entry['label'] ?? $entry['display_name'] ?? $key;
+        // GLPI 11 schema on `glpi_assets_customfielddefinitions`:
+        //   * `label` — plain string in the source language
+        //   * `translations` — JSON map { "fr_FR": "...", "pl_PL": "...", … }
+        //
+        // Older snapshots / the JSON-on-definition fallback path may have
+        // the translations baked into `label` itself; try both layouts.
+        $label = $entry['label'] ?? $entry['display_name'] ?? '';
         if (is_string($label) && $label !== '') {
             $decoded = json_decode($label, true);
             if (is_array($decoded)) {
-                $lang  = $_SESSION['glpilanguage'] ?? 'en_GB';
-                $label = $decoded[$lang] ?? reset($decoded) ?: $key;
+                $label = self::pickLocalisedString($decoded) ?? $key;
             }
-        } else {
+        }
+        if (!is_string($label) || $label === '') {
+            $label = '';
+        }
+        if (isset($entry['translations']) && is_string($entry['translations']) && $entry['translations'] !== '') {
+            $tr = json_decode($entry['translations'], true);
+            if (is_array($tr)) {
+                $localised = self::pickLocalisedString($tr);
+                if ($localised !== null && $localised !== '') {
+                    $label = $localised;
+                }
+            }
+        }
+        if ($label === '') {
             $label = $key;
         }
 
-        $type = (string) ($entry['type'] ?? $entry['datatype'] ?? 'string');
+        // `type` is stored as a class FQCN in GLPI 11
+        // (Glpi\Asset\CustomFieldType\DropdownType, …). Normalise to a
+        // short token (`dropdown`, `text`, `number`, `date`, `datetime`,
+        // `boolean`, `url`, `user`, `string`, …) so callers can do simple
+        // switching without depending on the full namespace.
+        $type      = (string) ($entry['type'] ?? $entry['datatype'] ?? 'string');
+        $typeShort = self::normalizeCustomFieldType($type);
+
+        // For dropdown / itemlink types, GLPI stores the target itemtype
+        // (e.g. `Location`, `Manufacturer`) in its own column. Carry it
+        // forward so the injection options can be built as proper
+        // dropdowns (name → ID lookup at injection time).
+        $itemtype = $entry['itemtype'] ?? null;
+        if (!is_string($itemtype) || $itemtype === '') {
+            $itemtype = null;
+        }
 
         return [
-            'key'     => $key,
-            'label'   => (string) $label,
-            'type'    => $type,
-            'default' => $entry['default_value'] ?? null,
+            'key'           => $key,
+            'label'         => (string) $label,
+            'type'          => $typeShort,
+            'type_raw'      => $type,
+            'itemtype'      => $itemtype,
+            'default'       => $entry['default_value'] ?? null,
         ];
+    }
+
+    /**
+     * Pick the value for the current session locale from a translation map,
+     * falling back to en_GB / `en` / the first non-empty entry.
+     */
+    private static function pickLocalisedString(array $map): ?string
+    {
+        $lang = $_SESSION['glpilanguage'] ?? 'en_GB';
+        foreach ([$lang, 'en_GB', 'en'] as $candidate) {
+            if (isset($map[$candidate]) && is_string($map[$candidate]) && $map[$candidate] !== '') {
+                return $map[$candidate];
+            }
+        }
+        foreach ($map as $value) {
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Reduce a GLPI 11 custom-field type — typically a class FQCN like
+     * `Glpi\Asset\CustomFieldType\DropdownType` — to a short canonical
+     * token used by the injection metadata mappers.
+     */
+    private static function normalizeCustomFieldType(string $type): string
+    {
+        if ($type === '') {
+            return 'string';
+        }
+        // Already short / lowercase token? Return as-is.
+        if (!str_contains($type, '\\') && ctype_lower($type[0])) {
+            return $type;
+        }
+        $short = strtolower(ltrim(substr(strrchr('\\' . $type, '\\'), 1), '\\'));
+        // Strip the `Type` suffix GLPI conventionally tacks on.
+        if (str_ends_with($short, 'type')) {
+            $short = substr($short, 0, -4);
+        }
+        return $short === '' ? 'string' : $short;
     }
 
     private static function sanitizeIdentifier(string $value): string
