@@ -72,12 +72,40 @@ class PluginDatainjectionInjectionType
                     !$only_primary
                     || (method_exists($injectionClass, 'isPrimaryType') && $injectionClass->isPrimaryType())
                 ) {
-                    $instance = new $type();
+                    // Custom-asset and Form-Category injection classes don't
+                    // *extend* the target itemtype (the target is `final` in
+                    // GLPI 11), so the rights check has to be aimed at the
+                    // delegate instead of the injection wrapper. They expose
+                    // the target FQCN via `getInjectionItemtype()`; honour
+                    // that for the canCreate() probe so the wrapper isn't
+                    // silently filtered out by an empty $rightname.
+                    $rights_target = $instance = $injectionClass;
+                    if (method_exists($injectionClass, 'getInjectionItemtype')) {
+                        $target_class = $injectionClass->getInjectionItemtype();
+                        if (is_string($target_class) && $target_class !== '' && class_exists($target_class)) {
+                            $rights_target = new $target_class();
+                        }
+                    }
                     //If user has no right to create an object of this type, do not display type in the list
-                    if (!$instance->canCreate()) {
+                    if (!$rights_target->canCreate()) {
                         continue;
                     }
-                    $typename = get_parent_class($type);
+                    // For the same reason we cannot key the dropdown by
+                    // `get_parent_class($type)` — every per-definition
+                    // custom-asset injection class shares the same parent
+                    // (the base class), so all entries would collapse to a
+                    // single dropdown row. Prefer the injection itemtype
+                    // when it is available; fall back to the legacy
+                    // `get_parent_class()` for the original injection
+                    // classes that DO extend the target.
+                    if (method_exists($injectionClass, 'getInjectionItemtype')
+                        && is_string($target_class = $injectionClass->getInjectionItemtype())
+                        && $target_class !== ''
+                    ) {
+                        $typename = $target_class;
+                    } else {
+                        $typename = get_parent_class($type);
+                    }
                     $name     = '';
                     if ($from != 'datainjection') {
                         $plugin->getFromDBbyDir($from);

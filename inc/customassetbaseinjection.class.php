@@ -31,6 +31,21 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         return '';
     }
 
+    /**
+     * Surface the underlying asset's human-readable name in dropdowns,
+     * search-options column headers and breadcrumbs — otherwise every
+     * generated injection wrapper would advertise itself by its raw
+     * class name (`PluginDatainjectionCustomAsset<X>Injection`).
+     */
+    public static function getTypeName($nb = 0)
+    {
+        $cls = static::getAssetClass();
+        if ($cls !== '' && class_exists($cls)) {
+            return $cls::getTypeName($nb);
+        }
+        return parent::getTypeName($nb);
+    }
+
     public function isPrimaryType()
     {
         return true;

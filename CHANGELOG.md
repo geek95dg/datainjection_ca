@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.7] - 2026-05-13
+
+### Fixed
+
+- Custom-asset and Form-Category itemtypes now appear in the "Type of data to import" dropdown on the model creation form. Two regressions were stacking:
+  - `PluginDatainjectionInjectionType::getItemtypes()` was probing rights against the *wrapper* class (`PluginDatainjectionCustomAsset<X>Injection`, `PluginDatainjectionCategoryInjection`), which has an empty `$rightname` and therefore failed `canCreate()`. The probe now targets the actual itemtype declared by `getInjectionItemtype()` — i.e. `\Glpi\CustomAsset\<X>Asset` or `\Glpi\Form\Category` — which carries the real per-definition rights.
+  - The dropdown was keyed by `get_parent_class()`, so every per-definition custom-asset wrapper collapsed to a single row (they all extend the same base class). Keyed by `getInjectionItemtype()` when available so each definition gets its own entry.
+- `PluginDatainjectionCustomAssetBaseInjection::getTypeName()` now delegates to the underlying asset class, so the dropdown shows the human-readable definition label (e.g. "Ipads", "PM90") instead of the wrapper class name.
+
 ## [2.16.6] - 2026-05-13
 
 ### Fixed
