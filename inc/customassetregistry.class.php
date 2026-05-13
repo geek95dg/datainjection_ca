@@ -200,24 +200,30 @@ class PluginDatainjectionCustomAssetRegistry
         $suffix         = self::sanitizeIdentifier($def['system_name']);
         $injectionClass = 'PluginDatainjectionCustomAsset' . $suffix . 'Injection';
 
-        // Traits are not always handled by GLPI's plugin autoloader, so
-        // include the file manually before generating the class.
-        if (!trait_exists('PluginDatainjectionCustomAssetInjectionTrait', false)) {
-            $traitFile = __DIR__ . '/customassetinjectiontrait.class.php';
-            if (is_file($traitFile)) {
-                require_once $traitFile;
+        // Ensure the base class is loaded — GLPI's plugin autoloader will
+        // pick it up by name, but include explicitly so the eval below
+        // never depends on autoload ordering.
+        if (!class_exists('PluginDatainjectionCustomAssetBaseInjection', false)) {
+            $baseFile = __DIR__ . '/customassetbaseinjection.class.php';
+            if (is_file($baseFile)) {
+                require_once $baseFile;
             }
         }
 
         if (!class_exists($injectionClass, false)) {
+            // IMPORTANT: do NOT `extends \Glpi\CustomAsset\XAsset` here. Those
+            // classes are emitted `final` by GLPI 11, so extending them is a
+            // compile error. Instead we extend our own (non-final) base
+            // class and reference the asset FQCN as a static — the base
+            // class instantiates it directly inside `customimport`.
             $code = sprintf(
-                'class %s extends \\%s implements PluginDatainjectionInjectionInterface {'
-                . ' use PluginDatainjectionCustomAssetInjectionTrait;'
+                'class %s extends PluginDatainjectionCustomAssetBaseInjection {'
                 . ' public static function getDefinitionId(): int { return %d; }'
+                . ' public static function getAssetClass(): string { return %s; }'
                 . ' }',
                 $injectionClass,
-                ltrim($assetClass, '\\'),
                 $defId,
+                var_export(ltrim($assetClass, '\\'), true),
             );
             try {
                 eval($code);

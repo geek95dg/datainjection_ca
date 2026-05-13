@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.4] - 2026-05-12
+
+### Fixed
+
+- Custom-asset injection no longer crashes with `Class PluginDatainjectionCustomAsset<X>Injection cannot extend final class Glpi\CustomAsset\<X>Asset`. GLPI 11 emits the per-definition dynamic asset class as `final`, so the previous strategy of `eval`-ing a subclass was a compile-time fatal — which surfaced as a 500 on `/ajax/common.tabs.php` whenever the plugin scanned `glpi_assets_assetdefinitions`. The generated injection class now extends a non-final `PluginDatainjectionCustomAssetBaseInjection` and delegates CRUD to a freshly-instantiated asset object (instantiating a final class is permitted; only extending it isn't).
+
+### Removed
+
+- `inc/customassetinjectiontrait.class.php` (its methods moved into the new base class).
+
 ## [2.16.3] - 2026-05-12
 
 ### Fixed
