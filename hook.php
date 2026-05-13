@@ -94,7 +94,10 @@ function plugin_datainjection_install()
                    ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
             $DB->doQuery($query);
 
-            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxs` (
+            // Note: GLPI auto-pluralizes `xlsx` → `xlsxes` when inferring
+            // the table name from `PluginDatainjectionModelxlsx`. The
+            // canonical table name therefore takes the "es" suffix.
+            $query = "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxes` (
                      `id` int {$default_key_sign} NOT NULL auto_increment,
                      `models_id` int {$default_key_sign} NOT NULL,
                      `itemtype` varchar(255) NOT NULL default '',
@@ -202,7 +205,8 @@ function plugin_datainjection_uninstall()
 
     $tables = ["glpi_plugin_datainjection_models",
         "glpi_plugin_datainjection_modelcsvs",
-        "glpi_plugin_datainjection_modelxlsxs",
+        "glpi_plugin_datainjection_modelxlsxs",  // legacy name; drop too in case it lingers from a prior install
+        "glpi_plugin_datainjection_modelxlsxes",
         "glpi_plugin_datainjection_mappings",
         "glpi_plugin_datainjection_infos",
         "glpi_plugin_datainjection_filetype",
@@ -235,9 +239,23 @@ function plugin_datainjection_migration_xlsx_support(
     string $default_collation,
     string $default_key_sign
 ): void {
-    if (!$DB->tableExists('glpi_plugin_datainjection_modelxlsxs')) {
+    $canonical = 'glpi_plugin_datainjection_modelxlsxes';
+    $legacy    = 'glpi_plugin_datainjection_modelxlsxs';
+
+    // Heal installs of 2.16.0–2.16.7 that created the table under the
+    // wrong (un-pluralized) name. If both exist, prefer the canonical
+    // one and drop the legacy.
+    if ($DB->tableExists($legacy)) {
+        if ($DB->tableExists($canonical)) {
+            $DB->doQuery("DROP TABLE `{$legacy}`");
+        } else {
+            $DB->doQuery("RENAME TABLE `{$legacy}` TO `{$canonical}`");
+        }
+    }
+
+    if (!$DB->tableExists($canonical)) {
         $DB->doQuery(
-            "CREATE TABLE IF NOT EXISTS `glpi_plugin_datainjection_modelxlsxs` (
+            "CREATE TABLE IF NOT EXISTS `{$canonical}` (
                 `id` int {$default_key_sign} NOT NULL auto_increment,
                 `models_id` int {$default_key_sign} NOT NULL,
                 `itemtype` varchar(255) NOT NULL default '',
