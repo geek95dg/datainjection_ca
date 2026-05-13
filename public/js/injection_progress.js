@@ -60,6 +60,27 @@ function startBatchInjection(container) {
         }
     }
 
+    /** Show the in-page error banner with a server-supplied message and
+     *  stop the progress spinner. Keeps the "Abort and start over" form
+     *  reachable so the user can recover without reinstalling. */
+    function showError(message) {
+        const progressBar = container.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.remove('bg-info');
+            progressBar.classList.add('bg-danger');
+            progressBar.textContent = errorLabel;
+        }
+        const errBox = container.querySelector('#injection_error');
+        const errMsg = container.querySelector('#injection_error_message');
+        if (errBox) {
+            errBox.style.display = '';
+        }
+        if (errMsg) {
+            errMsg.textContent = message || errorLabel;
+        }
+    }
+
     function processBatch() {
         $.ajax({
             url: batchUrl,
@@ -70,6 +91,13 @@ function startBatchInjection(container) {
                 batch_size: batchSize
             },
             success: function(response) {
+                // inject_batch.php may also return a structured error
+                // payload with HTTP 200 in degenerate cases; treat it
+                // like an error.
+                if (response && response.error) {
+                    showError(response.message || errorLabel);
+                    return;
+                }
                 updateProgressBar(response.progress);
                 updateStatus(response.processed, response.total);
                 offset = response.offset;
@@ -87,12 +115,25 @@ function startBatchInjection(container) {
                     processBatch();
                 }
             },
-            error: function() {
-                const progressBar = container.querySelector('.progress-bar');
-                if (progressBar) {
-                    progressBar.classList.remove('progress-bar-animated');
-                    progressBar.textContent = errorLabel;
+            error: function(xhr) {
+                // Prefer the structured error body the wrapped
+                // inject_batch.php now returns even on 500. Fall back
+                // to a generic message if the response was empty or
+                // un-parseable.
+                let message = errorLabel;
+                try {
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    } else if (xhr && xhr.responseText) {
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) {
+                            message = parsed.message;
+                        }
+                    }
+                } catch (e) {
+                    /* keep default label */
                 }
+                showError(message);
             }
         });
     }

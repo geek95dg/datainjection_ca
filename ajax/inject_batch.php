@@ -27,7 +27,6 @@
  * @link      https://github.com/pluginsGLPI/datainjection
  * -------------------------------------------------------------------------
  */
-use function Safe\json_encode;
 
 header("Content-Type: application/json; charset=UTF-8");
 Html::header_nocache();
@@ -37,6 +36,31 @@ Session::checkCentralAccess();
 $offset     = (int) ($_POST['offset'] ?? 0);
 $batch_size = (int) ($_POST['batch_size'] ?? 10);
 
-echo json_encode(
-    PluginDatainjectionClientInjection::processBatch($offset, $batch_size),
-);
+// Wrap the actual batch call: any throw turns into a 500 that the
+// progress JS can't recover from. Log it with full context, then return
+// a JSON body the JS can parse so the user sees a real error message
+// (and the "abort & start over" button stays clickable).
+try {
+    PluginDatainjectionLogger::info('inject_batch.php: enter', [
+        'offset'     => $offset,
+        'batch_size' => $batch_size,
+    ]);
+    $result = PluginDatainjectionClientInjection::processBatch($offset, $batch_size);
+    PluginDatainjectionLogger::info('inject_batch.php: ok', [
+        'offset'    => $offset,
+        'processed' => is_array($result) ? count($result) : null,
+    ]);
+    echo json_encode($result);
+} catch (\Throwable $e) {
+    PluginDatainjectionLogger::exception($e, 'inject_batch.php failed at offset ' . $offset);
+    // Don't propagate the throw — that produces a generic 500 with no
+    // body, which jQuery interprets as a network failure and the
+    // progress bar gets stuck. Instead return a structured error so the
+    // JS can show the message and stop polling.
+    http_response_code(500);
+    echo json_encode([
+        'error'    => true,
+        'message'  => $e->getMessage(),
+        'offset'   => $offset,
+    ]);
+}
