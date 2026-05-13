@@ -120,6 +120,30 @@ class PluginDatainjectionBackendxlsx extends PluginDatainjectionBackend implemen
     }
 
     /**
+     * Open / close hooks expected by the legacy CSV-shaped backend
+     * interface (called from `PluginDatainjectionClientInjection::showInjectionForm`
+     * to iterate the file fresh after the upload step).
+     *
+     * The XLSX backend parses the whole archive into memory in
+     * `loadWorkbook()` and serves rows from `$this->rows` via
+     * `getNextLine()` — there is no file handle to keep open. We just
+     * lazy-parse on demand and rewind the cursor so callers iterating
+     * from the top see the first row again.
+     */
+    public function openFile(): void
+    {
+        $this->loadWorkbook();
+        $this->cursor = 0;
+    }
+
+    public function closeFile(): void
+    {
+        // Nothing to release — rows live in memory until the backend is
+        // garbage-collected. Intentionally a no-op so the caller's
+        // `openFile() … closeFile()` bracket matches the CSV backend.
+    }
+
+    /**
      * Parse the .xlsx archive into $this->rows. Lazy and idempotent.
      */
     private function loadWorkbook(): void

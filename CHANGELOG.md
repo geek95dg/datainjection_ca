@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.18] - 2026-05-13
+
+### Fixed
+
+- `PluginDatainjectionBackendxlsx` now implements `openFile()` and `closeFile()`. The legacy CSV-shaped backend interface includes these (CSV streams from disk), and `PluginDatainjectionClientInjection::showInjectionForm()` calls them when fetching rows for batch processing during import. Without them, opening the import page for an XLSX-backed model produced `Call to undefined method PluginDatainjectionBackendxlsx::openFile()` and a 500. `openFile()` lazy-parses (if not already) and rewinds the cursor so re-iteration works; `closeFile()` is a no-op (rows live in memory).
+
 ## [2.16.17] - 2026-05-13
 
 ### Added
