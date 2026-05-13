@@ -226,25 +226,25 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             ],
         ];
 
-        // addToSearchOptions does field-by-field introspection (calls
-        // getItemTypeForTable($value['table'])->getTypeName(1), etc.) and
-        // has historically thrown when the table name doesn't map to a
-        // known itemtype. If it does, the whole getOptions() result is
-        // lost and the Fields dropdown ends up empty — wrap it so the
-        // failure ends up in datainjection.log.
-        try {
-            $tab = PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
-        } catch (\Throwable $e) {
-            if (class_exists('PluginDatainjectionLogger')) {
-                PluginDatainjectionLogger::exception(
-                    $e,
-                    'customAsset.getOptions: addToSearchOptions threw for ' . $assetClass,
-                );
-            }
-            // Best-effort fallback: keep whatever we had before. The Fields
-            // dropdown will at least have entries that already carried a
-            // linkfield from GLPI's search options.
-        }
+        // We deliberately do NOT call
+        // `PluginDatainjectionCommonInjectionLib::addToSearchOptions()` here
+        // for custom assets. That helper calls
+        // `getItemTypeForTable($value['table'])::getTypeName(1)` on every
+        // option, which for the `glpi_assets_assets` table resolves to the
+        // abstract `\Glpi\Asset\Asset` base class — and that class has a
+        // typed static `$definition_system_name` that is only initialised
+        // on the per-definition subclasses. Calling
+        // `Asset::getTypeName(1)` therefore throws
+        //
+        //     Typed static property Glpi\Asset\Asset::$definition_system_name
+        //     must not be accessed before initialization
+        //
+        // The throw aborts the whole search-options pipeline and the
+        // Fields dropdown ends up empty (or limited to the per-definition
+        // custom fields we append after). Run our own safe pass instead:
+        // filter, mark injectable, apply the displaytype overrides we
+        // collected above.
+        $tab = $this->processSearchOptionsForCustomAsset($tab, $options);
 
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: after addToSearchOptions', [
@@ -476,6 +476,118 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             'decimal', 'float'         => 'float',
             default                    => 'text',
         };
+    }
+
+    /**
+     * Safe equivalent of
+     * `PluginDatainjectionCommonInjectionLib::addToSearchOptions()` for
+     * custom-asset itemtypes. The shared helper introspects each option's
+     * table via `getItemTypeForTable($table)::getTypeName(1)`, which
+     * fatals on `glpi_assets_assets` because the resolved itemtype
+     * (`\Glpi\Asset\Asset`) has an uninitialised typed static property
+     * (`$definition_system_name`). We don't need that introspection —
+     * it's only used to append a `(Foo)` suffix to option names — so
+     * skip it entirely and just do the bits that are actually load-bearing
+     * for the Mappings UI:
+     *   1. drop options without a `field` or in the blacklist
+     *   2. mark the rest as `injectable=FIELD_INJECTABLE` if they carry a
+     *      `linkfield`, otherwise `FIELD_VIRTUAL`
+     *   3. derive a sensible `displaytype` / `checktype` if the option
+     *      didn't already specify one
+     *   4. apply the explicit displaytype/checktype overrides the caller
+     *      collected
+     *   5. dedupe by `linkfield`, preferring `completename` > `name` >
+     *      first encountered
+     *
+     * @param array $tab     options returned by `Search::getOptions()`
+     * @param array $options shape used by `addToSearchOptions`: ignore_fields,
+     *                       displaytype/checktype maps
+     */
+    private function processSearchOptionsForCustomAsset(array $tab, array $options): array
+    {
+        $ignore_fields = $options['ignore_fields'] ?? [];
+
+        // 1 + 2 + 3: filter & enrich
+        foreach ($tab as $id => $opt) {
+            if (!is_array($opt) || !isset($opt['field']) || in_array($id, $ignore_fields, true)) {
+                unset($tab[$id]);
+                continue;
+            }
+            $has_linkfield = isset($opt['linkfield']) && $opt['linkfield'] !== '';
+            $tab[$id]['injectable'] = $has_linkfield
+                ? PluginDatainjectionCommonInjectionLib::FIELD_INJECTABLE
+                : PluginDatainjectionCommonInjectionLib::FIELD_VIRTUAL;
+            if (!isset($opt['displaytype'])) {
+                $datatype = $opt['datatype'] ?? '';
+                $tab[$id]['displaytype'] = match ($datatype) {
+                    'dropdown', 'itemlink' => 'dropdown',
+                    'date'                 => 'date',
+                    'datetime'             => 'date',
+                    'bool', 'boolean'      => 'bool',
+                    'number', 'integer'    => 'text',
+                    'decimal', 'float'     => 'decimal',
+                    'multiline_text', 'textarea' => 'multiline_text',
+                    default                => 'text',
+                };
+            }
+            if (!isset($opt['checktype'])) {
+                $tab[$id]['checktype'] = match ($tab[$id]['displaytype']) {
+                    'bool'   => 'bool',
+                    'date'   => 'date',
+                    default  => 'text',
+                };
+            }
+        }
+
+        // 4: apply caller-supplied displaytype / checktype overrides
+        foreach (['displaytype', 'checktype'] as $paramtype) {
+            if (!isset($options[$paramtype]) || !is_array($options[$paramtype])) {
+                continue;
+            }
+            foreach ($options[$paramtype] as $type => $tabsID) {
+                foreach ((array) $tabsID as $tabID) {
+                    if (isset($tab[$tabID])) {
+                        $tab[$tabID][$paramtype] = $type;
+                    }
+                }
+            }
+        }
+
+        // 5: dedupe by linkfield — same precedence as
+        // `addToSearchOptions`: prefer `completename` > `name` > first
+        $preserved = [];
+        foreach ($tab as $opt) {
+            if (!isset($opt['linkfield'])) {
+                continue;
+            }
+            $lf = $opt['linkfield'];
+            if (!isset($preserved[$lf])) {
+                $preserved[$lf] = $opt;
+                continue;
+            }
+            if (($opt['field'] ?? '') === 'completename') {
+                $preserved[$lf] = $opt;
+            } elseif (
+                ($opt['field'] ?? '') === 'name'
+                && ($preserved[$lf]['field'] ?? '') !== 'completename'
+            ) {
+                $preserved[$lf] = $opt;
+            }
+        }
+        // Rebuild the array keeping only the preserved entries (and any
+        // options that have no linkfield at all — those are virtual /
+        // informational rows we don't want to silently drop).
+        $out = [];
+        foreach ($tab as $id => $opt) {
+            if (!isset($opt['linkfield']) || $opt['linkfield'] === '') {
+                $out[$id] = $opt;
+                continue;
+            }
+            if (isset($preserved[$opt['linkfield']]) && $preserved[$opt['linkfield']] === $opt) {
+                $out[$id] = $opt;
+            }
+        }
+        return $out;
     }
 
     /** @param array $tab @return array<int, int> */
