@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.16] - 2026-05-13
+
+### Fixed
+
+- Mappings → Fields dropdown now lists the full set of native columns (Nazwa, Numer seryjny, Lokalizacja, Status, Producent, …) for custom-asset itemtypes. The 2.16.13 diagnostic exposed that `PluginDatainjectionCommonInjectionLib::addToSearchOptions()` was throwing `Typed static property Glpi\Asset\Asset::$definition_system_name must not be accessed before initialization` when it called `getItemTypeForTable('glpi_assets_assets')::getTypeName(1)` — the table resolves to the abstract base `\Glpi\Asset\Asset` whose static is only initialised on the per-definition subclasses. We were preserving the raw options as a fallback, but the options had no `injectable=FIELD_INJECTABLE` flag, so `dropdownFields()` filtered them all out and the user saw only the post-appended custom fields.
+
+### Changed
+
+- Stopped calling `addToSearchOptions()` for custom-asset itemtypes. Replaced with `PluginDatainjectionCustomAssetBaseInjection::processSearchOptionsForCustomAsset()`, which performs the load-bearing parts of the shared helper without the failing introspection: filter out blacklisted / field-less options, mark the rest `FIELD_INJECTABLE` (or `FIELD_VIRTUAL` if no `linkfield`), derive `displaytype`/`checktype` defaults from `datatype`, apply the caller's explicit overrides, dedupe by `linkfield` (preferring `completename` > `name` > first encountered).
+
 ## [2.16.15] - 2026-05-13
 
 ### Fixed
