@@ -54,7 +54,13 @@ class PluginDatainjectionInjectionType
         /** @var array $INJECTABLE_TYPES */
         global $INJECTABLE_TYPES;
 
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('getItemtypes: enter', ['only_primary' => $only_primary]);
+        }
         getTypesToInject();
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('getItemtypes: populated', ['count' => count($INJECTABLE_TYPES)]);
+        }
 
         $plugin = new Plugin();
         $values = [];

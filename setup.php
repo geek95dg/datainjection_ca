@@ -36,7 +36,7 @@
 // is fine — and it lets `glpi:plugin:install` succeed regardless of how the
 // plugin is deployed.
 
-define('PLUGIN_DATAINJECTION_VERSION', '2.16.4');
+define('PLUGIN_DATAINJECTION_VERSION', '2.16.5');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_DATAINJECTION_MIN_GLPI", "11.0.0");
@@ -79,6 +79,28 @@ register_shutdown_function(static function (): void {
         @error_log('[datainjection] fatal in ' . $file . ':' . ($err['line'] ?? '?') . ' — ' . ($err['message'] ?? ''));
     }
 });
+
+// Catch non-fatal PHP warnings/notices that originate inside the plugin —
+// useful when GLPI's error handler converts them upstream and our shutdown
+// handler never sees them. Daisy-chains to any previous handler.
+$_datainjection_prev_error_handler = set_error_handler(
+    static function (int $errno, string $errstr, string $errfile = '', int $errline = 0) use (&$_datainjection_prev_error_handler) {
+        if (strpos($errfile, __DIR__) !== false) {
+            try {
+                PluginDatainjectionLogger::warning(
+                    'php error E' . $errno . ': ' . $errstr,
+                    ['where' => $errfile . ':' . $errline],
+                );
+            } catch (\Throwable $e) {
+                // Best effort.
+            }
+        }
+        if (is_callable($_datainjection_prev_error_handler)) {
+            return call_user_func($_datainjection_prev_error_handler, $errno, $errstr, $errfile, $errline);
+        }
+        return false; // let PHP's default handler also run
+    },
+);
 
 function plugin_init_datainjection()
 {
