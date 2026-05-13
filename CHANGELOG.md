@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.8] - 2026-05-13
+
+### Fixed
+
+- Opening the model overview tab for an XLSX-format model no longer 500s with `Table 'glpi.glpi_plugin_datainjection_modelxlsxes' doesn't exist`. GLPI's `CommonDBTM::getTable()` auto-pluralizes `xlsx` (ending in `x`) to `xlsxes`, but the install / migration helpers were creating the table as `modelxlsxs` (no `e`). Canonical name is now `glpi_plugin_datainjection_modelxlsxes`.
+
+### Changed
+
+- `plugin_datainjection_migration_xlsx_support()` now self-heals existing installs: if the legacy `glpi_plugin_datainjection_modelxlsxs` table is present it gets renamed to the canonical `…modelxlsxes` (or dropped if the canonical one already exists). Re-running `php bin/console glpi:plugin:install datainjection` on any 2.16.0–2.16.7 install picks up the fix automatically.
+- `plugin_datainjection_uninstall()` drops both names so the legacy table can never linger.
+
 ## [2.16.7] - 2026-05-13
 
 ### Fixed
