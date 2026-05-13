@@ -155,8 +155,23 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         //    non-injectable) when the table name doesn't follow that
         //    convention.
         $patched = 0;
+        $has_linkfield = 0;
+        $missing_field = 0;
+        $missing_table = 0;
         foreach ($tab as $id => &$opt) {
-            if (!is_array($opt) || isset($opt['linkfield']) || !isset($opt['field']) || !isset($opt['table'])) {
+            if (!is_array($opt)) {
+                continue;
+            }
+            if (isset($opt['linkfield'])) {
+                $has_linkfield++;
+                continue;
+            }
+            if (!isset($opt['field'])) {
+                $missing_field++;
+                continue;
+            }
+            if (!isset($opt['table'])) {
+                $missing_table++;
                 continue;
             }
             if ($opt['table'] === self::$table) {
@@ -172,11 +187,34 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         }
         unset($opt);
 
+        // Sample the first numeric-keyed option so we can see what shape
+        // GLPI's stock search options actually take for the AssetDefinition
+        // class — without this we're guessing whether `linkfield` was already
+        // there, whether `field`/`table` are even set, etc.
+        $sample = null;
+        foreach ($tab as $id => $opt) {
+            if (is_numeric($id) && is_array($opt)) {
+                $sample = [
+                    'id'   => $id,
+                    'keys' => array_keys($opt),
+                    'field' => $opt['field']     ?? null,
+                    'table' => $opt['table']     ?? null,
+                    'linkfield' => $opt['linkfield'] ?? null,
+                    'name'  => $opt['name']      ?? null,
+                ];
+                break;
+            }
+        }
+
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: search options', [
-                'asset_class' => $assetClass,
-                'raw_count'   => count($tab),
-                'patched_linkfield' => $patched,
+                'asset_class'        => $assetClass,
+                'raw_count'          => count($tab),
+                'patched_linkfield'  => $patched,
+                'already_linkfield'  => $has_linkfield,
+                'missing_field'      => $missing_field,
+                'missing_table'      => $missing_table,
+                'first_option'       => $sample,
             ]);
         }
 
@@ -188,7 +226,25 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             ],
         ];
 
-        $tab = PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        // addToSearchOptions does field-by-field introspection (calls
+        // getItemTypeForTable($value['table'])->getTypeName(1), etc.) and
+        // has historically thrown when the table name doesn't map to a
+        // known itemtype. If it does, the whole getOptions() result is
+        // lost and the Fields dropdown ends up empty — wrap it so the
+        // failure ends up in datainjection.log.
+        try {
+            $tab = PluginDatainjectionCommonInjectionLib::addToSearchOptions($tab, $options, $this);
+        } catch (\Throwable $e) {
+            if (class_exists('PluginDatainjectionLogger')) {
+                PluginDatainjectionLogger::exception(
+                    $e,
+                    'customAsset.getOptions: addToSearchOptions threw for ' . $assetClass,
+                );
+            }
+            // Best-effort fallback: keep whatever we had before. The Fields
+            // dropdown will at least have entries that already carried a
+            // linkfield from GLPI's search options.
+        }
 
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: after addToSearchOptions', [

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.13] - 2026-05-13
+
+### Changed
+
+- `PluginDatainjectionCustomAssetBaseInjection::getOptions()` now wraps `PluginDatainjectionCommonInjectionLib::addToSearchOptions()` in a `try/catch`. The lib introspects each option's table via `getItemTypeForTable(...)->getTypeName(1)`, which can throw when GLPI's search options for custom assets reference a table that doesn't map cleanly to an itemtype. Any throw is now logged with a full trace and the previously-patched options are preserved as a best-effort fallback, instead of leaving the Fields dropdown empty with no breadcrumb.
+
+### Added
+
+- Diagnostic breadcrumbs for the linkfield-patching pass: counts of how many options already carry `linkfield`, how many lack `field`, how many lack `table`. Plus a `first_option` sample dump showing the keys / `field` / `table` / `linkfield` / `name` of the first numeric-keyed option so the actual shape of GLPI's stock search options for AssetDefinition classes is visible. The 2.16.12 breadcrumb reported `patched_linkfield: 0` with no further detail, which left "did the options already have it?" vs "is `field` missing?" indistinguishable.
+
 ## [2.16.12] - 2026-05-13
 
 ### Fixed
