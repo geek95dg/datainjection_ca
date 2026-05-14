@@ -48,12 +48,15 @@
         between `injectLine pre` and `injectLine post` with no fatal in
         any log). 2 keeps every AJAX call well under any reasonable
         proxy/FPM timeout. #}
-     {# Forced to 1 for the silent-death-around-row-22 investigation —
-        with batch_size=1 every AJAX request processes exactly one row,
-        so a death is unambiguously attributable to ONE specific i /
-        injectionline rather than to the second row of a batch. Crank
-        back up once that's resolved. #}
-     data-batch-size="1"
+     {# Batch size: 5 is a balance between two competing pressures.
+        Low values produce many AJAX round-trips (slow). High values
+        keep a PHP-FPM worker busy long enough to risk hitting the
+        observed silent hang inside GLPI core's $item->add() after
+        ~22 successful adds per worker session. 5 gives each request
+        a few rows of work and lets the JS-side retry layer
+        (injection_progress.js) cleanly fall onto a fresh FPM worker
+        if a batch happens to land on the recycle boundary. #}
+     data-batch-size="5"
      data-status-label="{{ __('Injection of the file', 'datainjection') }}"
      data-lines-label="{{ __(' lines', 'datainjection') }}"
      data-error-label="{{ __('Error', 'datainjection') }}"

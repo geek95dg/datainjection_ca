@@ -42,6 +42,23 @@ function startBatchInjection(container) {
     const errorLabel   = container.dataset.errorLabel || '';
 
     let offset = 0;
+    // Retry bookkeeping: when a batch hits 500 we don't give up — we wait
+    // a beat and re-POST the SAME offset. Reason: with custom-asset
+    // imports we've reproducibly seen the PHP-FPM worker hang inside
+    // GLPI core's $item->add() after ~22 successful adds in one worker
+    // session, returning 500 to the AJAX without progressing. The next
+    // request always lands on a fresh FPM worker (FPM recycles after
+    // a 500), and that worker happily processes ~22 more rows. So a
+    // 1000-row import completes in ~45 chunks of ~22 with brief pauses
+    // for FPM to spin up a fresh worker. Bounded attempts so a real
+    // bug doesn't loop forever.
+    const MAX_BATCH_RETRIES = 8;
+    const RETRY_BASE_MS     = 750;
+    let   retryAttempt      = 0;
+    // Snapshot what the server told us about the failure so showError
+    // can render it once we've exhausted retries.
+    let   lastFailureMessage = null;
+    let   lastFailureDetails = null;
 
     function updateProgressBar(progress) {
         const progressBar = container.querySelector('.progress-bar');
@@ -107,6 +124,57 @@ function startBatchInjection(container) {
         return where || klass || undefined;
     }
 
+    /** Decode a 500 response from inject_batch.php (or any non-2xx) into
+     *  a {message, details} pair. Centralised so success+error paths
+     *  agree on what the server told us. */
+    function decodeFailure(xhr) {
+        let message = errorLabel;
+        let payload = null;
+        try {
+            if (xhr && xhr.responseJSON) {
+                payload = xhr.responseJSON;
+            } else if (xhr && xhr.responseText) {
+                payload = JSON.parse(xhr.responseText);
+            }
+            if (payload && payload.message) {
+                message = payload.message;
+            }
+        } catch (e) {
+            /* keep default label */
+        }
+        let details = buildDetails(payload);
+        if (!details && xhr && xhr.status) {
+            details = 'HTTP ' + xhr.status
+                + (xhr.statusText ? ' ' + xhr.statusText : '');
+        }
+        return { message: message, details: details };
+    }
+
+    /** Schedule another attempt at the same offset after exponential
+     *  backoff. Returns true when a retry was scheduled, false when the
+     *  retry budget is exhausted and the caller should surface the
+     *  failure permanently. */
+    function maybeRetry() {
+        if (retryAttempt >= MAX_BATCH_RETRIES) {
+            return false;
+        }
+        retryAttempt += 1;
+        // Exponential-ish backoff: 750ms, 1.5s, 3s, 6s, 12s, 12s, 12s, 12s.
+        // Capped so a long-running outage doesn't push the next attempt
+        // past the user's patience.
+        const wait = Math.min(RETRY_BASE_MS * Math.pow(2, retryAttempt - 1), 12000);
+        // Surface what we're doing so the spinner isn't visually identical
+        // to a successful in-flight batch.
+        const status = container.querySelector('#injection_status');
+        if (status) {
+            const original = status.textContent || '';
+            status.textContent = original
+                + ' — retry ' + retryAttempt + '/' + MAX_BATCH_RETRIES;
+        }
+        setTimeout(processBatch, wait);
+        return true;
+    }
+
     function processBatch() {
         $.ajax({
             url: batchUrl,
@@ -119,11 +187,23 @@ function startBatchInjection(container) {
             success: function(response) {
                 // inject_batch.php may also return a structured error
                 // payload with HTTP 200 in degenerate cases; treat it
-                // like an error.
+                // like an error (retry first, surface if exhausted).
                 if (response && response.error) {
-                    showError(response.message || errorLabel, buildDetails(response));
+                    const decoded = { message: response.message || errorLabel,
+                                      details: buildDetails(response) };
+                    lastFailureMessage = decoded.message;
+                    lastFailureDetails = decoded.details;
+                    if (maybeRetry()) {
+                        return;
+                    }
+                    showError(lastFailureMessage, lastFailureDetails);
                     return;
                 }
+                // A real success — reset the retry counter so a later
+                // hang gets its own full retry budget.
+                retryAttempt = 0;
+                lastFailureMessage = null;
+                lastFailureDetails = null;
                 updateProgressBar(response.progress);
                 updateStatus(response.processed, response.total);
                 offset = response.offset;
@@ -142,33 +222,17 @@ function startBatchInjection(container) {
                 }
             },
             error: function(xhr) {
-                // Prefer the structured error body the wrapped
-                // inject_batch.php now returns even on 500. Fall back
-                // to a generic message if the response was empty or
-                // un-parseable.
-                let message = errorLabel;
-                let payload = null;
-                try {
-                    if (xhr && xhr.responseJSON) {
-                        payload = xhr.responseJSON;
-                    } else if (xhr && xhr.responseText) {
-                        payload = JSON.parse(xhr.responseText);
-                    }
-                    if (payload && payload.message) {
-                        message = payload.message;
-                    }
-                } catch (e) {
-                    /* keep default label */
+                const decoded = decodeFailure(xhr);
+                lastFailureMessage = decoded.message;
+                lastFailureDetails = decoded.details;
+                // Most observed FPM-worker hangs return 500 with a
+                // structured body. A fresh worker handles the same
+                // offset cleanly, so we retry the same offset rather
+                // than skipping the row.
+                if (maybeRetry()) {
+                    return;
                 }
-                // When the body had nothing parseable, at least surface the
-                // HTTP status so the user can distinguish "endpoint 404"
-                // from "endpoint 500 with no logged exception".
-                let details = buildDetails(payload);
-                if (!details && xhr && xhr.status) {
-                    details = 'HTTP ' + xhr.status
-                        + (xhr.statusText ? ' ' + xhr.statusText : '');
-                }
-                showError(message, details);
+                showError(lastFailureMessage, lastFailureDetails);
             }
         });
     }
