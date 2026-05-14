@@ -425,6 +425,57 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             }
         }
 
+        // GLPI 11 keys the `custom_fields` JSON by the integer id of
+        // each `glpi_assets_customfielddefinitions` row, NOT by
+        // `system_name`. Translate our `system_name`-keyed values
+        // (`polka`, `regal`, …) to id-keyed values (`50`, `49`, …) so
+        // the GUI walker actually surfaces them. Resolution comes from
+        // the registry, which already loads both fields per row.
+        if (!empty($customValues)) {
+            try {
+                $declaredFields = PluginDatainjectionCustomAssetRegistry::getCustomFields(
+                    static::getDefinitionId(),
+                );
+                $nameToId = [];
+                foreach ($declaredFields as $declared) {
+                    $declaredKey = $declared['key'] ?? null;
+                    $declaredId  = $declared['id']  ?? null;
+                    if (is_string($declaredKey) && is_int($declaredId) && $declaredId > 0) {
+                        $nameToId[$declaredKey] = $declaredId;
+                    }
+                }
+
+                $byId  = [];
+                $orphans = [];
+                foreach ($customValues as $name => $value) {
+                    if (isset($nameToId[$name])) {
+                        $byId[(string) $nameToId[$name]] = $value;
+                    } else {
+                        $orphans[] = $name;
+                    }
+                }
+
+                if (class_exists('PluginDatainjectionLogger')) {
+                    PluginDatainjectionLogger::info('customimport: id-keyed custom_fields', [
+                        'name_to_id' => $nameToId,
+                        'by_id'      => $byId,
+                        'orphans'    => $orphans,
+                    ]);
+                }
+
+                if (!empty($byId)) {
+                    $customValues = $byId;
+                }
+            } catch (\Throwable $e) {
+                if (class_exists('PluginDatainjectionLogger')) {
+                    PluginDatainjectionLogger::exception(
+                        $e,
+                        'customimport: name→id translation failed; using string keys',
+                    );
+                }
+            }
+        }
+
         if (class_exists('PluginDatainjectionLogger')) {
             // Dump the AssetDefinition's declared custom-field keys so
             // we can verify whether the keys we're passing (`polka`,
