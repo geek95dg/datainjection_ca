@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.33] - 2026-05-14
+
+### Fixed
+
+- **Manufacturer / Producent is selectable in the custom-asset Mappings dropdown.** `appendNativeAssetFieldOptions` used to skip any column whose `linkfield` was already present in the search-options array, but GLPI's stock options for a custom asset include a `manufacturers_id` entry labelled "Firmware: Producent" (the firmware's manufacturer, not the asset's). Our friendly "Manufacturer" entry was being shadowed and never appended, so users couldn't map the asset's own manufacturer column at all. Reversed the precedence: any column we have an authoritative entry for **evicts** the conflicting pre-existing entry before we append ours. Also added `assets_assettypes_id` ("Type") and `assets_assetmodels_id` ("Model") to the native catalog so those never fall back to raw names either.
+- **Raw SQL identifiers no longer leak into the Fields dropdown.** New `humaniseOptionNames()` pass runs once at the end of `getOptions()` and rewrites any option whose `name` is missing, empty, or still looks like a SQL column name (purely `[a-z0-9_]`, contains an underscore, equals its linkfield) into a Title-Cased human label (`is_recursive` → "Is Recursive", `template_name` → "Template Name"). Heuristic deliberately conservative — any name with a space, capital letter, or non-ASCII character passes through untouched so translated labels are never clobbered.
+
+### Tests
+
+- `TESTING.md` gained section **C1b** — explicitly verifies "Manufacturer" appears in the Mappings dropdown as a top-level option and that no entry in the dropdown still looks like a raw SQL identifier. Includes a SQL one-liner to verify a Manufacturer mapping actually wrote to `glpi_assets_assets.manufacturers_id`.
+
 ## [2.16.32] - 2026-05-14
 
 ### Fixed

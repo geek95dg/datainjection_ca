@@ -278,10 +278,18 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         // such as Serial / NetworkPort / States add columns dynamically).
         $nativeAppended = $this->appendNativeAssetFieldOptions($tab);
 
+        // Final fallback for any option that still carries a raw SQL
+        // identifier as its label. Custom-field labels (handled below)
+        // already fall back to the field key in the registry; this
+        // catches anything that slipped through from
+        // `Search::getOptions()` itself.
+        $humanised = $this->humaniseOptionNames($tab);
+
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: native fields appended', [
                 'asset_class' => $assetClass,
                 'appended'    => $nativeAppended,
+                'humanised'   => $humanised,
                 'kept_count'  => count($tab),
             ]);
         }
@@ -701,27 +709,33 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
     private function nativeAssetFieldCatalog(): array
     {
         return [
-            'name'              => ['name' => __('Name'),                          'displaytype' => 'text',     'checktype' => 'text'],
-            'serial'            => ['name' => __('Serial number'),                 'displaytype' => 'text',     'checktype' => 'text'],
-            'otherserial'       => ['name' => __('Inventory number'),              'displaytype' => 'text',     'checktype' => 'text'],
-            'contact'           => ['name' => __('Alternate username'),            'displaytype' => 'text',     'checktype' => 'text'],
-            'contact_num'       => ['name' => __('Alternate username number'),     'displaytype' => 'text',     'checktype' => 'text'],
-            'comment'           => ['name' => __('Comments'),                      'displaytype' => 'multiline_text', 'checktype' => 'text'],
-            'entities_id'       => ['name' => __('Entity'),                        'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_entities'],
-            'locations_id'      => ['name' => __('Location'),                      'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_locations'],
-            'states_id'         => ['name' => __('Status'),                        'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_states'],
-            'manufacturers_id'  => ['name' => __('Manufacturer'),                  'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_manufacturers'],
-            'users_id'          => ['name' => __('User'),                          'displaytype' => 'user',     'checktype' => 'text', 'table' => 'glpi_users'],
-            'groups_id'         => ['name' => __('Group'),                         'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_groups'],
-            'users_id_tech'     => ['name' => __('Technician in charge'),          'displaytype' => 'user',     'checktype' => 'text', 'table' => 'glpi_users'],
-            'groups_id_tech'    => ['name' => __('Group in charge'),               'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_groups'],
-            'date_creation'     => ['name' => __('Creation date'),                 'displaytype' => 'date',     'checktype' => 'date'],
-            'date_mod'          => ['name' => __('Last update'),                   'displaytype' => 'date',     'checktype' => 'date'],
-            'is_recursive'      => ['name' => __('Child entities'),                'displaytype' => 'bool',     'checktype' => 'bool'],
-            'is_deleted'        => ['name' => __('Deleted'),                       'displaytype' => 'bool',     'checktype' => 'bool'],
-            'is_dynamic'        => ['name' => __('Automatic inventory'),           'displaytype' => 'bool',     'checktype' => 'bool'],
-            'is_template'       => ['name' => __('Template'),                      'displaytype' => 'bool',     'checktype' => 'bool'],
-            'template_name'     => ['name' => __('Template name'),                 'displaytype' => 'text',     'checktype' => 'text'],
+            'name'                      => ['name' => __('Name'),                          'displaytype' => 'text',     'checktype' => 'text'],
+            'serial'                    => ['name' => __('Serial number'),                 'displaytype' => 'text',     'checktype' => 'text'],
+            'otherserial'               => ['name' => __('Inventory number'),              'displaytype' => 'text',     'checktype' => 'text'],
+            'contact'                   => ['name' => __('Alternate username'),            'displaytype' => 'text',     'checktype' => 'text'],
+            'contact_num'               => ['name' => __('Alternate username number'),     'displaytype' => 'text',     'checktype' => 'text'],
+            'comment'                   => ['name' => __('Comments'),                      'displaytype' => 'multiline_text', 'checktype' => 'text'],
+            'entities_id'               => ['name' => __('Entity'),                        'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_entities'],
+            'locations_id'              => ['name' => __('Location'),                      'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_locations'],
+            'states_id'                 => ['name' => __('Status'),                        'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_states'],
+            'manufacturers_id'          => ['name' => __('Manufacturer'),                  'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_manufacturers'],
+            // Asset Type / Model: GLPI's stock options for these on custom
+            // assets sometimes show with raw column names or no name at all
+            // depending on the active capacities. Spell them out so the
+            // mapping dropdown always shows the human label.
+            'assets_assettypes_id'      => ['name' => __('Type'),                          'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_assets_assettypes'],
+            'assets_assetmodels_id'     => ['name' => __('Model'),                         'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_assets_assetmodels'],
+            'users_id'                  => ['name' => __('User'),                          'displaytype' => 'user',     'checktype' => 'text', 'table' => 'glpi_users'],
+            'groups_id'                 => ['name' => __('Group'),                         'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_groups'],
+            'users_id_tech'             => ['name' => __('Technician in charge'),          'displaytype' => 'user',     'checktype' => 'text', 'table' => 'glpi_users'],
+            'groups_id_tech'            => ['name' => __('Group in charge'),               'displaytype' => 'dropdown', 'checktype' => 'text', 'table' => 'glpi_groups'],
+            'date_creation'             => ['name' => __('Creation date'),                 'displaytype' => 'date',     'checktype' => 'date'],
+            'date_mod'                  => ['name' => __('Last update'),                   'displaytype' => 'date',     'checktype' => 'date'],
+            'is_recursive'              => ['name' => __('Child entities'),                'displaytype' => 'bool',     'checktype' => 'bool'],
+            'is_deleted'                => ['name' => __('Deleted'),                       'displaytype' => 'bool',     'checktype' => 'bool'],
+            'is_dynamic'                => ['name' => __('Automatic inventory'),           'displaytype' => 'bool',     'checktype' => 'bool'],
+            'is_template'               => ['name' => __('Template'),                      'displaytype' => 'bool',     'checktype' => 'bool'],
+            'template_name'             => ['name' => __('Template name'),                 'displaytype' => 'text',     'checktype' => 'text'],
         ];
     }
 
@@ -743,14 +757,27 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             return 0;
         }
 
-        $existing_linkfields = [];
-        foreach ($tab as $opt) {
-            if (is_array($opt) && isset($opt['linkfield']) && is_string($opt['linkfield'])) {
-                $existing_linkfields[$opt['linkfield']] = true;
+        $catalog = $this->nativeAssetFieldCatalog();
+
+        // EVICT FIRST. Any pre-existing entry in $tab whose `linkfield`
+        // matches a column we have an authoritative entry for must be
+        // dropped — otherwise the leftover GLPI option (e.g. the
+        // firmware's `manufacturers_id` labelled "Firmware: Producent")
+        // shadows our properly-labelled native entry and steers the
+        // injection at the wrong column. The dropdown was showing
+        // "Firmware: Producent" with no plain "Manufacturer" option
+        // exactly for this reason.
+        foreach ($tab as $id => $opt) {
+            if (
+                is_array($opt)
+                && isset($opt['linkfield'])
+                && is_string($opt['linkfield'])
+                && isset($catalog[$opt['linkfield']])
+            ) {
+                unset($tab[$id]);
             }
         }
 
-        $catalog = $this->nativeAssetFieldCatalog();
         $nextId  = 4000;
         $count   = 0;
         foreach ($catalog as $column => $meta) {
@@ -762,9 +789,6 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                     continue;
                 }
             } catch (\Throwable $e) {
-                continue;
-            }
-            if (isset($existing_linkfields[$column])) {
                 continue;
             }
             $entry = [
@@ -783,6 +807,64 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $count++;
         }
         return $count;
+    }
+
+    /**
+     * Last-resort safety net for the mapping dropdown: a search option
+     * whose `name` is missing, empty, or still looks like a raw SQL
+     * identifier (snake_case_lowercase, e.g. `is_recursive`,
+     * `assets_assetmodels_id`) gets a humanised fallback so the user
+     * never sees a raw column name in the Pola/Fields picker.
+     *
+     * Stays narrow: it does NOT touch options whose name already has a
+     * space, an accented character, an uppercase letter, or any of the
+     * common label punctuation. Real (often translated) labels pass
+     * through untouched.
+     */
+    private function humaniseOptionNames(array &$tab): int
+    {
+        $rewritten = 0;
+        foreach ($tab as $id => $opt) {
+            if (!is_array($opt)) {
+                continue;
+            }
+            $name = $opt['name'] ?? null;
+            $linkfield = $opt['linkfield'] ?? null;
+            if (!is_string($linkfield) || $linkfield === '') {
+                continue;
+            }
+            $needs_rewrite = !is_string($name) || $name === '';
+            if (!$needs_rewrite && is_string($name)) {
+                // Heuristic: a label that's purely [a-z0-9_], starts with
+                // a letter, contains an underscore, and matches its
+                // linkfield is almost certainly a raw column name that
+                // leaked through. Friendly labels in any language fail
+                // this test (they have spaces, caps, or non-ASCII).
+                if (
+                    $name === $linkfield
+                    && preg_match('/^[a-z][a-z0-9_]*$/', $name)
+                    && str_contains($name, '_')
+                ) {
+                    $needs_rewrite = true;
+                }
+            }
+            if (!$needs_rewrite) {
+                continue;
+            }
+            // Build a fallback: strip a trailing `_id`, replace `_` with
+            // spaces, ucfirst. `is_recursive` → `Is recursive`,
+            // `template_name` → `Template name`,
+            // `manufacturers_id` → `Manufacturers`.
+            $base = preg_replace('/_id$/', '', $linkfield) ?? $linkfield;
+            $base = str_replace('_', ' ', $base);
+            $base = trim($base);
+            if ($base === '') {
+                continue;
+            }
+            $tab[$id]['name'] = mb_convert_case($base, MB_CASE_TITLE);
+            $rewritten++;
+        }
+        return $rewritten;
     }
 
     /**
