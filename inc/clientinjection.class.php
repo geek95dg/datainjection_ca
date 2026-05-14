@@ -235,6 +235,21 @@ class PluginDatainjectionClientInjection
             'header_offset' => $header_offset,
             'itemtype'      => method_exists($model, 'getItemtype') ? $model->getItemtype() : null,
         ]);
+        $batch_started_at = microtime(true);
+
+        // Cheap pretty-print for status codes — translate the int into
+        // its constant name so the log is readable without cross-referencing.
+        $statusLabel = static function (int $s): string {
+            return match ($s) {
+                PluginDatainjectionCommonInjectionLib::SUCCESS        => 'SUCCESS',
+                PluginDatainjectionCommonInjectionLib::FAILED         => 'FAILED',
+                PluginDatainjectionCommonInjectionLib::WARNING        => 'WARNING',
+                PluginDatainjectionCommonInjectionLib::TYPE_MISMATCH  => 'TYPE_MISMATCH',
+                PluginDatainjectionCommonInjectionLib::MANDATORY      => 'MANDATORY',
+                PluginDatainjectionCommonInjectionLib::ITEM_NOT_FOUND => 'ITEM_NOT_FOUND',
+                default                                              => (string) $s,
+            };
+        };
 
         for ($i = $offset; $i < $end; $i++) {
             $injectionline = $i + $header_offset;
@@ -269,6 +284,7 @@ class PluginDatainjectionClientInjection
                 'mem_mb'        => round(memory_get_usage(true) / (1024 * 1024), 1),
                 'mem_peak_mb'   => round(memory_get_peak_usage(true) / (1024 * 1024), 1),
             ]);
+            $line_started_at = microtime(true);
             try {
                 $result = $engine->injectLine($lines[$i][0], $injectionline);
             } catch (\Throwable $e) {
@@ -282,6 +298,28 @@ class PluginDatainjectionClientInjection
                     'error_message' => $e->getMessage(),
                 ];
             }
+            $elapsed_ms = (int) round((microtime(true) - $line_started_at) * 1000);
+
+            // Surface why a row failed. Every non-SUCCESS result now
+            // logs at WARN with the row's i, its translated status
+            // name, the lib's error_message (often a translated string
+            // pointing at a specific mapping / mandatory / type issue),
+            // and any field_in_error. Without this, status 11 (FAILED)
+            // looks like a success from the outside.
+            $status_int = (int) ($result['status'] ?? -1);
+            if ($status_int !== PluginDatainjectionCommonInjectionLib::SUCCESS) {
+                PluginDatainjectionLogger::warning('processBatch: injectLine non-success', [
+                    'i'              => $i,
+                    'injectionline'  => $injectionline,
+                    'status'         => $status_int,
+                    'status_label'   => $statusLabel($status_int),
+                    'error_message'  => $result['error_message']
+                                        ?? $result['message']
+                                        ?? null,
+                    'field_in_error' => $result['field_in_error'] ?? null,
+                    'elapsed_ms'     => $elapsed_ms,
+                ]);
+            }
             // Symmetric "post" breadcrumb. A missing `post` for the i we
             // last saw `pre` for is the unambiguous signature that
             // injectLine died mid-call without throwing.
@@ -289,6 +327,8 @@ class PluginDatainjectionClientInjection
                 'i'             => $i,
                 'injectionline' => $injectionline,
                 'status'        => $result['status'] ?? null,
+                'status_label'  => $statusLabel($status_int),
+                'elapsed_ms'    => $elapsed_ms,
                 'mem_mb'        => round(memory_get_usage(true) / (1024 * 1024), 1),
             ]);
             $results[]     = $result;
@@ -297,6 +337,14 @@ class PluginDatainjectionClientInjection
                 $error_lines[] = $lines[$i][0];
             }
         }
+
+        $batch_elapsed_ms = (int) round((microtime(true) - $batch_started_at) * 1000);
+        PluginDatainjectionLogger::info('processBatch: loop done', [
+            'offset'           => $offset,
+            'end'              => $end,
+            'batch_elapsed_ms' => $batch_elapsed_ms,
+            'lines_in_batch'   => $end - $offset,
+        ]);
 
         //Store updated results
         PluginDatainjectionSession::setParam('injection_results', json_encode($results));

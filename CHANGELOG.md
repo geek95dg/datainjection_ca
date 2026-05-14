@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.25] - 2026-05-14
+
+### Fixed
+
+- **Surfaced the silent "every row fails" condition.** The previous diagnostics showed `injectLine post … status: 11` on every row, and 11 is `PluginDatainjectionCommonInjectionLib::FAILED` ("Error during injection"), not SUCCESS. The batch loop was treating that as fine and moving on. Every non-SUCCESS row now logs at WARN with its translated status name (FAILED / TYPE_MISMATCH / MANDATORY / ITEM_NOT_FOUND / …), the lib's `error_message`, and `field_in_error` so the actual reason for the rejection lands in `datainjection.log`.
+- **Shrunk default `batch_size` from 10 → 2.** Field log showed the AJAX worker dying mid-`injectLine` in batch 2 with no PHP fatal in any log; memory was flat at 6 MB. The variability between attempts (died at different rows) ruled out a data issue and pointed at an external request-timeout (php-fpm `request_terminate_timeout` / nginx `proxy_read_timeout`) cutting the worker because each custom-asset `injectLine` rebuilds `Search::getOptions` many times and is slow. batch_size=2 keeps each AJAX call short enough to comfortably finish inside any reasonable proxy/FPM timeout.
+
+### Added
+
+- `injectLine post` now also logs `status_label` (the translated name) and `elapsed_ms` for that row.
+- New `processBatch: loop done` line at the end of every batch with `batch_elapsed_ms` and `lines_in_batch`. Spot a slow batch immediately.
+
 ## [2.16.24] - 2026-05-14
 
 ### Added
