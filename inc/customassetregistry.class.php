@@ -457,6 +457,12 @@ class PluginDatainjectionCustomAssetRegistry
 
         return [
             'key'           => $key,
+            // The companion-table row's numeric primary key — GLPI 11
+            // uses THIS as the JSON key inside
+            // `glpi_assets_assets.custom_fields` (not the system_name).
+            // Without it our customimport writes orphan string-keyed
+            // entries that the GUI walker never sees.
+            'id'            => isset($entry['id']) ? (int) $entry['id'] : null,
             'label'         => (string) $label,
             'type'          => $typeShort,
             'type_raw'      => $type,

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.40] - 2026-05-14
+
+### Fixed
+
+- **Imported custom-field values now display in the GUI.** The tester's manual-save test exposed the real format: GLPI 11 keys `glpi_assets_assets.custom_fields` by the **integer `id`** of the matching `glpi_assets_customfielddefinitions` row, NOT by the field's `system_name`. After a manual save the JSON contained `{"50":60,"49":1,"46":null}` (id 50 = polka, 49 = regal, 46 = data_inwentaryzacji), while our importer was writing `{"polka":59,"regal":3}` — same fields, wrong keys → the GUI walker, which iterates declared fields by id, never saw our entries and showed empty dropdowns. Two changes plug this:
+  - `PluginDatainjectionCustomAssetRegistry::parseCustomFieldEntry()` now also captures the row's numeric `id`.
+  - `PluginDatainjectionCustomAssetBaseInjection::customimport()` translates `system_name` → `id` against the registry before writing the JSON (and falling back to the direct SQL write). A new `customimport: id-keyed custom_fields` log line dumps the `name_to_id` mapping and any `orphans` (extracted keys we couldn't translate, which would still indicate a real bug).
+
 ## [2.16.39] - 2026-05-14
 
 ### Fixed
