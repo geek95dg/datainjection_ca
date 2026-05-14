@@ -291,22 +291,31 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         // also `name`). Catalog entries beat non-catalog entries.
         $deduped = $this->deduplicateByDisplayName($tab);
 
-        // GLPI 11 exposes each custom-field column under its raw name
-        // (`custom_polka`, `custom_regal`, …) in Search::getOptions().
-        // Don't drop those — they share the same per-column write path
-        // as our `_customfield_<key>` entries (see customimport()).
-        // Just rewrite their displayed `name` to use the friendly
-        // label from the registry, so the dropdown reads cleanly.
+        // First, strip every search option that belongs to the Fields
+        // plugin (table prefix `glpi_plugin_fields_`). That plugin is
+        // scoped to native itemtypes; on custom assets its options
+        // create confusing duplicates of our `_customfield_<key>`
+        // entries with raw labels (`custom_polka`, `custom_regal`),
+        // and the values would never reach the Fields plugin's data
+        // tables anyway.
+        $fieldsPluginDrops = $this->dropFieldsPluginOptions($tab);
+
+        // GLPI 11 exposes each NATIVE custom-field column under its raw
+        // name (e.g. AssetDefinition-declared fields). Those share a
+        // linkfield with our `_customfield_<key>` entries; relabel
+        // them with the friendly label from the registry instead of
+        // dropping, so the dropdown reads cleanly.
         $customStubs = $this->relabelRawCustomFieldStubs($tab);
 
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: native fields appended', [
-                'asset_class'    => $assetClass,
-                'appended'       => $nativeAppended,
-                'humanised'      => $humanised,
-                'name_dedup'     => $deduped,
-                'custom_stubs'   => $customStubs,
-                'kept_count'     => count($tab),
+                'asset_class'        => $assetClass,
+                'appended'           => $nativeAppended,
+                'humanised'          => $humanised,
+                'name_dedup'         => $deduped,
+                'fields_plugin_drop' => $fieldsPluginDrops,
+                'custom_stubs'       => $customStubs,
+                'kept_count'         => count($tab),
             ]);
         }
 
@@ -443,26 +452,26 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $fields['assets_assetdefinitions_id'] = static::getDefinitionId();
             unset($fields['id']);
 
-            // GLPI 11 stores each custom field in its OWN column
-            // (`custom_<key>`) on glpi_assets_assets, NOT in the JSON
-            // `custom_fields` column. The JSON is a regenerated cache
-            // GLPI itself rebuilds from those per-field columns during
-            // every add/update. So writing only `custom_fields = {…}`
-            // here is silently overwritten by GLPI's regen → asset
-            // detail page shows empty values, mysql query returns `[]`.
+            // GLPI 11 native custom-asset custom fields are persisted in
+            // the JSON column `glpi_assets_assets.custom_fields`. The
+            // canonical input format expected by
+            // `Glpi\Asset\Asset::prepareInputForAdd` is a *nested PHP
+            // array* under `custom_fields`, NOT a pre-encoded JSON
+            // string — passing a string was silently dropped during the
+            // prepare step (the asset's `prepareCustomFieldsValues`
+            // iterates `$input['custom_fields']` as an array).
             //
-            // Write each value into its proper per-field column. We
-            // still set the JSON too for forward-compat with installs
-            // that haven't yet migrated to per-column storage.
+            // We also do NOT touch `custom_<key>` top-level columns:
+            // those exist only when the Fields plugin's containers add
+            // them to native itemtypes; GLPI 11 native custom-asset
+            // rows do not have such columns and trying to set them was
+            // a no-op.
             if (!empty($customValues)) {
-                foreach ($customValues as $key => $value) {
-                    $fields['custom_' . $key] = $value;
-                }
-                $fields['custom_fields'] = $this->mergeCustomFields(null, $customValues);
+                $fields['custom_fields'] = $customValues;
                 if (class_exists('PluginDatainjectionLogger')) {
                     PluginDatainjectionLogger::info('customimport: custom fields written', [
-                        'columns' => array_map(static fn($k) => 'custom_' . $k, array_keys($customValues)),
-                        'json'    => $fields['custom_fields'],
+                        'keys'  => array_keys($customValues),
+                        'count' => count($customValues),
                     ]);
                 }
             }
@@ -505,21 +514,28 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         }
 
         if (!empty($customValues)) {
-            $existing = null;
+            $existing = [];
             if ($item->getFromDB($id)) {
-                $existing = $item->fields['custom_fields'] ?? null;
+                $rawExisting = $item->fields['custom_fields'] ?? null;
+                if (is_string($rawExisting) && $rawExisting !== '') {
+                    $decoded = json_decode($rawExisting, true);
+                    if (is_array($decoded)) {
+                        $existing = $decoded;
+                    }
+                } elseif (is_array($rawExisting)) {
+                    $existing = $rawExisting;
+                }
             }
-            // See the add() branch comment: write each value into its
-            // proper per-field column so GLPI's JSON-rebuild step
-            // doesn't silently drop it.
-            foreach ($customValues as $key => $value) {
-                $fields['custom_' . $key] = $value;
-            }
-            $fields['custom_fields'] = $this->mergeCustomFields($existing, $customValues);
+            // Merge the new values on top of whatever the row already
+            // carried, and hand GLPI a real nested PHP array under
+            // `custom_fields`. See the add() branch comment for why a
+            // JSON string here gets silently dropped.
+            $merged = array_merge($existing, $customValues);
+            $fields['custom_fields'] = $merged;
             if (class_exists('PluginDatainjectionLogger')) {
                 PluginDatainjectionLogger::info('customimport: custom fields written (update)', [
-                    'columns' => array_map(static fn($k) => 'custom_' . $k, array_keys($customValues)),
-                    'json'    => $fields['custom_fields'],
+                    'keys'  => array_keys($merged),
+                    'count' => count($merged),
                 ]);
             }
         }
@@ -923,6 +939,41 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $rewritten++;
         }
         return $rewritten;
+    }
+
+    /**
+     * Drop search-option entries that come from the Fields plugin.
+     *
+     * The Fields plugin (`glpi_plugin_fields_*` tables) injects its own
+     * search options into every itemtype it has a container for. On
+     * custom assets that produces dropdown rows like `custom_polka`,
+     * `custom_regal`, `custom_data_inwentaryzacji` — but those fields
+     * are scoped to the Fields plugin's own value tables, not to
+     * `glpi_assets_assets.custom_fields`. Letting users pick them on a
+     * custom-asset import does nothing (the value never reaches the
+     * Fields plugin's data table because we don't speak its hook
+     * protocol) and confuses the dropdown.
+     *
+     * The Fields plugin's options carry a tell-tale `table` value
+     * starting with `glpi_plugin_fields_`. Strip every option that
+     * matches.
+     *
+     * @return int number of entries dropped
+     */
+    private function dropFieldsPluginOptions(array &$tab): int
+    {
+        $dropped = 0;
+        foreach ($tab as $id => $opt) {
+            if (!is_array($opt)) {
+                continue;
+            }
+            $table = $opt['table'] ?? null;
+            if (is_string($table) && strncmp($table, 'glpi_plugin_fields_', 19) === 0) {
+                unset($tab[$id]);
+                $dropped++;
+            }
+        }
+        return $dropped;
     }
 
     /**

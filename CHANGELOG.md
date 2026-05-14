@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.37] - 2026-05-14
+
+### Fixed
+
+- **Native custom-asset custom fields (GLPI 11 `AssetDefinition`-declared) actually persist now.** The earlier path passed `$fields['custom_fields']` as a pre-encoded JSON STRING, but `Glpi\Asset\Asset::prepareInputForAdd()` expects a nested PHP ARRAY there — the string was silently dropped and the row landed with `custom_fields = '[]'`. `customimport()` now hands GLPI `$fields['custom_fields'] = ['key' => value, …]` (and, on update, decodes the existing JSON, merges, then passes the merged array). 2.16.36's `custom_<key>` top-level column writes are reverted — those columns only exist when the Fields plugin adds them to *native* itemtypes, and writing them on a GLPI 11 native custom-asset row was a no-op.
+- **Fields-plugin search options no longer pollute the custom-asset Field dropdown.** The Fields plugin (`glpi_plugin_fields_*` tables) is the install's tool for custom fields on *native* itemtypes. Its option entries leak into every itemtype it has a container for — including custom assets — producing the `custom_polka`, `custom_regal`, `custom_data_inwentaryzacji` rows the tester reported. New `dropFieldsPluginOptions()` pass strips every option whose `table` starts with `glpi_plugin_fields_`. Native itemtype imports are untouched.
+
 ## [2.16.36] - 2026-05-14
 
 ### Fixed
