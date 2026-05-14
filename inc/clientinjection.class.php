@@ -218,6 +218,21 @@ class PluginDatainjectionClientInjection
         $error_lines_json = PluginDatainjectionSession::getParam('injection_error_lines');
         $error_lines      = json_decode($error_lines_json, true) ?: [];
 
+        // Cumulative-state diagnostic: track how big the per-session
+        // tmp files are growing batch-over-batch. If the silent death
+        // around row 22 is caused by PHP / session / tmp running out
+        // of room, this will show a clear correlation.
+        PluginDatainjectionLogger::info('processBatch: session state', [
+            'results_count'        => is_array($results) ? count($results) : null,
+            'results_json_kb'      => is_string($results_json)
+                ? (int) round(strlen($results_json) / 1024)
+                : null,
+            'error_lines_count'    => is_array($error_lines) ? count($error_lines) : null,
+            'error_lines_json_kb'  => is_string($error_lines_json)
+                ? (int) round(strlen($error_lines_json) / 1024)
+                : null,
+        ]);
+
         $engine = new PluginDatainjectionEngine(
             $model,
             PluginDatainjectionSession::getParam('infos'),
