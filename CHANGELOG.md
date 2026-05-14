@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.31] - 2026-05-14
+
+### Fixed
+
+- **The import is now resilient to the silent PHP-FPM-worker hang inside GLPI core's `$item->add()` (after ~22 ADDs per worker).** The 2.16.30 dump confirmed the failing payload is payload-independent — fix the row content and the next row hangs at the same boundary, so it can't be addressed inside our plugin. Plumb a retry layer into `public/js/injection_progress.js`:
+  - On any 500 (or `{error:true}` 200) the JS waits with exponential backoff (750ms → 1.5s → 3s → 6s → 12s, capped) and re-POSTs the *same* `offset`. FPM recycles a worker after the 500, so the retry lands on a fresh worker and the same payload commits cleanly.
+  - Up to 8 retries per batch. A successful response resets the counter for the next batch — so a 1000-row import can absorb ~45 of these recycles without giving up.
+  - During retries the status line shows `… — retry N/8` so the spinner isn't ambiguous with a successful in-flight batch.
+  - When all retries are exhausted the original error banner (message + class@where / HTTP status) is shown unchanged.
+
+### Changed
+
+- Default `data-batch-size` bumped back from 1 → 5. With retry-on-500 in place, the previous "1 to isolate which row" defensive setting is no longer needed; 5 trades fewer round-trips for the same resilience.
+
 ## [2.16.30] - 2026-05-14
 
 ### Added
