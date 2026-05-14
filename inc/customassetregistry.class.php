@@ -376,6 +376,22 @@ class PluginDatainjectionCustomAssetRegistry
             // Best effort only.
         }
 
+        // Dedup: when a definition stores its custom fields both in the
+        // JSON display config AND in the companion table, we end up with
+        // each real field listed twice — once under its bare key
+        // (`polka`) and once under the asset-column form
+        // (`custom_polka`). The companion-table entries are authoritative
+        // (they carry `system_name`, `type`, label translations). Drop
+        // any `custom_<key>` entry if `<key>` is already present.
+        foreach (array_keys($fields) as $existingKey) {
+            if (strncmp($existingKey, 'custom_', 7) === 0) {
+                $stripped = substr($existingKey, 7);
+                if ($stripped !== '' && isset($fields[$stripped])) {
+                    unset($fields[$existingKey]);
+                }
+            }
+        }
+
         return array_values($fields);
     }
 
