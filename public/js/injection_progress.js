@@ -62,8 +62,13 @@ function startBatchInjection(container) {
 
     /** Show the in-page error banner with a server-supplied message and
      *  stop the progress spinner. Keeps the "Abort and start over" form
-     *  reachable so the user can recover without reinstalling. */
-    function showError(message) {
+     *  reachable so the user can recover without reinstalling.
+     *
+     *  `details` (optional) is appended on a second line — used to surface
+     *  the exception class + file:line returned by inject_batch.php so the
+     *  user can search datainjection.log even when GLPI rewrote the
+     *  primary message to a generic localised string. */
+    function showError(message, details) {
         const progressBar = container.querySelector('.progress-bar');
         if (progressBar) {
             progressBar.classList.remove('progress-bar-animated');
@@ -78,7 +83,28 @@ function startBatchInjection(container) {
         }
         if (errMsg) {
             errMsg.textContent = message || errorLabel;
+            if (details) {
+                const sub = document.createElement('div');
+                sub.className = 'small text-muted mt-1';
+                sub.textContent = details;
+                errMsg.appendChild(sub);
+            }
         }
+    }
+
+    /** Build a "ClassName @ /path/to/file.php:NN" subline when the server
+     *  payload carries those fields. Returns undefined when nothing useful
+     *  is available so the banner stays single-line. */
+    function buildDetails(payload) {
+        if (!payload || typeof payload !== 'object') {
+            return undefined;
+        }
+        const where = payload.where;
+        const klass = payload.class;
+        if (where && klass) {
+            return klass + ' @ ' + where;
+        }
+        return where || klass || undefined;
     }
 
     function processBatch() {
@@ -95,7 +121,7 @@ function startBatchInjection(container) {
                 // payload with HTTP 200 in degenerate cases; treat it
                 // like an error.
                 if (response && response.error) {
-                    showError(response.message || errorLabel);
+                    showError(response.message || errorLabel, buildDetails(response));
                     return;
                 }
                 updateProgressBar(response.progress);
@@ -121,19 +147,28 @@ function startBatchInjection(container) {
                 // to a generic message if the response was empty or
                 // un-parseable.
                 let message = errorLabel;
+                let payload = null;
                 try {
-                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-                        message = xhr.responseJSON.message;
+                    if (xhr && xhr.responseJSON) {
+                        payload = xhr.responseJSON;
                     } else if (xhr && xhr.responseText) {
-                        const parsed = JSON.parse(xhr.responseText);
-                        if (parsed && parsed.message) {
-                            message = parsed.message;
-                        }
+                        payload = JSON.parse(xhr.responseText);
+                    }
+                    if (payload && payload.message) {
+                        message = payload.message;
                     }
                 } catch (e) {
                     /* keep default label */
                 }
-                showError(message);
+                // When the body had nothing parseable, at least surface the
+                // HTTP status so the user can distinguish "endpoint 404"
+                // from "endpoint 500 with no logged exception".
+                let details = buildDetails(payload);
+                if (!details && xhr && xhr.status) {
+                    details = 'HTTP ' + xhr.status
+                        + (xhr.statusText ? ' ' + xhr.statusText : '');
+                }
+                showError(message, details);
             }
         });
     }
