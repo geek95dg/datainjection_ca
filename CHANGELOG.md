@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.30] - 2026-05-14
+
+### Added
+
+- Diagnostic checkpoints + full field-payload dump around the **`$item->add($fields)`** call inside `PluginDatainjectionCustomAssetBaseInjection::customimport()`. PR #36 narrowed the silent death to `effectiveAddOrUpdate` → `customimport` → GLPI core's `CommonDBTM::add()`. This commit wraps the actual `add()` call with `before` / `after` log lines, dumps the exact fields being inserted (truncated to ~1200 chars), and records elapsed_ms + memory across the add. A failed import will now leave `before $item->add()` on disk with the precise payload that breaks GLPI, and no matching `after $item->add()` — proving the hang is inside GLPI core (likely a plugin hook on item_add).
+
 ## [2.16.29] - 2026-05-14
 
 ### Added
