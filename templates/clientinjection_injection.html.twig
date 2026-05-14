@@ -40,7 +40,15 @@
      data-result-url="{{ result_url }}"
      data-model-id="{{ model_id }}"
      data-nblines="{{ nblines }}"
-     data-batch-size="10"
+     {# batch-size kept intentionally small: each injectLine() triggers many
+        Search::getOptions() rebuilds for custom-asset itemtypes and is slow.
+        At batch-size 10 the HTTP request stays open long enough that
+        php-fpm `request_terminate_timeout` / nginx `proxy_read_timeout`
+        kills the worker mid-row (we've observed the worker dying
+        between `injectLine pre` and `injectLine post` with no fatal in
+        any log). 2 keeps every AJAX call well under any reasonable
+        proxy/FPM timeout. #}
+     data-batch-size="2"
      data-status-label="{{ __('Injection of the file', 'datainjection') }}"
      data-lines-label="{{ __(' lines', 'datainjection') }}"
      data-error-label="{{ __('Error', 'datainjection') }}"
