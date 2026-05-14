@@ -1414,8 +1414,17 @@ class PluginDatainjectionCommonInjectionLib
                     return (self::isFloat($data) ? self::SUCCESS : self::TYPE_MISMATCH);
 
                 case 'date':
-                    // Date is already "reformat" according to getDateFormat()
-                    $pat = '/^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})$/';
+                    // Date is already "reformat" according to getDateFormat().
+                    // Accept BOTH date-only (`YYYY-MM-DD`) and full MySQL
+                    // DATETIME (`YYYY-MM-DD HH:MM:SS`) — GLPI auto-injects
+                    // `date_creation` / `date_mod` with DATETIME values
+                    // (current timestamp), and the original date-only
+                    // regex was rejecting them as TYPE_MISMATCH. That
+                    // marked the entire row's status as FAILED even though
+                    // the record itself was successfully written, so the
+                    // import looked like a 100% failure to the user while
+                    // GLPI was actually creating the rows.
+                    $pat = '/^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})( [0-9]{2}:[0-9]{2}:[0-9]{2})?$/';
                     $res = preg_match($pat, $data, $regs);
                     return ($res !== 0 ? self::SUCCESS : self::TYPE_MISMATCH);
 

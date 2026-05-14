@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.27] - 2026-05-14
+
+### Fixed
+
+- **Imports are no longer reported as FAILED when they actually succeed.** `PluginDatainjectionCommonInjectionLib::checkType()`'s `'date'` branch only accepted strict `YYYY-MM-DD`. GLPI auto-injects `date_creation` / `date_mod` with full MySQL `DATETIME` values (`'2026-05-14 09:21:42'`), so the date-only regex returned `TYPE_MISMATCH` for those two auto-fields on every single row. That stamped the entire row's status `FAILED` (the lib promotes any per-field non-SUCCESS to a row-level FAILED) — even though the asset was already saved with a real ID. The dump from 2.16.26 confirmed it: `result_dump` showed `"Glpi\\CustomAsset\\drukarkimobilneAsset": 11268, 11269, …` sequential IDs alongside the FAILED status. Regex now also accepts the optional ` HH:MM:SS` suffix.
+
 ## [2.16.26] - 2026-05-14
 
 ### Added
