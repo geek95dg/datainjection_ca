@@ -426,11 +426,32 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         }
 
         if (class_exists('PluginDatainjectionLogger')) {
+            // Dump the AssetDefinition's declared custom-field keys so
+            // we can verify whether the keys we're passing (`polka`,
+            // `regal`, …) actually match what the definition declared.
+            // If they don't, GLPI 11's prepareInputForAdd will silently
+            // drop them and the row lands with `custom_fields = '[]'`.
+            $declared_keys = [];
+            try {
+                $declared = PluginDatainjectionCustomAssetRegistry::getCustomFields(
+                    static::getDefinitionId(),
+                );
+                foreach ($declared as $df) {
+                    if (isset($df['key']) && is_string($df['key'])) {
+                        $declared_keys[] = $df['key'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                $declared_keys = ['<error: ' . $e->getMessage() . '>'];
+            }
+
             PluginDatainjectionLogger::info('customimport: extract custom fields', [
-                'add'              => $add,
-                'incoming_keys'    => $incoming_keys,
-                'custom_keys'      => array_keys($customValues),
-                'custom_count'     => count($customValues),
+                'add'                  => $add,
+                'incoming_keys'        => $incoming_keys,
+                'custom_keys'          => array_keys($customValues),
+                'custom_count'         => count($customValues),
+                'definition_declared'  => $declared_keys,
+                'name_mismatch'        => array_values(array_diff(array_keys($customValues), $declared_keys)),
             ]);
         }
 
@@ -498,11 +519,40 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $t0_add = microtime(true);
             $newID = $item->add($fields);
             if (class_exists('PluginDatainjectionLogger')) {
+                // Pull the freshly-inserted row's `custom_fields` value
+                // straight from DB so we can compare what we passed
+                // against what GLPI actually persisted. If we passed
+                // `['polka' => 59]` but the row shows `[]`, GLPI's
+                // prepareInputForAdd dropped our input — that's the
+                // bug. The post-add value is the truth, not what we
+                // think we set.
+                $persisted = '<unknown>';
+                try {
+                    if (is_numeric($newID) && (int) $newID > 0) {
+                        global $DB;
+                        if (isset($DB) && is_object($DB)) {
+                            $iter = $DB->request([
+                                'SELECT' => ['custom_fields'],
+                                'FROM'   => self::$table,
+                                'WHERE'  => ['id' => (int) $newID],
+                                'LIMIT'  => 1,
+                            ]);
+                            foreach ($iter as $r) {
+                                $persisted = $r['custom_fields'] ?? '<null>';
+                                break;
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $persisted = '<probe failed: ' . $e->getMessage() . '>';
+                }
                 PluginDatainjectionLogger::info('customimport: after $item->add()', [
-                    'assetClass' => $assetClass,
-                    'newID'      => $newID,
-                    'elapsed_ms' => (int) round((microtime(true) - $t0_add) * 1000),
-                    'mem_mb'     => round(memory_get_usage(true) / (1024 * 1024), 1),
+                    'assetClass'         => $assetClass,
+                    'newID'              => $newID,
+                    'elapsed_ms'         => (int) round((microtime(true) - $t0_add) * 1000),
+                    'mem_mb'             => round(memory_get_usage(true) / (1024 * 1024), 1),
+                    'sent_custom_fields' => $fields['custom_fields'] ?? null,
+                    'persisted_custom_fields' => $persisted,
                 ]);
             }
             return $newID ?: false;
