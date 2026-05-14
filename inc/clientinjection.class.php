@@ -199,11 +199,19 @@ class PluginDatainjectionClientInjection
 
         Profile::getCurrent()->disable();
 
+        PluginDatainjectionLogger::info('processBatch: unserialize model', [
+            'offset' => $offset,
+        ]);
         $model = unserialize($_SESSION['datainjection']['currentmodel']);
         $model->loadSpecificModel();
         $entities_id = $_SESSION['glpiactive_entity'];
         $lines_json  = PluginDatainjectionSession::getParam('injection_lines');
         $lines       = json_decode($lines_json, true);
+        PluginDatainjectionLogger::info('processBatch: lines decoded', [
+            'lines_count'    => is_array($lines) ? count($lines) : null,
+            'lines_is_array' => is_array($lines),
+            'json_len'       => is_string($lines_json) ? strlen($lines_json) : null,
+        ]);
 
         $results_json     = PluginDatainjectionSession::getParam('injection_results');
         $results          = json_decode($results_json, true) ?: [];
@@ -217,12 +225,43 @@ class PluginDatainjectionClientInjection
         );
 
         $header_offset = $model->getSpecificModel()->isHeaderPresent() ? 2 : 1;
-        $total         = count($lines);
+        $total         = count($lines ?: []);
         $end           = min($offset + $batch_size, $total);
+
+        PluginDatainjectionLogger::info('processBatch: starting injection loop', [
+            'offset'        => $offset,
+            'end'           => $end,
+            'total'         => $total,
+            'header_offset' => $header_offset,
+            'itemtype'      => method_exists($model, 'getItemtype') ? $model->getItemtype() : null,
+        ]);
 
         for ($i = $offset; $i < $end; $i++) {
             $injectionline = $i + $header_offset;
-            $result        = $engine->injectLine($lines[$i][0], $injectionline);
+            // Per-line breadcrumb: when a batch dies mid-loop, the last
+            // `processBatch: injectLine pre` line tells us which CSV row
+            // caused it (matched against the source file via
+            // $injectionline). Wrap injectLine() itself so a thrown
+            // exception inside one line records a structured error result
+            // instead of killing the entire batch.
+            PluginDatainjectionLogger::info('processBatch: injectLine pre', [
+                'i'             => $i,
+                'injectionline' => $injectionline,
+                'cols'          => is_array($lines[$i][0] ?? null) ? count($lines[$i][0]) : null,
+            ]);
+            try {
+                $result = $engine->injectLine($lines[$i][0], $injectionline);
+            } catch (\Throwable $e) {
+                PluginDatainjectionLogger::exception(
+                    $e,
+                    'processBatch: injectLine threw on line ' . $injectionline,
+                );
+                $result = [
+                    'status'        => PluginDatainjectionCommonInjectionLib::FAILED,
+                    'line'          => $injectionline,
+                    'error_message' => $e->getMessage(),
+                ];
+            }
             $results[]     = $result;
 
             if ($result['status'] != PluginDatainjectionCommonInjectionLib::SUCCESS) {
