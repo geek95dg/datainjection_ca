@@ -21,7 +21,7 @@
    </authors>
    <versions>
       <version>
-          <num>2.16.40</num>
+          <num>2.16.41</num>
           <compatibility>~11.0.0</compatibility>
           <download_url>https://github.com/geek95dg/datainjection_ca/releases</download_url>
       </version>
