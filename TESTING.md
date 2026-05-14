@@ -156,6 +156,36 @@ PRT-003;PRTSN-0003;INV-PRT-0003;In use
 
 ---
 
+### C1b. Mapping dropdown shows every standard column with a human label
+
+**What you'll check**: the **Field** dropdown on the Mappings tab contains the standard `glpi_assets_assets` columns (Name, Serial number, Inventory number, Manufacturer, Type, Model, Status, Location, …) with translated/human labels, **not** raw SQL identifiers like `manufacturers_id` or `is_recursive`. Specifically the **Manufacturer** entry must be present and selectable (separate from any "Firmware: Producent" device-relation entry that may also appear under Firmware).
+
+**Steps**:
+1. Edit a custom-asset model (the one from C1).
+2. Open the Mappings tab.
+3. On any unmapped row, open the **Field** dropdown.
+4. Scroll through the list.
+
+**Expected**:
+- "Manufacturer" / "Producent" appears as a top-level option (not only under "Firmware: …").
+- No entry in the dropdown looks like `snake_case_lowercase` (e.g. you should never see a raw `manufacturers_id`, `assets_assettypes_id`, `is_recursive`, etc.). If any do appear, paste a screenshot — those are bugs to fix.
+- "Type", "Model", "Status", "Location", "User", "Technician in charge" all appear with their human labels.
+
+**Quick way to verify after import**: pick "Manufacturer" in the mapping, import a row with `manufacturers_id=Brother` (or whichever vendor is in your dropdown), and confirm `glpi_assets_assets.manufacturers_id` for that row points at the Brother record — not at a firmware-related table.
+
+```bash
+sudo mysql -e "
+  SELECT a.name, m.name AS manufacturer
+  FROM glpi_assets_assets a
+  LEFT JOIN glpi_manufacturers m ON m.id = a.manufacturers_id
+  WHERE a.name LIKE 'TEST-%';" glpi
+```
+
+**Pass / Fail**: ☐
+**Notes**: 
+
+---
+
 ### C2. Custom asset with custom fields
 
 **Pre-requisite**: add at least one custom field to your `AssetDefinition` (e.g. a text field `Owner`, a dropdown field `Department`).
