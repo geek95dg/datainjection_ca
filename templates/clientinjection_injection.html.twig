@@ -48,7 +48,12 @@
         between `injectLine pre` and `injectLine post` with no fatal in
         any log). 2 keeps every AJAX call well under any reasonable
         proxy/FPM timeout. #}
-     data-batch-size="2"
+     {# Forced to 1 for the silent-death-around-row-22 investigation —
+        with batch_size=1 every AJAX request processes exactly one row,
+        so a death is unambiguously attributable to ONE specific i /
+        injectionline rather than to the second row of a batch. Crank
+        back up once that's resolved. #}
+     data-batch-size="1"
      data-status-label="{{ __('Injection of the file', 'datainjection') }}"
      data-lines-label="{{ __(' lines', 'datainjection') }}"
      data-error-label="{{ __('Error', 'datainjection') }}"

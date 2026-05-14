@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.28] - 2026-05-14
+
+### Added
+
+- **Internal `injectLine` checkpoint logging.** `PluginDatainjectionEngine::injectLine()` now logs at five points: `enter`, `before_getOptions`, `after_getOptions`, `before_addOrUpdateObject`, `after_addOrUpdateObject`, `return`. Each carries elapsed-ms-since-entry + memory. When a row dies silently inside vendor/GLPI code, the last checkpoint tells us which internal stage was alive.
+- **Cumulative-session-state diagnostic** in `processBatch`. New `processBatch: session state` line at the top of each batch reports `results_count`, `results_json_kb`, `error_lines_count`, `error_lines_json_kb`. Exposes whether the silent death around row ~22 correlates with growing per-session tmp-file size.
+
+### Changed
+
+- Template default `data-batch-size` dropped 2 → 1. With one row per AJAX request, a silent death is unambiguously attributable to a specific `i` / `injectionline`. Crank back up after the bug is fixed.
+
 ## [2.16.27] - 2026-05-14
 
 ### Fixed

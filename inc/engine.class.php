@@ -71,6 +71,23 @@ class PluginDatainjectionEngine
    **/
     public function injectLine($line, $index)
     {
+        // Step-by-step checkpoint logger. When a row dies silently inside
+        // GLPI/vendor code (no \Throwable caught, no PHP fatal, no entry
+        // in php-fpm/apache error.log) we need to know WHICH internal
+        // step was last alive. Each checkpoint records elapsed-since-
+        // entry plus a cheap memory snapshot.
+        $t0 = microtime(true);
+        $checkpoint = static function (string $stage) use ($index, $t0): void {
+            if (!class_exists('PluginDatainjectionLogger')) {
+                return;
+            }
+            PluginDatainjectionLogger::info('engine.injectLine: ' . $stage, [
+                'line'       => $index,
+                'elapsed_ms' => (int) round((microtime(true) - $t0) * 1000),
+                'mem_mb'     => round(memory_get_usage(true) / (1024 * 1024), 1),
+            ]);
+        };
+        $checkpoint('enter');
 
         //Store all fields to injection, sorted by itemtype
         $fields_toinject  = [];
@@ -85,7 +102,9 @@ class PluginDatainjectionEngine
         //which looks like this :
         //array(itemtype=>array(field=>value,field2=>value2))
         //Note : ignore values which are not mapped with a glpi's field
+        $checkpoint('before_getOptions');
         $searchOptions = $injectionClass->getOptions($itemtype);
+        $checkpoint('after_getOptions');
         $counter = count($line);
 
         for ($i = 0; $i < $counter; $i++) {
@@ -153,13 +172,16 @@ class PluginDatainjectionEngine
         ];
 
         //Will manage add or update
+        $checkpoint('before_addOrUpdateObject');
         $results = $injectionClass->addOrUpdateObject($fields_toinject, $options);
+        $checkpoint('after_addOrUpdateObject');
 
         //Add injected line number to the result array
         $results['line'] = $index;
         if ($results['status'] != PluginDatainjectionCommonInjectionLib::SUCCESS) {
             $this->error_lines[] = $line;
         }
+        $checkpoint('return');
         return $results;
     }
 
