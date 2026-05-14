@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.39] - 2026-05-14
+
+### Fixed
+
+- **Custom-field values now actually land in `glpi_assets_assets.custom_fields`, even on UPDATE imports.** The 2.16.38 diagnostics confirmed `name_mismatch: []` (our keys do match the AssetDefinition's declarations) and that the tester's import was hitting the UPDATE branch (`add: false`). The UPDATE branch had no post-write probe and no fallback — values went into `$fields` but GLPI 11's prepare layer silently dropped them. Two things changed in `customimport()`:
+  - The `add` branch's `persisted_custom_fields` probe is now mirrored on the UPDATE branch as `customimport: after $item->update()`.
+  - Both branches now check the freshly-persisted JSON. If it's `[]` / `''` / `null` despite us having sent a non-empty `custom_fields` array, a direct `DB->update('glpi_assets_assets', ['custom_fields' => json_encode(...)], ['id' => …])` forces the JSON in. A WARN log line `customimport: direct SQL fallback wrote custom_fields` fires when this hits so we know GLPI's prepare is still misbehaving — but the values are persisted regardless.
+- **Custom-field dropdown duplicates collapsed at the source.** The tester's `definition_declared` output showed each field listed twice — once as `polka` (from the companion table `glpi_assets_customfielddefinitions`) and once as `custom_polka` (from the AssetDefinition's JSON display config). `PluginDatainjectionCustomAssetRegistry::extractCustomFields()` now drops any `custom_<key>` entry when the same `<key>` already exists. The companion table is authoritative.
+
 ## [2.16.38] - 2026-05-14
 
 ### Added

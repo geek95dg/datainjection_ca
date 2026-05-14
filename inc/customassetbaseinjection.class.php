@@ -555,6 +555,45 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                     'persisted_custom_fields' => $persisted,
                 ]);
             }
+
+            // Same fallback as the update branch: GLPI's prepare layer
+            // silently swallows our `custom_fields` array — force the
+            // JSON in with a direct DB write so the values reach the
+            // row regardless.
+            if (
+                !empty($customValues)
+                && is_numeric($newID)
+                && (int) $newID > 0
+                && (is_string($persisted) && in_array($persisted, ['[]', '', 'null'], true))
+            ) {
+                try {
+                    global $DB;
+                    if (isset($DB) && is_object($DB)) {
+                        $forced_json = json_encode(
+                            $customValues,
+                            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+                        );
+                        $DB->update(
+                            self::$table,
+                            ['custom_fields' => $forced_json],
+                            ['id' => (int) $newID],
+                        );
+                        if (class_exists('PluginDatainjectionLogger')) {
+                            PluginDatainjectionLogger::warning(
+                                'customimport: direct SQL fallback wrote custom_fields',
+                                ['id' => $newID, 'json' => $forced_json],
+                            );
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    if (class_exists('PluginDatainjectionLogger')) {
+                        PluginDatainjectionLogger::exception(
+                            $e,
+                            'customimport: direct SQL fallback failed for id=' . $newID,
+                        );
+                    }
+                }
+            }
             return $newID ?: false;
         }
 
@@ -590,7 +629,80 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             }
         }
 
-        if ($item->update($fields)) {
+        $t0_upd = microtime(true);
+        $updated = $item->update($fields);
+
+        // Same probe as the add() branch: read the row's custom_fields
+        // back from DB right after update() and compare against what
+        // we sent. If sent has values but persisted is `[]`, GLPI's
+        // update prepare silently dropped our input — fall through to
+        // a direct SQL UPDATE to force the JSON in (this is exactly
+        // the path the user hit on UPDATE, where add: false).
+        $persisted = '<unknown>';
+        try {
+            global $DB;
+            if (isset($DB) && is_object($DB)) {
+                $iter = $DB->request([
+                    'SELECT' => ['custom_fields'],
+                    'FROM'   => self::$table,
+                    'WHERE'  => ['id' => (int) $id],
+                    'LIMIT'  => 1,
+                ]);
+                foreach ($iter as $r) {
+                    $persisted = $r['custom_fields'] ?? '<null>';
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {
+            $persisted = '<probe failed: ' . $e->getMessage() . '>';
+        }
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('customimport: after $item->update()', [
+                'assetClass'              => $assetClass,
+                'id'                      => $id,
+                'updated'                 => (bool) $updated,
+                'elapsed_ms'              => (int) round((microtime(true) - $t0_upd) * 1000),
+                'sent_custom_fields'      => $fields['custom_fields'] ?? null,
+                'persisted_custom_fields' => $persisted,
+            ]);
+        }
+
+        // Fallback: if we have customValues to write but the row's
+        // `custom_fields` column ended up empty / `[]`, GLPI's update
+        // prepare dropped them. Force the JSON in with a direct
+        // statement. The merged array we built above is the
+        // authoritative payload.
+        if (!empty($customValues) && (is_string($persisted) && in_array($persisted, ['[]', '', 'null'], true))) {
+            try {
+                global $DB;
+                if (isset($DB) && is_object($DB)) {
+                    $forced_json = json_encode(
+                        $merged ?? $customValues,
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+                    );
+                    $DB->update(
+                        self::$table,
+                        ['custom_fields' => $forced_json],
+                        ['id' => (int) $id],
+                    );
+                    if (class_exists('PluginDatainjectionLogger')) {
+                        PluginDatainjectionLogger::warning(
+                            'customimport: direct SQL fallback wrote custom_fields',
+                            ['id' => $id, 'json' => $forced_json],
+                        );
+                    }
+                }
+            } catch (\Throwable $e) {
+                if (class_exists('PluginDatainjectionLogger')) {
+                    PluginDatainjectionLogger::exception(
+                        $e,
+                        'customimport: direct SQL fallback failed for id=' . $id,
+                    );
+                }
+            }
+        }
+
+        if ($updated) {
             return $id;
         }
         return false;

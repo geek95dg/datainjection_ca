@@ -36,7 +36,7 @@
 // is fine — and it lets `glpi:plugin:install` succeed regardless of how the
 // plugin is deployed.
 
-define('PLUGIN_DATAINJECTION_VERSION', '2.16.38');
+define('PLUGIN_DATAINJECTION_VERSION', '2.16.39');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_DATAINJECTION_MIN_GLPI", "11.0.0");
