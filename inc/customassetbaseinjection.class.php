@@ -408,7 +408,35 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                 $fields['custom_fields'] = $this->mergeCustomFields(null, $customValues);
             }
 
+            // Wrap the actual DB write in checkpoints + payload dump.
+            // A silent worker death inside GLPI's CommonDBTM::add() (it
+            // fires plugin hooks, dropdown auto-create, history etc.)
+            // is otherwise indistinguishable from a freeze.
+            if (class_exists('PluginDatainjectionLogger')) {
+                $dump = @json_encode(
+                    $fields,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR,
+                );
+                if (is_string($dump) && strlen($dump) > 1200) {
+                    $dump = substr($dump, 0, 1200) . '…';
+                }
+                PluginDatainjectionLogger::info('customimport: before $item->add()', [
+                    'assetClass'   => $assetClass,
+                    'fields_keys'  => array_keys($fields),
+                    'fields_dump'  => $dump,
+                    'mem_mb'       => round(memory_get_usage(true) / (1024 * 1024), 1),
+                ]);
+            }
+            $t0_add = microtime(true);
             $newID = $item->add($fields);
+            if (class_exists('PluginDatainjectionLogger')) {
+                PluginDatainjectionLogger::info('customimport: after $item->add()', [
+                    'assetClass' => $assetClass,
+                    'newID'      => $newID,
+                    'elapsed_ms' => (int) round((microtime(true) - $t0_add) * 1000),
+                    'mem_mb'     => round(memory_get_usage(true) / (1024 * 1024), 1),
+                ]);
+            }
             return $newID ?: false;
         }
 
