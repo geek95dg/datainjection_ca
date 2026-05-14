@@ -33,6 +33,61 @@
 // error path.
 header("Content-Type: application/json; charset=UTF-8");
 
+// Raise PHP runtime limits BEFORE we hand control to GLPI / processBatch.
+// Symptoms previously observed: batch 2 (offset=10) dies mid-injectLine
+// with no logged exception, no PHP fatal, no entry in php-fpm/apache
+// error.log. That pattern is consistent with the worker tripping over
+// memory_limit, max_execution_time, or being aborted by the client.
+// `@` because some installs disable ini_set for these knobs — we want
+// best effort, not a crash.
+@ini_set('memory_limit', '1024M');
+@ini_set('max_execution_time', '0');
+@set_time_limit(0);
+ignore_user_abort(true);
+
+// Install a LOCAL shutdown handler that always fires, regardless of
+// setup.php's plugin-path filter. If injectLine dies inside vendor/GLPI
+// code (so error_get_last()['file'] doesn't contain __DIR__) the global
+// handler in setup.php currently bails. This local one keys off the
+// fact that we're inside inject_batch.php — anything fatal here is by
+// definition relevant to the batch loop.
+register_shutdown_function(static function (): void {
+    $err = error_get_last();
+    if (!is_array($err)) {
+        return;
+    }
+    $fatal_types = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;
+    if (!($err['type'] & $fatal_types)) {
+        return;
+    }
+    $msg = (string) ($err['message'] ?? 'unknown');
+    $loc = (string) ($err['file'] ?? '?') . ':' . ($err['line'] ?? '?');
+    try {
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::error('inject_batch.php fatal', [
+                'type'       => $err['type'] ?? null,
+                'message'    => $msg,
+                'where'      => $loc,
+                'mem_mb'     => round(memory_get_usage(true) / (1024 * 1024), 1),
+                'mem_peak_mb'=> round(memory_get_peak_usage(true) / (1024 * 1024), 1),
+            ]);
+        }
+    } catch (\Throwable $e) {
+        @error_log('[datainjection] inject_batch fatal in ' . $loc . ' — ' . $msg);
+    }
+    // If headers haven't been sent yet, surface a structured JSON 500
+    // so the progress JS shows a banner instead of hanging.
+    if (!headers_sent()) {
+        http_response_code(500);
+        echo json_encode([
+            'error'   => true,
+            'message' => 'inject_batch.php fatal: ' . $msg,
+            'where'   => $loc,
+            'class'   => 'PHP_FATAL',
+        ]);
+    }
+});
+
 // Breadcrumb the request *before* touching any GLPI symbol. If
 // `Html::header_nocache()` or `Session::checkCentralAccess()` later throws,
 // we want a log entry proving we at least entered the script. Anything
@@ -41,9 +96,11 @@ header("Content-Type: application/json; charset=UTF-8");
 try {
     if (class_exists('PluginDatainjectionLogger')) {
         PluginDatainjectionLogger::info('inject_batch.php: received', [
-            'method'      => $_SERVER['REQUEST_METHOD'] ?? null,
-            'has_session' => session_status() === PHP_SESSION_ACTIVE,
-            'post_keys'   => array_keys($_POST),
+            'method'         => $_SERVER['REQUEST_METHOD'] ?? null,
+            'has_session'    => session_status() === PHP_SESSION_ACTIVE,
+            'post_keys'      => array_keys($_POST),
+            'memory_limit'   => ini_get('memory_limit'),
+            'max_exec_time'  => ini_get('max_execution_time'),
         ]);
     }
 } catch (\Throwable $e) {

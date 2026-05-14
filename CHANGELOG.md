@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.24] - 2026-05-14
+
+### Added
+
+- `processBatch` now also logs a **row preview** (`preview`: first ~240 chars of the joined cell values), the live **memory footprint** (`mem_mb` / `mem_peak_mb`), and a symmetric `processBatch: injectLine post` line after each successful return. Field log: when the batch dies silently mid-`injectLine`, the *last* `injectLine pre` (with preview) tells you which CSV row killed it, and a missing matching `injectLine post` is the unambiguous signature of a non-throwing death (PHP fatal that bypasses both \\Throwable and the shutdown handler).
+- `ajax/inject_batch.php` installs a **local** shutdown handler — fires regardless of whether the fatal traces through plugin code (the global setup.php handler bails on vendor-only fatals). Logs message + location + memory, and if headers haven't been sent yet, returns a structured `{error, message: "inject_batch.php fatal: …", where, class: "PHP_FATAL"}` 500 so the JS banner shows the cause instead of hanging.
+
+### Changed
+
+- `ajax/inject_batch.php` raises `memory_limit=1024M`, `max_execution_time=0`, `set_time_limit(0)`, `ignore_user_abort(true)` before doing anything else. Eliminates "worker tripped over a too-low ini limit" / "client disconnect aborted the script" as causes of silent death.
+
 ## [2.16.23] - 2026-05-14
 
 ### Fixed

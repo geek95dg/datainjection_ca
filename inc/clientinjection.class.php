@@ -244,10 +244,30 @@ class PluginDatainjectionClientInjection
             // $injectionline). Wrap injectLine() itself so a thrown
             // exception inside one line records a structured error result
             // instead of killing the entire batch.
+            //
+            // We also dump a short preview of the raw row data and the
+            // current memory footprint so the next silent death (PHP
+            // fatal that bypasses both \Throwable and the shutdown
+            // handler) leaves us with both "which row" and "was memory
+            // climbing".
+            $row_for_preview = $lines[$i][0] ?? null;
+            $preview         = null;
+            if (is_array($row_for_preview)) {
+                $joined  = implode(' | ', array_map(
+                    static fn($v) => is_scalar($v) ? (string) $v : gettype($v),
+                    $row_for_preview,
+                ));
+                $preview = mb_strlen($joined) > 240
+                    ? mb_substr($joined, 0, 240) . '…'
+                    : $joined;
+            }
             PluginDatainjectionLogger::info('processBatch: injectLine pre', [
                 'i'             => $i,
                 'injectionline' => $injectionline,
-                'cols'          => is_array($lines[$i][0] ?? null) ? count($lines[$i][0]) : null,
+                'cols'          => is_array($row_for_preview) ? count($row_for_preview) : null,
+                'preview'       => $preview,
+                'mem_mb'        => round(memory_get_usage(true) / (1024 * 1024), 1),
+                'mem_peak_mb'   => round(memory_get_peak_usage(true) / (1024 * 1024), 1),
             ]);
             try {
                 $result = $engine->injectLine($lines[$i][0], $injectionline);
@@ -262,6 +282,15 @@ class PluginDatainjectionClientInjection
                     'error_message' => $e->getMessage(),
                 ];
             }
+            // Symmetric "post" breadcrumb. A missing `post` for the i we
+            // last saw `pre` for is the unambiguous signature that
+            // injectLine died mid-call without throwing.
+            PluginDatainjectionLogger::info('processBatch: injectLine post', [
+                'i'             => $i,
+                'injectionline' => $injectionline,
+                'status'        => $result['status'] ?? null,
+                'mem_mb'        => round(memory_get_usage(true) / (1024 * 1024), 1),
+            ]);
             $results[]     = $result;
 
             if ($result['status'] != PluginDatainjectionCommonInjectionLib::SUCCESS) {
