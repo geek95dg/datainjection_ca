@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.29] - 2026-05-14
+
+### Added
+
+- Step-level checkpoints inside `PluginDatainjectionCommonInjectionLib::processAddOrUpdate()` — the lib method that actually runs the injection. New `processAddOrUpdate: <stage>` log lines for: `enter`, `after_manageRelations`, `after_processDictionnariesIfNeeded`, `after_manageFieldValues`, `before_dataAlreadyInDB`, `after_dataAlreadyInDB`, `before_reformat`, `after_reformat`, `after_check`, `before_effectiveAddOrUpdate`, `after_effectiveAddOrUpdate`. With `engine.injectLine` already instrumented, we can now isolate a silent death to a single sub-step within the lib.
+
 ## [2.16.28] - 2026-05-14
 
 ### Added
