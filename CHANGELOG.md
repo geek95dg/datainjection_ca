@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.26] - 2026-05-14
+
+### Added
+
+- `processBatch: injectLine non-success` now also dumps the **entire `$result`** array (`result_keys` + truncated `result_dump` JSON). Earlier diagnostics showed `error_message` / `field_in_error` are null on every FAILED row, which means the injection lib reports the rejection through some other key (probably a per-field nested status, or `values_to_inject` with per-field codes). Dumping the whole structure exposes which key actually carries the reason.
+
 ## [2.16.25] - 2026-05-14
 
 ### Fixed

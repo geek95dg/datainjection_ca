@@ -302,12 +302,23 @@ class PluginDatainjectionClientInjection
 
             // Surface why a row failed. Every non-SUCCESS result now
             // logs at WARN with the row's i, its translated status
-            // name, the lib's error_message (often a translated string
-            // pointing at a specific mapping / mandatory / type issue),
-            // and any field_in_error. Without this, status 11 (FAILED)
-            // looks like a success from the outside.
+            // name, AND the full dump of $result. Earlier diagnostics
+            // showed `error_message`/`field_in_error` keys are null,
+            // which means the injection lib reports the rejection via
+            // some *other* key (commonly `values_to_inject` + per-field
+            // status, or a nested `errors[]` array). Dump the whole
+            // structure (truncated) so we can see which keys the lib
+            // actually populates.
             $status_int = (int) ($result['status'] ?? -1);
             if ($status_int !== PluginDatainjectionCommonInjectionLib::SUCCESS) {
+                $result_keys = is_array($result) ? array_keys($result) : null;
+                $result_dump = is_array($result) ? json_encode(
+                    $result,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR,
+                ) : null;
+                if (is_string($result_dump) && strlen($result_dump) > 1200) {
+                    $result_dump = substr($result_dump, 0, 1200) . '…';
+                }
                 PluginDatainjectionLogger::warning('processBatch: injectLine non-success', [
                     'i'              => $i,
                     'injectionline'  => $injectionline,
@@ -317,6 +328,8 @@ class PluginDatainjectionClientInjection
                                         ?? $result['message']
                                         ?? null,
                     'field_in_error' => $result['field_in_error'] ?? null,
+                    'result_keys'    => $result_keys,
+                    'result_dump'    => $result_dump,
                     'elapsed_ms'     => $elapsed_ms,
                 ]);
             }
