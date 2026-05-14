@@ -291,13 +291,21 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         // also `name`). Catalog entries beat non-catalog entries.
         $deduped = $this->deduplicateByDisplayName($tab);
 
+        // Drop GLPI 11's raw custom-field-column entries
+        // (linkfield=`custom_<key>`). Our own `_customfield_<key>`
+        // entries replace them with the proper labels, and the raw
+        // entries silently broke custom-field uploads if the user
+        // picked the wrong one in the dropdown.
+        $customStubs = $this->dropRawCustomFieldStubs($tab);
+
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: native fields appended', [
-                'asset_class' => $assetClass,
-                'appended'    => $nativeAppended,
-                'humanised'   => $humanised,
-                'name_dedup'  => $deduped,
-                'kept_count'  => count($tab),
+                'asset_class'    => $assetClass,
+                'appended'       => $nativeAppended,
+                'humanised'      => $humanised,
+                'name_dedup'     => $deduped,
+                'custom_stubs'   => $customStubs,
+                'kept_count'     => count($tab),
             ]);
         }
 
@@ -862,14 +870,15 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             }
             $needs_rewrite = !is_string($name) || $name === '';
             if (!$needs_rewrite && is_string($name)) {
-                // A label that's pure `snake_case_lowercase` is almost
-                // certainly a raw SQL identifier that slipped through.
-                // Real (often translated) labels never match this — they
-                // contain spaces, accents, or capital letters.
-                if (
-                    preg_match('/^[a-z][a-z0-9_]*$/', $name)
-                    && str_contains($name, '_')
-                ) {
+                // A label that's pure `[a-z][a-z0-9_]*` (no spaces, no
+                // caps, no accents) is almost certainly a raw SQL
+                // identifier that slipped through. Real (often
+                // translated) labels never match this. The previous
+                // version required an underscore; that missed
+                // single-word leaks like `comment`, `serial`, etc.,
+                // and the screenshot from the tester showed those
+                // appearing raw.
+                if (preg_match('/^[a-z][a-z0-9_]*$/', $name)) {
                     $needs_rewrite = true;
                 }
             }
@@ -886,6 +895,42 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $rewritten++;
         }
         return $rewritten;
+    }
+
+    /**
+     * GLPI 11's `AssetDefinition` exposes its custom-field DB columns
+     * under their raw schema names (e.g. `custom_polka`, `custom_regal`)
+     * in the asset's `Search::getOptions()` output. Our own custom-field
+     * append step adds parallel entries with the proper labels under
+     * the `_customfield_<key>` linkfield, so the user ended up with
+     * BOTH a "polka" (ours) and a "custom_polka" (raw stock entry) in
+     * the Field picker. Picking the raw one means the value never
+     * passes through `customimport()`'s `_customfield_` extraction and
+     * the custom field never gets written.
+     *
+     * Drop every option whose `linkfield` looks like a custom-field
+     * column. Safe even when there are no custom fields registered —
+     * native asset columns never start with `custom_`.
+     *
+     * @return int number of entries dropped
+     */
+    private function dropRawCustomFieldStubs(array &$tab): int
+    {
+        $dropped = 0;
+        foreach ($tab as $id => $opt) {
+            if (!is_array($opt)) {
+                continue;
+            }
+            $linkfield = $opt['linkfield'] ?? null;
+            if (!is_string($linkfield) || $linkfield === '') {
+                continue;
+            }
+            if (strncmp($linkfield, 'custom_', strlen('custom_')) === 0) {
+                unset($tab[$id]);
+                $dropped++;
+            }
+        }
+        return $dropped;
     }
 
     /**
