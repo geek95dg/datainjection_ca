@@ -1569,13 +1569,32 @@ class PluginDatainjectionCommonInjectionLib
         $this->results['status']                     = self::SUCCESS;
         $this->results[self::ACTION_CHECK]['status'] = self::SUCCESS;
 
+        // Step-by-step checkpoint log. When the worker dies silently
+        // inside processAddOrUpdate (no \Throwable, no PHP fatal, log
+        // ends mid-getOptions-loop), the last checkpoint here names
+        // the lib stage that was alive.
+        $_t0_par = microtime(true);
+        $_par_cp = static function (string $stage) use (&$_t0_par): void {
+            if (!class_exists('PluginDatainjectionLogger')) {
+                return;
+            }
+            PluginDatainjectionLogger::info('processAddOrUpdate: ' . $stage, [
+                'elapsed_ms' => (int) round((microtime(true) - $_t0_par) * 1000),
+                'mem_mb'     => round(memory_get_usage(true) / (1024 * 1024), 1),
+            ]);
+        };
+        $_par_cp('enter');
+
         //Manage fields belonging to relations between tables
         $this->manageRelations();
+        $_par_cp('after_manageRelations');
 
         $accepted = $this->processDictionnariesIfNeeded();
+        $_par_cp('after_processDictionnariesIfNeeded');
 
         //Get real value for fields (ie dropdown, etc)
         $this->manageFieldValues();
+        $_par_cp('after_manageFieldValues');
 
         //Check if the type to inject requires additional fields
         //(for example to link it with another type)
@@ -1585,7 +1604,9 @@ class PluginDatainjectionCommonInjectionLib
             $this->results[self::ACTION_CHECK]['status'] = self::FAILED;
         } else {
             //Check is data to be inject still exists in DB (update) or not (add)
+            $_par_cp('before_dataAlreadyInDB');
             $this->dataAlreadyInDB($this->injectionClass, $this->primary_type);
+            $_par_cp('after_dataAlreadyInDB');
             $process = true;
 
             //No item found in DB
@@ -1618,10 +1639,13 @@ class PluginDatainjectionCommonInjectionLib
 
         if ($process) {
             //First : reformat data
+            $_par_cp('before_reformat');
             $this->reformat();
+            $_par_cp('after_reformat');
 
             //Second : check data
             $this->check();
+            $_par_cp('after_check');
             if ($this->results['status'] != self::FAILED) {
                 //Third : inject data
                 $item = $this->getItemInstance();
@@ -1639,7 +1663,9 @@ class PluginDatainjectionCommonInjectionLib
                     $this->addTemplateFields($this->primary_type);
                 }
                 $values = $this->getValuesForItemtype($this->primary_type);
+                $_par_cp('before_effectiveAddOrUpdate');
                 $newID  = $this->effectiveAddOrUpdate($this->injectionClass, $item, $values, $add);
+                $_par_cp('after_effectiveAddOrUpdate');
 
                 if (!$newID) {
                     $this->results['status'] = self::WARNING;
