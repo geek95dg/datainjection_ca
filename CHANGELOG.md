@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.22] - 2026-05-14
+
+### Fixed
+
+- **Import progress page no longer flips to "Import failed — Wystąpił nieoczekiwany błąd" with nothing in `datainjection.log` to explain it.** `ajax/inject_batch.php` had `Html::header_nocache()` and `Session::checkCentralAccess()` *outside* the `try/catch` wrapper added in 2.16.19. Anything either of those threw (most commonly GLPI's Symfony ExceptionHandler rewriting an upstream error into the generic localised message) skipped our logger entirely and reached the JS as `{message: "An unexpected error occurred"}` → "Wystąpił nieoczekiwany błąd" in Polish, with no breadcrumb on disk. Everything is now inside the try block, and a `received` log line is emitted as the very first action of the script so we can confirm the endpoint was reached even when the body throws.
+- `ajax/inject_batch.php` now fails fast with a specific message when the session has lost `currentmodel` or `injection_lines` between the upload step and the first batch, instead of letting `processBatch` blow up on a null unserialize.
+
+### Changed
+
+- `inject_batch.php` error payload now includes the exception class and `file:line` alongside the message; `injection_progress.js` renders that as a second muted line under the "Import failed" banner. When GLPI rewrites `$e->getMessage()` to its localised generic string, the operator can still grep for the class/where pair in `datainjection.log`.
+- AJAX error handler in the progress JS also surfaces the HTTP status when the response body wasn't parseable — distinguishes "endpoint 404 (routing)" from "endpoint 500 with no logged exception" at a glance.
+
 ## [2.16.21] - 2026-05-13
 
 ### Fixed
