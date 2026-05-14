@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.23] - 2026-05-14
+
+### Fixed
+
+- **Stop emitting `Undefined array key "filename"` + `Trying to access array offset on null` (and storing NULL as `file_name` in the session) on every successful upload.** `front/clientinjection.form.php:107` was reading `$_FILES['filename']['name']` AFTER `readUploadedFile()` had already `unset($_FILES['filename'])` (the workaround for Symfony's UploadedFile validator). We now capture the original filename into a local at the top of the upload branch, before processUploadedFile runs, and persist that.
+
+### Added
+
+- Per-line breadcrumbs in `PluginDatainjectionClientInjection::processBatch`:
+  - `processBatch: unserialize model`
+  - `processBatch: lines decoded` (lines_count, json_len, etc.)
+  - `processBatch: starting injection loop` (offset/end/total/itemtype)
+  - `processBatch: injectLine pre` — emitted before each `$engine->injectLine()` call so a mid-batch crash is pinpointable to a specific CSV row.
+- `$engine->injectLine()` is now wrapped in a per-line try/catch — a single bad row records a FAILED result + logged exception instead of taking the whole batch down with a 500.
+
+### Changed
+
+- The shutdown handler in `setup.php` previously only logged PHP fatals whose `error_get_last()['file']` was inside the plugin directory. It now ALSO logs when the request URI / script name targets `/plugins/datainjection/…` — so a fatal originating from GLPI or vendor code that was triggered by our endpoints (e.g. `Search::getOptions` deep inside `inject_batch.php`) finally produces a breadcrumb.
+
 ## [2.16.22] - 2026-05-14
 
 ### Fixed

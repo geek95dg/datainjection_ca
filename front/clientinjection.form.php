@@ -71,6 +71,17 @@ try {
         $model->can($_POST['id'], READ);
         $_SESSION['datainjection']['infos'] = ($_POST['info'] ?? []);
 
+        // Capture the uploaded original filename BEFORE handing the
+        // request to processUploadedFile() — `readUploadedFile()` unsets
+        // `$_FILES['filename']` after moving the temp file (workaround
+        // for Symfony's UploadedFile validator), so reading it later
+        // produces "Undefined array key 'filename'" + "Trying to access
+        // array offset on null" warnings and stores NULL as the display
+        // file name.
+        $original_filename = (isset($_FILES['filename']['name']) && is_string($_FILES['filename']['name']))
+            ? $_FILES['filename']['name']
+            : '';
+
         //If additional informations provided : check if mandatory infos are present
         if (!$model->checkMandatoryFields($_SESSION['datainjection']['infos'])) {
             PluginDatainjectionLogger::warning('clientinjection.form.php: mandatory info missing');
@@ -104,7 +115,11 @@ try {
 
             if ($response) {
                 //File uploaded successfully and matches the given model : switch to the import tab
-                $_SESSION['datainjection']['file_name']    = $_FILES['filename']['name'];
+                // Use the filename we captured BEFORE readUploadedFile()
+                // unset it. Falls back to '' rather than NULL so downstream
+                // code (`Error-<filename>` CSV export, the progress page
+                // heading) never has to defend against null.
+                $_SESSION['datainjection']['file_name']    = $original_filename;
                 $_SESSION['datainjection']['step']         = PluginDatainjectionClientInjection::STEP_PROCESS;
                 //Store model in session for injection
                 $_SESSION['datainjection']['currentmodel'] = serialize($model);

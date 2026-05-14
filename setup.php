@@ -36,7 +36,7 @@
 // is fine — and it lets `glpi:plugin:install` succeed regardless of how the
 // plugin is deployed.
 
-define('PLUGIN_DATAINJECTION_VERSION', '2.16.22');
+define('PLUGIN_DATAINJECTION_VERSION', '2.16.23');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_DATAINJECTION_MIN_GLPI", "11.0.0");
@@ -65,9 +65,18 @@ register_shutdown_function(static function (): void {
         return;
     }
     // Only log if the failure traces through datainjection code, otherwise
-    // we noisily claim every site-wide fatal.
-    $file = (string) ($err['file'] ?? '');
-    if (strpos($file, __DIR__) === false) {
+    // we noisily claim every site-wide fatal. "Traces through" = either
+    // the fatal itself is inside the plugin, OR the current request URI
+    // points at a plugin endpoint (covers fatals thrown from GLPI/vendor
+    // code that were triggered by our entry points — e.g. an inject_batch
+    // call that crashes deep inside Search::getOptions).
+    $file   = (string) ($err['file'] ?? '');
+    $uri    = (string) ($_SERVER['REQUEST_URI']  ?? '');
+    $script = (string) ($_SERVER['SCRIPT_NAME']  ?? '');
+    $traces_through_plugin = strpos($file, __DIR__) !== false
+        || strpos($uri,    '/plugins/datainjection/') !== false
+        || strpos($script, '/plugins/datainjection/') !== false;
+    if (!$traces_through_plugin) {
         return;
     }
     try {
