@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.35] - 2026-05-14
+
+### Fixed
+
+- **Custom-field values weren't being saved on imports where the user picked the "raw column-name" entry in the Field dropdown.** GLPI 11's `AssetDefinition` exposes each custom-field DB column under its raw schema name (e.g. `custom_polka`, `custom_regal`) inside the asset's `Search::getOptions()` output, in parallel with our own `_customfield_<key>` entries that have proper labels. Both appeared in the picker. Picking the raw one meant the value never went through `customimport()`'s `_customfield_` prefix extraction → the custom field never landed in the asset. New `dropRawCustomFieldStubs()` pass drops any option whose `linkfield` starts with `custom_` — those are always duplicates of our properly-labelled entries. This is the C2 "fails uploading data to custom fields" cause.
+- **Single-word raw SQL identifiers are now humanised** too. The previous heuristic required an underscore in the name (so `comment`, `serial`, `name` etc. were skipped). Dropped that requirement: any `name` matching `^[a-z][a-z0-9_]*$` gets Title-Cased. The "must contain spaces, caps, or non-ASCII" gate that protects translated labels is preserved.
+
 ## [2.16.34] - 2026-05-14
 
 ### Fixed
