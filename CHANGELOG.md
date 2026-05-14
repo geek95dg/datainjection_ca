@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.34] - 2026-05-14
+
+### Fixed
+
+- **No more duplicate "Name" rows in the custom-asset Mappings dropdown.** Two options with different `linkfield` but identical display `name` (e.g. one for the asset's own `name` column and one for a joined table whose `field` was also `name`) used to both render as "Name" in the picker, with no way for the user to tell them apart. New `deduplicateByDisplayName()` pass collapses those: an entry whose `linkfield` is in `nativeAssetFieldCatalog()` (= an authoritative direct column on `glpi_assets_assets`) always wins. Within a tie, the lowest GLPI search-option id wins.
+- **`humaniseOptionNames` is now thorough enough to catch any raw SQL identifier**, not just ones that exactly matched their `linkfield`. Any `name` that's purely `snake_case_lowercase` and contains an underscore is rewritten to Title Case. The conservative "needs spaces / caps / non-ASCII" gate is preserved so translated labels are never touched.
+
+### Added
+
+- Diagnostic log lines in `customimport()` to trace custom-field uploads:
+  - `customimport: extract custom fields` — dumps every incoming `$fields` key, the subset that matched the `_customfield_` prefix, and the count of values extracted. If `incoming_keys` is missing `_customfield_*` entries, the bug is upstream in the mapping/injection-lib pipeline; if they're there but `custom_count` is 0, the prefix match is broken.
+  - `customimport: custom_fields JSON built` — dumps the exact JSON about to be persisted into `glpi_assets_assets.custom_fields`. Compare against what shows in the asset detail page to spot a save-time loss.
+
 ## [2.16.33] - 2026-05-14
 
 ### Fixed

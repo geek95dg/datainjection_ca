@@ -285,11 +285,18 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         // `Search::getOptions()` itself.
         $humanised = $this->humaniseOptionNames($tab);
 
+        // Collapse options that ended up with the same display name
+        // (e.g. two "Name" rows in the Field picker — one for the
+        // asset's own column, one from a joined table whose `field` was
+        // also `name`). Catalog entries beat non-catalog entries.
+        $deduped = $this->deduplicateByDisplayName($tab);
+
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: native fields appended', [
                 'asset_class' => $assetClass,
                 'appended'    => $nativeAppended,
                 'humanised'   => $humanised,
+                'name_dedup'  => $deduped,
                 'kept_count'  => count($tab),
             ]);
         }
@@ -386,12 +393,27 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         $prefixLen    = strlen($prefix);
         $customValues = [];
 
+        // Diagnostic: dump the keys we received so a "custom field
+        // values didn't end up in the asset" report can be traced back
+        // to either (a) the keys never had `_customfield_` prefixes
+        // (mapping side bug) or (b) the JSON merge missed them.
+        $incoming_keys = array_keys($fields);
+
         foreach ($fields as $key => $value) {
             if (is_string($key) && strncmp($key, $prefix, $prefixLen) === 0) {
                 $customKey = substr($key, $prefixLen);
                 $customValues[$customKey] = $value;
                 unset($fields[$key]);
             }
+        }
+
+        if (class_exists('PluginDatainjectionLogger')) {
+            PluginDatainjectionLogger::info('customimport: extract custom fields', [
+                'add'              => $add,
+                'incoming_keys'    => $incoming_keys,
+                'custom_keys'      => array_keys($customValues),
+                'custom_count'     => count($customValues),
+            ]);
         }
 
         $assetClass = static::getAssetClass();
@@ -414,6 +436,11 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
 
             if (!empty($customValues)) {
                 $fields['custom_fields'] = $this->mergeCustomFields(null, $customValues);
+                if (class_exists('PluginDatainjectionLogger')) {
+                    PluginDatainjectionLogger::info('customimport: custom_fields JSON built', [
+                        'json' => $fields['custom_fields'],
+                    ]);
+                }
             }
 
             // Wrap the actual DB write in checkpoints + payload dump.
@@ -835,14 +862,12 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             }
             $needs_rewrite = !is_string($name) || $name === '';
             if (!$needs_rewrite && is_string($name)) {
-                // Heuristic: a label that's purely [a-z0-9_], starts with
-                // a letter, contains an underscore, and matches its
-                // linkfield is almost certainly a raw column name that
-                // leaked through. Friendly labels in any language fail
-                // this test (they have spaces, caps, or non-ASCII).
+                // A label that's pure `snake_case_lowercase` is almost
+                // certainly a raw SQL identifier that slipped through.
+                // Real (often translated) labels never match this — they
+                // contain spaces, accents, or capital letters.
                 if (
-                    $name === $linkfield
-                    && preg_match('/^[a-z][a-z0-9_]*$/', $name)
+                    preg_match('/^[a-z][a-z0-9_]*$/', $name)
                     && str_contains($name, '_')
                 ) {
                     $needs_rewrite = true;
@@ -851,10 +876,6 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             if (!$needs_rewrite) {
                 continue;
             }
-            // Build a fallback: strip a trailing `_id`, replace `_` with
-            // spaces, ucfirst. `is_recursive` → `Is recursive`,
-            // `template_name` → `Template name`,
-            // `manufacturers_id` → `Manufacturers`.
             $base = preg_replace('/_id$/', '', $linkfield) ?? $linkfield;
             $base = str_replace('_', ' ', $base);
             $base = trim($base);
@@ -865,6 +886,74 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $rewritten++;
         }
         return $rewritten;
+    }
+
+    /**
+     * Collapse options that share the same display name. The mapping UI
+     * keys its dropdown by `linkfield` but DISPLAYS only `name`, so two
+     * options with identical names but different linkfields show up as
+     * two indistinguishable rows in the picker (the very real "duplicate
+     * Name" problem the tester hit).
+     *
+     * Rule for which one wins:
+     *   1. An entry whose `linkfield` is in `nativeAssetFieldCatalog()`
+     *      always wins — that's the authoritative direct column on
+     *      `glpi_assets_assets` that our native pass added.
+     *   2. Otherwise, the entry with the LOWEST id (= the one
+     *      Search::getOptions returned first) wins.
+     *
+     * @param array $tab passed by reference
+     * @return int number of entries dropped
+     */
+    private function deduplicateByDisplayName(array &$tab): int
+    {
+        $catalog       = $this->nativeAssetFieldCatalog();
+        $best_by_name  = [];
+        foreach ($tab as $id => $opt) {
+            if (!is_array($opt) || !isset($opt['name']) || !is_string($opt['name']) || $opt['name'] === '') {
+                continue;
+            }
+            if (!isset($opt['linkfield']) || !is_string($opt['linkfield']) || $opt['linkfield'] === '') {
+                continue;
+            }
+            $name = $opt['name'];
+            $is_catalog = isset($catalog[$opt['linkfield']]);
+
+            if (!isset($best_by_name[$name])) {
+                $best_by_name[$name] = ['id' => $id, 'is_catalog' => $is_catalog];
+                continue;
+            }
+            $current = $best_by_name[$name];
+            $beats = false;
+            if ($is_catalog && !$current['is_catalog']) {
+                $beats = true;                          // catalog wins
+            } elseif ($is_catalog === $current['is_catalog']) {
+                $beats = is_int($id) && is_int($current['id']) && $id < $current['id'];
+            }
+            if ($beats) {
+                $best_by_name[$name] = ['id' => $id, 'is_catalog' => $is_catalog];
+            }
+        }
+
+        // Now drop everything that lost.
+        $kept_ids = [];
+        foreach ($best_by_name as $info) {
+            $kept_ids[$info['id']] = true;
+        }
+        $dropped = 0;
+        foreach ($tab as $id => $opt) {
+            if (!is_array($opt) || !isset($opt['name']) || !is_string($opt['name']) || $opt['name'] === '') {
+                continue;
+            }
+            if (!isset($opt['linkfield']) || !is_string($opt['linkfield']) || $opt['linkfield'] === '') {
+                continue;
+            }
+            if (!isset($kept_ids[$id])) {
+                unset($tab[$id]);
+                $dropped++;
+            }
+        }
+        return $dropped;
     }
 
     /**
