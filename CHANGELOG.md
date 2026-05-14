@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.32] - 2026-05-14
+
+### Fixed
+
+- **Post-import asset links no longer 404 for GLPI 11 custom assets.** `inc/model.class.php`'s results-table generator built the per-row link with `Toolbox::getItemTypeFormURL($itemtype)`. For a class living under `Glpi\CustomAsset\` (e.g. `Glpi\CustomAsset\drukarkimobilneAsset`) that falls back to the legacy path `/front/customasset/drukarkimobilneasset.form.php?id=NNN`, which is not routed in GLPI 11. Detect the `Glpi\CustomAsset\` namespace, strip the trailing `Asset` suffix the registry appends, and emit the GLPI 11 route `/front/asset/asset.form.php?class=<system_name>&id=<id>` instead. Native (non-custom) itemtypes and the genericobject branch are unchanged.
+
 ## [2.16.31] - 2026-05-14
 
 ### Fixed

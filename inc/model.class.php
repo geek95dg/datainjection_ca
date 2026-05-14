@@ -1542,6 +1542,30 @@ class PluginDatainjectionModel extends CommonDBTM
                     $tmp['item'] = $result[$model->fields['itemtype']];
                     $url         = Toolbox::getItemTypeFormURL($model->fields['itemtype']) . "?id=" .
                                                   $result[$model->fields['itemtype']];
+                    // GLPI 11 routes custom assets through
+                    // /front/asset/asset.form.php?class=<name>&id=<id>.
+                    // `Toolbox::getItemTypeFormURL()` for a class living
+                    // under the `Glpi\CustomAsset\` namespace falls back
+                    // to the legacy `/front/customasset/<name>asset.form.php`
+                    // pattern, which 404s. Detect that namespace and
+                    // rewrite the URL accordingly.
+                    $itemtype = $model->fields['itemtype'];
+                    if (
+                        is_string($itemtype)
+                        && strpos($itemtype, 'Glpi\\CustomAsset\\') === 0
+                    ) {
+                        // `Glpi\CustomAsset\drukarkimobilneAsset` →
+                        // `drukarkimobilne` (strip the namespace and the
+                        // trailing `Asset` suffix that the registry
+                        // appends to every generated class).
+                        $short = substr($itemtype, strlen('Glpi\\CustomAsset\\'));
+                        if (str_ends_with($short, 'Asset')) {
+                            $short = substr($short, 0, -strlen('Asset'));
+                        }
+                        $url = $CFG_GLPI['root_doc'] . "/front/asset/asset.form.php?class="
+                             . rawurlencode($short) . "&id="
+                             . (int) $result[$model->fields['itemtype']];
+                    }
                     //redefine genericobject url of needed
                     $plugin = new Plugin();
                     if (
