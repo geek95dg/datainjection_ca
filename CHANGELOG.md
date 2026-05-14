@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.38] - 2026-05-14
+
+### Added
+
+- **Custom-field path diagnostics.** Two new log fields surface the gap between what we send to GLPI and what GLPI persists:
+  - `customimport: extract custom fields` now also dumps `definition_declared` (the AssetDefinition's declared field keys, pulled from the registry) and `name_mismatch` (the keys we extracted that don't appear in the declared list). If `name_mismatch` is non-empty, our linkfields don't agree with GLPI's expected keys and prepareInputForAdd drops them.
+  - `customimport: after $item->add()` now also dumps `sent_custom_fields` (the array we handed `$item->add()`) and `persisted_custom_fields` (a fresh `SELECT custom_fields FROM glpi_assets_assets WHERE id = newID` taken immediately after the call). Comparing these two pinpoints whether GLPI's prepare/save path dropped our input.
+
 ## [2.16.37] - 2026-05-14
 
 ### Fixed
