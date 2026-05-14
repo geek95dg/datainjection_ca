@@ -291,12 +291,13 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
         // also `name`). Catalog entries beat non-catalog entries.
         $deduped = $this->deduplicateByDisplayName($tab);
 
-        // Drop GLPI 11's raw custom-field-column entries
-        // (linkfield=`custom_<key>`). Our own `_customfield_<key>`
-        // entries replace them with the proper labels, and the raw
-        // entries silently broke custom-field uploads if the user
-        // picked the wrong one in the dropdown.
-        $customStubs = $this->dropRawCustomFieldStubs($tab);
+        // GLPI 11 exposes each custom-field column under its raw name
+        // (`custom_polka`, `custom_regal`, …) in Search::getOptions().
+        // Don't drop those — they share the same per-column write path
+        // as our `_customfield_<key>` entries (see customimport()).
+        // Just rewrite their displayed `name` to use the friendly
+        // label from the registry, so the dropdown reads cleanly.
+        $customStubs = $this->relabelRawCustomFieldStubs($tab);
 
         if (class_exists('PluginDatainjectionLogger')) {
             PluginDatainjectionLogger::info('customAsset.getOptions: native fields appended', [
@@ -442,11 +443,26 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             $fields['assets_assetdefinitions_id'] = static::getDefinitionId();
             unset($fields['id']);
 
+            // GLPI 11 stores each custom field in its OWN column
+            // (`custom_<key>`) on glpi_assets_assets, NOT in the JSON
+            // `custom_fields` column. The JSON is a regenerated cache
+            // GLPI itself rebuilds from those per-field columns during
+            // every add/update. So writing only `custom_fields = {…}`
+            // here is silently overwritten by GLPI's regen → asset
+            // detail page shows empty values, mysql query returns `[]`.
+            //
+            // Write each value into its proper per-field column. We
+            // still set the JSON too for forward-compat with installs
+            // that haven't yet migrated to per-column storage.
             if (!empty($customValues)) {
+                foreach ($customValues as $key => $value) {
+                    $fields['custom_' . $key] = $value;
+                }
                 $fields['custom_fields'] = $this->mergeCustomFields(null, $customValues);
                 if (class_exists('PluginDatainjectionLogger')) {
-                    PluginDatainjectionLogger::info('customimport: custom_fields JSON built', [
-                        'json' => $fields['custom_fields'],
+                    PluginDatainjectionLogger::info('customimport: custom fields written', [
+                        'columns' => array_map(static fn($k) => 'custom_' . $k, array_keys($customValues)),
+                        'json'    => $fields['custom_fields'],
                     ]);
                 }
             }
@@ -493,7 +509,19 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             if ($item->getFromDB($id)) {
                 $existing = $item->fields['custom_fields'] ?? null;
             }
+            // See the add() branch comment: write each value into its
+            // proper per-field column so GLPI's JSON-rebuild step
+            // doesn't silently drop it.
+            foreach ($customValues as $key => $value) {
+                $fields['custom_' . $key] = $value;
+            }
             $fields['custom_fields'] = $this->mergeCustomFields($existing, $customValues);
+            if (class_exists('PluginDatainjectionLogger')) {
+                PluginDatainjectionLogger::info('customimport: custom fields written (update)', [
+                    'columns' => array_map(static fn($k) => 'custom_' . $k, array_keys($customValues)),
+                    'json'    => $fields['custom_fields'],
+                ]);
+            }
         }
 
         if ($item->update($fields)) {
@@ -898,39 +926,70 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
     }
 
     /**
-     * GLPI 11's `AssetDefinition` exposes its custom-field DB columns
-     * under their raw schema names (e.g. `custom_polka`, `custom_regal`)
-     * in the asset's `Search::getOptions()` output. Our own custom-field
-     * append step adds parallel entries with the proper labels under
-     * the `_customfield_<key>` linkfield, so the user ended up with
-     * BOTH a "polka" (ours) and a "custom_polka" (raw stock entry) in
-     * the Field picker. Picking the raw one means the value never
-     * passes through `customimport()`'s `_customfield_` extraction and
-     * the custom field never gets written.
+     * Apply the friendly custom-field labels from our registry to GLPI
+     * 11's stock `custom_<key>` options.
      *
-     * Drop every option whose `linkfield` looks like a custom-field
-     * column. Safe even when there are no custom fields registered —
-     * native asset columns never start with `custom_`.
+     * In GLPI 11 each custom field has a dedicated `custom_<key>`
+     * column on `glpi_assets_assets`, and `Search::getOptions()` for
+     * the AssetDefinition emits an entry per column under that raw
+     * name — both for `linkfield` AND for the displayed `name`. Our
+     * own append step adds `_customfield_<key>` entries with the
+     * proper labels (resolved from the registry). Both kinds of
+     * entries ultimately write into the same `custom_<key>` column
+     * (customimport's `_customfield_` extraction translates one to
+     * the other), so we don't need to drop either set — we just need
+     * the dropdown to show the friendly label, not the raw column
+     * name.
      *
-     * @return int number of entries dropped
+     * Walk the registry's custom fields and, for every stock option
+     * whose `linkfield` is `custom_<key>`, overwrite the `name` with
+     * the registry's label. Returns the number of options renamed.
+     *
+     * @param array $tab passed by reference
+     * @return int number of entries renamed
      */
-    private function dropRawCustomFieldStubs(array &$tab): int
+    private function relabelRawCustomFieldStubs(array &$tab): int
     {
-        $dropped = 0;
+        $defId = static::getDefinitionId();
+        if ($defId <= 0) {
+            return 0;
+        }
+        $fields = PluginDatainjectionCustomAssetRegistry::getCustomFields($defId);
+        if (empty($fields)) {
+            return 0;
+        }
+        // key -> label map.
+        $labels = [];
+        foreach ($fields as $field) {
+            $key = $field['key'] ?? null;
+            $lbl = $field['label'] ?? null;
+            if (is_string($key) && $key !== '' && is_string($lbl) && $lbl !== '') {
+                $labels[$key] = $lbl;
+            }
+        }
+        if (empty($labels)) {
+            return 0;
+        }
+
+        $renamed = 0;
         foreach ($tab as $id => $opt) {
             if (!is_array($opt)) {
                 continue;
             }
             $linkfield = $opt['linkfield'] ?? null;
-            if (!is_string($linkfield) || $linkfield === '') {
+            if (!is_string($linkfield) || strncmp($linkfield, 'custom_', 7) !== 0) {
                 continue;
             }
-            if (strncmp($linkfield, 'custom_', strlen('custom_')) === 0) {
-                unset($tab[$id]);
-                $dropped++;
+            $key = substr($linkfield, 7);   // strip `custom_`
+            if (!isset($labels[$key])) {
+                continue;
+            }
+            if (($opt['name'] ?? '') !== $labels[$key]) {
+                $tab[$id]['name'] = $labels[$key];
+                $renamed++;
             }
         }
-        return $dropped;
+        return $renamed;
     }
 
     /**

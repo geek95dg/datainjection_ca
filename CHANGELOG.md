@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.36] - 2026-05-14
+
+### Fixed
+
+- **Custom-field values now actually persist.** GLPI 11 stores each custom field in its OWN column on `glpi_assets_assets` (`custom_polka`, `custom_regal`, …), not in the JSON `custom_fields` column. The JSON is a cache GLPI rebuilds from the per-field columns on every add/update. The previous `customimport()` set only `$fields['custom_fields'] = "{…}"`, which GLPI then overwrote with `[]` because none of the `custom_<key>` columns were present in `$fields`. Asset detail pages and SQL queries both showed empty `custom_fields`. The C2 reproduction (`PRT-FULL-01.custom_fields = '[]'`) was caused by this. Now `customimport()` writes each value into its proper `custom_<key>` column directly — same for add and update paths. The JSON is still set as a forward-compat hedge.
+- **Reverted the `custom_*` dropdown-eviction from 2.16.35** — those entries are not duplicates, they are GLPI's canonical write path for the same columns we now target. Replaced with `relabelRawCustomFieldStubs()` which only rewrites the displayed `name` of each `custom_<key>` option using the friendly label from the registry. The dropdown reads cleanly without breaking the write path.
+
 ## [2.16.35] - 2026-05-14
 
 ### Fixed
