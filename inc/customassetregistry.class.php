@@ -320,9 +320,34 @@ class PluginDatainjectionCustomAssetRegistry
     /**
      * Decode the custom field definitions for one AssetDefinition.
      *
-     * GLPI 11 stores them either as a JSON array on the definition row
-     * (column commonly named `custom_fields` / `fields_display`) or in a
-     * companion table `glpi_assets_customfielddefinitions`. We try both.
+     * GLPI 11 has two sources that look like "custom fields":
+     *
+     *   1. The companion table `glpi_assets_customfielddefinitions`.
+     *      This is the AUTHORITATIVE list of fields the user declared
+     *      against the AssetDefinition — each row carries `system_name`,
+     *      a typed class FQCN (`Glpi\Asset\CustomFieldType\DateType`,
+     *      …), translations, default value, etc.
+     *
+     *   2. A JSON column on the definition row (`custom_fields` /
+     *      `fields_display` / `fields`). This is the FORM-DISPLAY
+     *      LAYOUT — it lists which fields (including native columns
+     *      like `name`, `serial`, `locations_id`) appear on the form
+     *      and in what order. Entries here have just `key` / `order` /
+     *      `field_options` and no `type`. They are NOT custom field
+     *      definitions, even though the JSON shape looks superficially
+     *      similar.
+     *
+     * Earlier revisions of this method read from both sources, which
+     * polluted the mapping dropdown with bogus `_customfield_<native>`
+     * options (e.g. `_customfield_name`, `_customfield_states_id`) for
+     * every native column the user pinned to their form layout.
+     *
+     * New rule:
+     *   - When the companion table is populated, use it exclusively.
+     *   - Only fall back to the JSON column when the companion table
+     *     is empty / missing (older installs, edge cases) AND the JSON
+     *     entry carries a `type` (proving it's a real declaration, not
+     *     a display-config row).
      */
     private static function extractCustomFields(array $row): array
     {
@@ -331,28 +356,7 @@ class PluginDatainjectionCustomAssetRegistry
 
         $fields = [];
 
-        // 1. JSON column on the definition row.
-        foreach (['custom_fields', 'fields_display', 'fields'] as $col) {
-            if (!array_key_exists($col, $row)) {
-                continue;
-            }
-            $raw = $row[$col];
-            if (!is_string($raw) || $raw === '') {
-                continue;
-            }
-            $decoded = json_decode($raw, true);
-            if (!is_array($decoded)) {
-                continue;
-            }
-            foreach ($decoded as $entry) {
-                $parsed = self::parseCustomFieldEntry($entry);
-                if ($parsed !== null) {
-                    $fields[$parsed['key']] = $parsed;
-                }
-            }
-        }
-
-        // 2. Companion table — overrides JSON if richer data is available.
+        // 1. Companion table is authoritative. Pull declarations first.
         try {
             if ($DB->tableExists('glpi_assets_customfielddefinitions')) {
                 $where = [];
@@ -374,6 +378,42 @@ class PluginDatainjectionCustomAssetRegistry
             }
         } catch (\Throwable $e) {
             // Best effort only.
+        }
+
+        // 2. JSON column fallback. ONLY consulted when the companion
+        //    table returned no declarations for this definition; and
+        //    even then, each entry has to look like a real custom-field
+        //    definition (`type` or `datatype` set) to count. Pure
+        //    form-display rows (`key`+`order`+`field_options`, no
+        //    `type`) are dropped on the floor.
+        if (empty($fields)) {
+            foreach (['custom_fields', 'fields_display', 'fields'] as $col) {
+                if (!array_key_exists($col, $row)) {
+                    continue;
+                }
+                $raw = $row[$col];
+                if (!is_string($raw) || $raw === '') {
+                    continue;
+                }
+                $decoded = json_decode($raw, true);
+                if (!is_array($decoded)) {
+                    continue;
+                }
+                foreach ($decoded as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
+                    }
+                    $hasType = (isset($entry['type'])    && is_string($entry['type'])    && $entry['type']    !== '')
+                            || (isset($entry['datatype']) && is_string($entry['datatype']) && $entry['datatype'] !== '');
+                    if (!$hasType) {
+                        continue;
+                    }
+                    $parsed = self::parseCustomFieldEntry($entry);
+                    if ($parsed !== null) {
+                        $fields[$parsed['key']] = $parsed;
+                    }
+                }
+            }
         }
 
         // Dedup: when a definition stores its custom fields both in the

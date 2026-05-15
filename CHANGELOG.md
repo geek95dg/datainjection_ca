@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.44] - 2026-05-15
+
+### Fixed
+
+- **No more bogus `_customfield_<native>` rows in the mapping dropdown** (`_customfield_name`, `_customfield_states_id`, `_customfield_locations_id`, etc.). `PluginDatainjectionCustomAssetRegistry::extractCustomFields()` used to merge data from two unrelated sources as if they were both custom-field declarations:
+  - `glpi_assets_customfielddefinitions` (companion table) — the authoritative list of fields the user declared, each carrying a typed class FQCN.
+  - The AssetDefinition row's JSON column (`custom_fields` / `fields_display`) — the *form-display layout* that pins which fields (often **native** columns like `name`, `serial`, `locations_id`) show on the form and in what order, with just `key` / `order` / `field_options`, no `type`.
+
+  Treating the JSON entries as custom-field defs caused the mapping dropdown to show every form-display-pinned native column twice — once as a real native column (`name=Nazwa`) and once wrapped as a bogus custom field (`_customfield_name=name`).
+
+  New rule:
+  - When the companion table returns any rows, use it **exclusively** for this definition.
+  - JSON column is only consulted as a fallback for older installs / edge cases where the companion table is empty.
+  - Even in fallback mode, each JSON entry must carry an explicit `type`/`datatype` to count — pure display-config rows (no `type`) are dropped on the floor.
+
 ## [2.16.43] - 2026-05-15
 
 ### Fixed
