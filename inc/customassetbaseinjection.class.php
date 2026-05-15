@@ -673,6 +673,15 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                                 ['id' => $newID, 'json' => $forced_json],
                             );
                         }
+                        // Backfill the History tab — the direct SQL
+                        // write bypasses Log::history() that
+                        // $item->add() would normally fire.
+                        $this->logCustomFieldsHistory(
+                            (int) $newID,
+                            $assetClass,
+                            is_string($persisted) && $persisted !== '<unknown>' ? $persisted : '',
+                            $forced_json,
+                        );
                     }
                 } catch (\Throwable $e) {
                     if (class_exists('PluginDatainjectionLogger')) {
@@ -816,6 +825,15 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                             ['id' => $id, 'json' => $forced_json],
                         );
                     }
+                    // Backfill the History tab — the direct SQL write
+                    // bypasses Log::history() that $item->update()
+                    // would normally fire.
+                    $this->logCustomFieldsHistory(
+                        (int) $id,
+                        $assetClass,
+                        is_string($persisted) && $persisted !== '<unknown>' ? $persisted : '',
+                        $forced_json,
+                    );
                 }
             } catch (\Throwable $e) {
                 if (class_exists('PluginDatainjectionLogger')) {
@@ -831,6 +849,114 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             return $id;
         }
         return false;
+    }
+
+    /**
+     * Write `glpi_logs` history rows for a custom_fields JSON change.
+     *
+     * Because the direct-SQL fallback bypasses GLPI's `Log::history()`
+     * call chain that `$item->update()` would normally fire, the
+     * History tab on an imported asset comes back empty. This helper
+     * fills the gap with two kinds of rows:
+     *
+     *   1. One summary row per call — matches the pattern already used
+     *      by `PluginDatainjectionCommonInjectionLib::logAddOrUpdate()`
+     *      ("Update from CSV file"), so existing audit filters that
+     *      look for that string keep working.
+     *
+     *   2. One row per actually-changed custom field, with the field's
+     *      friendly label, the previous value, and the new value —
+     *      the same kind of row a manual GUI save would produce.
+     *
+     * @param int    $itemId    The id row in `glpi_assets_assets`.
+     * @param string $assetClass Concrete asset class FQCN (used as the
+     *                          history row's `itemtype`).
+     * @param string|null $oldJson Raw JSON content of `custom_fields`
+     *                          immediately before our direct SQL write.
+     * @param string $newJson   Raw JSON content we just wrote.
+     */
+    private function logCustomFieldsHistory(
+        int $itemId,
+        string $assetClass,
+        ?string $oldJson,
+        string $newJson
+    ): void {
+        if ($itemId <= 0) {
+            return;
+        }
+        if (!class_exists('Log')) {
+            return;
+        }
+
+        try {
+            // 1. The summary row. Mirrors `logAddOrUpdate()`'s payload
+            //    shape so external tooling that already greps for
+            //    "from CSV file" keeps matching.
+            $oldClean = is_string($oldJson) ? $oldJson : '';
+            \Log::history(
+                $itemId,
+                $assetClass,
+                [0, $oldClean, __('Update from CSV file', 'datainjection')],
+            );
+
+            // 2. Per-field rows. Only emit when the value actually
+            //    changed; "added" rows show as `''` → `new` and
+            //    cleared rows show as `old` → `''`.
+            $oldArr = is_string($oldJson) && $oldJson !== ''
+                ? (json_decode($oldJson, true) ?: [])
+                : [];
+            $newArr = json_decode($newJson, true) ?: [];
+            if (!is_array($oldArr)) {
+                $oldArr = [];
+            }
+            if (!is_array($newArr)) {
+                return;
+            }
+
+            // Resolve id → label once so the per-field rows read
+            // sensibly in the History tab.
+            $idToLabel = [];
+            try {
+                foreach (PluginDatainjectionCustomAssetRegistry::getCustomFields(
+                    static::getDefinitionId(),
+                ) as $df) {
+                    if (isset($df['id'], $df['label']) && is_int($df['id'])) {
+                        $idToLabel[(string) $df['id']] = (string) $df['label'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Best effort: per-field labels will fall back to the
+                // raw id key if the registry lookup fails.
+            }
+
+            // Walk both sides so additions and clears both surface.
+            $allKeys = array_unique(array_merge(
+                array_keys($oldArr),
+                array_keys($newArr),
+            ));
+            foreach ($allKeys as $key) {
+                $oldVal = $oldArr[$key] ?? null;
+                $newVal = $newArr[$key] ?? null;
+                if ($oldVal === $newVal) {
+                    continue;
+                }
+                $label = $idToLabel[(string) $key] ?? (string) $key;
+                $oldStr = $oldVal === null ? '' : (string) $oldVal;
+                $newStr = $newVal === null ? '' : (string) $newVal;
+                \Log::history(
+                    $itemId,
+                    $assetClass,
+                    [0, $oldStr, sprintf('%s: %s', $label, $newStr)],
+                );
+            }
+        } catch (\Throwable $e) {
+            if (class_exists('PluginDatainjectionLogger')) {
+                PluginDatainjectionLogger::exception(
+                    $e,
+                    'customimport: failed to write history rows for id=' . $itemId,
+                );
+            }
+        }
     }
 
     /**

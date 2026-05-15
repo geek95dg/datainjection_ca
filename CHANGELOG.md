@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.42] - 2026-05-15
+
+### Added
+
+- **Custom-field imports now populate the asset's History tab.** The 2.16.41 direct-SQL fallback bypasses `$item->add()` / `$item->update()`, which also bypasses the `Log::history()` calls those normally fire — so an imported row showed empty in the History tab even though `custom_fields` was correct. New `logCustomFieldsHistory()` helper runs alongside every fallback write and emits:
+  - One summary row matching the existing `PluginDatainjectionCommonInjectionLib::logAddOrUpdate()` pattern (`"Update from CSV file"`), so existing audit filters keep matching.
+  - One row per actually-changed custom field, with the field's friendly label and the old → new values resolved via the registry's `id → label` map. Same shape a manual GUI save produces, so the History view reads naturally.
+- Both add and update branches call the helper, with the pre-write `persisted` JSON as the "before" snapshot.
+
 ## [2.16.41] - 2026-05-14
 
 ### Fixed
