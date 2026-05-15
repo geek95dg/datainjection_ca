@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.43] - 2026-05-15
+
+### Fixed
+
+- **First-time custom-asset imports no longer fail with `Unknown column '_customfield_*' in 'WHERE'`.** Reported on a fresh `SkanerowagiAsset` definition with the file's `Numer seryjny 1` / `Numer seryjny 2` columns mapped to native custom fields marked as mandatory. `PluginDatainjectionCommonInjectionLib::dataAlreadyInDB()` builds the "is this row already in the DB?" WHERE clause by appending each mandatory field as a real SQL column (`AND \`field\` = 'value'`). For our virtual `_customfield_<key>` linkfields — values live inside the `glpi_assets_assets.custom_fields` JSON, not as physical columns — that produced SQL like `AND \`_customfield_numer_seryjny_1\` = 'SKANER-07'` and MySQL 500'd at offset 0 on every row.
+
+  Fix: in the mandatory-field loop, skip any field name starting with `PluginDatainjectionCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX` (`_customfield_`). The remaining native unique-check columns (name / serial / etc.) still gate the add-vs-update decision, which is the standard behaviour for non-column fields. Proper JSON_EXTRACT-based custom-field uniqueness would be a separate, larger change.
+
 ## [2.16.42] - 2026-05-15
 
 ### Added
