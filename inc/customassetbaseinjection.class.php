@@ -607,21 +607,59 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
                 ]);
             }
 
-            // Same fallback as the update branch: GLPI's prepare layer
-            // silently swallows our `custom_fields` array — force the
-            // JSON in with a direct DB write so the values reach the
-            // row regardless.
+            // GLPI 11's `Asset::prepareInputForAdd/Update` reliably
+            // drops our `custom_fields` array regardless of input shape
+            // (we've tried JSON string, PHP array, both at once). Run
+            // the direct SQL write whenever we have id-keyed custom
+            // values — not just when the persisted JSON is empty.
+            // Trying to be clever about "only when GLPI failed" left
+            // the values stranded when the row already had pre-existing
+            // JSON from a prior manual save. Also strip stale
+            // `system_name`-keyed siblings (e.g. `"polka":59` left over
+            // from previous broken imports) — GLPI's GUI walker keys
+            // by id, so those are inert clutter.
             if (
                 !empty($customValues)
                 && is_numeric($newID)
                 && (int) $newID > 0
-                && (is_string($persisted) && in_array($persisted, ['[]', '', 'null'], true))
             ) {
                 try {
                     global $DB;
                     if (isset($DB) && is_object($DB)) {
+                        $merged_for_force = is_array($persisted ?? null) || (is_string($persisted) && $persisted !== '' && $persisted !== '<unknown>')
+                            ? (is_string($persisted) ? (json_decode($persisted, true) ?: []) : (array) $persisted)
+                            : [];
+                        if (!is_array($merged_for_force)) {
+                            $merged_for_force = [];
+                        }
+                        // Drop stale system_name keys that have an
+                        // id-keyed equivalent we're about to write.
+                        $declaredKeys = [];
+                        try {
+                            foreach (PluginDatainjectionCustomAssetRegistry::getCustomFields(
+                                static::getDefinitionId(),
+                            ) as $df) {
+                                if (isset($df['key'], $df['id']) && is_string($df['key']) && is_int($df['id'])) {
+                                    $declaredKeys[$df['key']] = (string) $df['id'];
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            // best effort
+                        }
+                        foreach ($declaredKeys as $name => $idStr) {
+                            if (
+                                array_key_exists($name, $merged_for_force)
+                                && array_key_exists($idStr, $customValues)
+                            ) {
+                                unset($merged_for_force[$name]);
+                            }
+                        }
+                        // Our id-keyed values win over anything that
+                        // was already there for the same id.
+                        $merged_for_force = array_replace($merged_for_force, $customValues);
+
                         $forced_json = json_encode(
-                            $customValues,
+                            $merged_for_force,
                             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
                         );
                         $DB->update(
@@ -718,17 +756,53 @@ class PluginDatainjectionCustomAssetBaseInjection extends CommonDBTM implements 
             ]);
         }
 
-        // Fallback: if we have customValues to write but the row's
-        // `custom_fields` column ended up empty / `[]`, GLPI's update
-        // prepare dropped them. Force the JSON in with a direct
-        // statement. The merged array we built above is the
-        // authoritative payload.
-        if (!empty($customValues) && (is_string($persisted) && in_array($persisted, ['[]', '', 'null'], true))) {
+        // Always run the direct SQL fallback when we have customValues
+        // — see add() branch comment. GLPI 11 drops `custom_fields`
+        // from prepareInputForUpdate too. We re-read the persisted JSON
+        // and rebuild the authoritative payload: existing values that
+        // aren't being replaced are preserved, our id-keyed values
+        // overwrite their previous counterparts, and stale
+        // `system_name`-keyed siblings (left over from earlier
+        // releases) are stripped — GLPI's GUI walker keys by id, so
+        // those are inert clutter.
+        if (!empty($customValues)) {
             try {
                 global $DB;
                 if (isset($DB) && is_object($DB)) {
+                    $current_persisted = [];
+                    if (is_string($persisted) && $persisted !== '' && $persisted !== '<unknown>') {
+                        $decoded = json_decode($persisted, true);
+                        if (is_array($decoded)) {
+                            $current_persisted = $decoded;
+                        }
+                    }
+
+                    // Drop stale system_name keys that have an id-keyed
+                    // equivalent we're about to write.
+                    $declaredKeys = [];
+                    try {
+                        foreach (PluginDatainjectionCustomAssetRegistry::getCustomFields(
+                            static::getDefinitionId(),
+                        ) as $df) {
+                            if (isset($df['key'], $df['id']) && is_string($df['key']) && is_int($df['id'])) {
+                                $declaredKeys[$df['key']] = (string) $df['id'];
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        // best effort
+                    }
+                    foreach ($declaredKeys as $name => $idStr) {
+                        if (
+                            array_key_exists($name, $current_persisted)
+                            && array_key_exists($idStr, $customValues)
+                        ) {
+                            unset($current_persisted[$name]);
+                        }
+                    }
+                    $merged_for_force = array_replace($current_persisted, $customValues);
+
                     $forced_json = json_encode(
-                        $merged ?? $customValues,
+                        $merged_for_force,
                         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
                     );
                     $DB->update(

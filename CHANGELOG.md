@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.41] - 2026-05-14
+
+### Fixed
+
+- **Direct-SQL fallback now ALWAYS runs (not only when persisted was empty).** GLPI 11's prepareInputForUpdate consistently drops our `custom_fields` array regardless of input shape. The previous fallback trigger ("persisted is `[]`") missed the case where a row already had JSON from a prior manual save — our id-keyed import got silently swallowed and the old values stayed put. Both add and update branches now write the merged JSON directly via `DB->update()` whenever `customValues` is non-empty.
+- **Stale `system_name`-keyed siblings are stripped** during the fallback merge. The GUI walker keys by id; entries like `"polka":59` left over from previous broken imports are inert clutter. For every declared field, if a string-keyed entry exists alongside the id-keyed one we're about to write, the string-keyed one is removed. Result: a clean `custom_fields` JSON like `{"50":59,"49":3}` instead of `{"polka":59,"regal":3,"50":59,"49":3}`.
+
 ## [2.16.40] - 2026-05-14
 
 ### Fixed
