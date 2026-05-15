@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.16.44] - 2026-05-15
+
+### Fixed
+
+- **No more bogus `_customfield_<native>` rows in the mapping dropdown** (`_customfield_name`, `_customfield_states_id`, `_customfield_locations_id`, etc.). `PluginDatainjectionCustomAssetRegistry::extractCustomFields()` used to merge data from two unrelated sources as if they were both custom-field declarations:
+  - `glpi_assets_customfielddefinitions` (companion table) — the authoritative list of fields the user declared, each carrying a typed class FQCN.
+  - The AssetDefinition row's JSON column (`custom_fields` / `fields_display`) — the *form-display layout* that pins which fields (often **native** columns like `name`, `serial`, `locations_id`) show on the form and in what order, with just `key` / `order` / `field_options`, no `type`.
+
+  Treating the JSON entries as custom-field defs caused the mapping dropdown to show every form-display-pinned native column twice — once as a real native column (`name=Nazwa`) and once wrapped as a bogus custom field (`_customfield_name=name`).
+
+  New rule:
+  - When the companion table returns any rows, use it **exclusively** for this definition.
+  - JSON column is only consulted as a fallback for older installs / edge cases where the companion table is empty.
+  - Even in fallback mode, each JSON entry must carry an explicit `type`/`datatype` to count — pure display-config rows (no `type`) are dropped on the floor.
+
+## [2.16.43] - 2026-05-15
+
+### Fixed
+
+- **First-time custom-asset imports no longer fail with `Unknown column '_customfield_*' in 'WHERE'`.** Reported on a fresh `SkanerowagiAsset` definition with the file's `Numer seryjny 1` / `Numer seryjny 2` columns mapped to native custom fields marked as mandatory. `PluginDatainjectionCommonInjectionLib::dataAlreadyInDB()` builds the "is this row already in the DB?" WHERE clause by appending each mandatory field as a real SQL column (`AND \`field\` = 'value'`). For our virtual `_customfield_<key>` linkfields — values live inside the `glpi_assets_assets.custom_fields` JSON, not as physical columns — that produced SQL like `AND \`_customfield_numer_seryjny_1\` = 'SKANER-07'` and MySQL 500'd at offset 0 on every row.
+
+  Fix: in the mandatory-field loop, skip any field name starting with `PluginDatainjectionCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX` (`_customfield_`). The remaining native unique-check columns (name / serial / etc.) still gate the add-vs-update decision, which is the standard behaviour for non-column fields. Proper JSON_EXTRACT-based custom-field uniqueness would be a separate, larger change.
+
 ## [2.16.42] - 2026-05-15
 
 ### Added

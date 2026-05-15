@@ -2051,6 +2051,34 @@ class PluginDatainjectionCommonInjectionLib
                     if ($itemtype == $this->primary_type) {
                         foreach ($this->mandatory_fields[$itemtype] as $field => $is_mandatory) {
                             if ($is_mandatory) {
+                                // Skip virtual linkfields — they're not
+                                // real columns on the asset table.
+                                // GLPI 11 native custom-asset custom
+                                // fields live inside the
+                                // `glpi_assets_assets.custom_fields`
+                                // JSON column under our
+                                // `_customfield_<key>` linkfield
+                                // convention; injecting them straight
+                                // into the WHERE clause produces
+                                // "Unknown column" SQL errors and
+                                // kills every row in the file.
+                                // Uniqueness on a JSON sub-key would
+                                // need JSON_EXTRACT() handling we
+                                // don't have here; skipping is the
+                                // safe fallback (the row's native
+                                // unique-check columns — name /
+                                // serial / etc. — still gate the
+                                // add-vs-update decision).
+                                if (
+                                    is_string($field)
+                                    && strncmp(
+                                        $field,
+                                        PluginDatainjectionCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX,
+                                        strlen(PluginDatainjectionCustomAssetRegistry::CUSTOM_FIELD_LINK_PREFIX),
+                                    ) === 0
+                                ) {
+                                    continue;
+                                }
                                 if ($item instanceof User && $field == "useremails_id") {
                                     $email = $DB->escape($this->getValueByItemtypeAndName($itemtype, $field));
                                     $where .= " AND `id` IN (SELECT `users_id` FROM glpi_useremails WHERE `email` = '$email') ";
