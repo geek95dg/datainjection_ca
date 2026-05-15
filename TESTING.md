@@ -5,9 +5,11 @@ A pre-release acceptance checklist. Designed so a non-developer can walk through
 - **What you'll check** — one-line intent.
 - **Steps** — copy-paste-able instructions, screenshots optional.
 - **Expected result** — what success looks like.
-- **Result table** at the end of each test — fill **Status** (`Pass` / `Fail` / `N/A`), **Tester initials**, **Date**, and **Notes**.
+- **Result** — fillable lines (Status, Tester, Date) plus a **Notes** block right under each test. Roll up to the **Master results table at the end** of this document once you're done.
 
 > Skip notation: each item is independent. If a test section doesn't apply to your install (e.g. you don't use Genericobject), mark it **N/A** and move on.
+
+> Format note: the **Notes** block under each test is rendered as a blockquote (`>` lines) — in Word/docx this becomes an indented paragraph you can type into freely. The **Status / Tester / Date** lines are blanks (`____`) — just overwrite the underscores with your value.
 
 Suggested tooling for the security tests:
 
@@ -15,50 +17,6 @@ Suggested tooling for the security tests:
 - **curl** on the command line. Comes pre-installed on macOS / Linux; on Windows use WSL or the bundled `curl.exe`.
 - An SSH/terminal session to the GLPI server for log inspection.
 - **No** Burp Suite / sqlmap / etc. is required — every test below uses only the browser and curl.
-
----
-
-## Master results table
-
-Fill this in as you go. The detailed instructions for each test are in the sections below. Cross-reference by the **Test ID** column.
-
-| ID    | Title                                                                 | Status | Tester | Date | Quick notes |
-|-------|-----------------------------------------------------------------------|--------|--------|------|-------------|
-| A1    | Plugin shows up in the GLPI admin UI                                  |        |        |      |             |
-| A2    | Menu item appears for a permitted user                                |        |        |      |             |
-| A3    | Menu item is HIDDEN for a user without rights                         |        |        |      |             |
-| B1    | Round-trip a Computer CSV                                             |        |        |      |             |
-| B2    | Re-import the same file (update path)                                 |        |        |      |             |
-| C1    | Custom asset CSV import — basic columns                               |        |        |      |             |
-| C1b   | Mapping dropdown shows every standard column with a human label       |        |        |      |             |
-| C1c   | No Fields-plugin entries pollute the custom-asset Mappings dropdown   |        |        |      |             |
-| C1d   | No bogus `_customfield_<native>` rows in the dropdown                 |        |        |      |             |
-| C2    | Custom asset with custom fields — values persist to DB                |        |        |      |             |
-| C2b   | Imported custom-field values render in the asset GUI                  |        |        |      |             |
-| C2c   | Import generates History entries (`glpi_logs`)                        |        |        |      |             |
-| C3    | Large custom-asset import (100+ rows) completes end-to-end            |        |        |      |             |
-| C4    | XLSX format for custom assets                                         |        |        |      |             |
-| C5    | Fresh AssetDefinition with mandatory custom fields imports cleanly    |        |        |      |             |
-| C6    | Re-import same XLSX over existing rows merges values (update path)    |        |        |      |             |
-| D1    | Wrong delimiter                                                       |        |        |      |             |
-| D2    | Empty mandatory field                                                 |        |        |      |             |
-| D3    | Abort & start over button                                             |        |        |      |             |
-| D4    | Direct-SQL fallback log line fires when expected                      |        |        |      |             |
-| E1    | CSRF — upload form refuses requests without a valid token             |        |        |      |             |
-| E2    | CSRF — abort button is also gated                                     |        |        |      |             |
-| E3    | Access control — central-only endpoint                                |        |        |      |             |
-| E4    | Right enforcement — `plugin_datainjection_use` Read is required       |        |        |      |             |
-| E5    | File-upload guards — wrong extension                                  |        |        |      |             |
-| E6    | File-upload guards — `tmp_name` not a real upload                     |        |        |      |             |
-| E7    | Stored-data exposure — log file permissions                           |        |        |      |             |
-| E8    | SQL injection — try a quote in a mapped value                         |        |        |      |             |
-| E9    | XSS — quote-containing name in result table                           |        |        |      |             |
-| E10   | Session isolation — uploaded file is per-user                         |        |        |      |             |
-| F1    | Log file rotates at 5 MB                                              |        |        |      |             |
-| F2    | No PHP warnings during a normal import                                |        |        |      |             |
-
-> **Status legend**: `Pass` / `Fail` / `N/A` / `Blocked` / `In progress`.
-> Paste screenshots, log snippets, and exception traces into the dedicated **Notes** row at the end of each test below.
 
 ---
 
@@ -77,11 +35,18 @@ Fill this in as you go. The detailed instructions for each test are in the secti
 - Row shows version **2.16.x** (where x is the latest, e.g. 2.16.32).
 - Status is **Enabled** (green check, or "Activated" label depending on theme).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -98,11 +63,18 @@ Fill this in as you go. The detailed instructions for each test are in the secti
 - A page titled "Data injection" opens at `…/plugins/datainjection/front/clientinjection.form.php`.
 - A model picker dropdown is visible.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -120,11 +92,18 @@ Fill this in as you go. The detailed instructions for each test are in the secti
 - "Data injection" entry is not in the menu.
 - Going directly to `…/plugins/datainjection/front/clientinjection.form.php` yields a permission-denied page (HTTP 403 or GLPI's standard "access denied" screen).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -157,11 +136,18 @@ TEST-COMP-03;SN-0003;INV-0003
 - Each row has a clickable link in the **Item** column. Clicking opens the Computer detail page at `…/front/computer.form.php?id=NNN`.
 - The newly-created computers appear in Assets → Computers.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -177,11 +163,18 @@ TEST-COMP-03;SN-0003;INV-0003
 - Computer `TEST-COMP-01` now has `INV-0001-UPDATED` as its inventory number.
 - No duplicate rows in Assets → Computers.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -214,11 +207,18 @@ PRT-003;PRTSN-0003;INV-PRT-0003;In use
 - Clicking a link opens the asset detail page.
 - The new assets appear in **Assets → <YourDefinitionName>**.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -248,11 +248,18 @@ sudo mysql -e "
   WHERE a.name LIKE 'TEST-%';" glpi
 ```
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -279,11 +286,18 @@ sudo mysql -e "
   ```
   `fields_plugin_drop` should be **> 0** on installs that have the Fields plugin enabled (or 0 if none of its containers target this asset type).
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -304,11 +318,18 @@ sudo mysql -e "
   ```
 - Nothing like `_customfield_name`, `_customfield_states_id`, `_customfield_locations_id`, `_customfield_users_id`, `_customfield_comment` appears — those are native columns the form-display config pins, **not** custom fields.
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -337,11 +358,18 @@ PRT-FULL-02;PRTSN-FULL-0002;Bob;Sales
   sudo mysql -e "SELECT name, custom_fields FROM glpi_assets_assets WHERE name = 'PRT-FULL-01' \G" glpi
   ```
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -369,11 +397,18 @@ PRT-FULL-02;PRTSN-FULL-0002;Bob;Sales
   sudo grep 'direct SQL fallback wrote custom_fields' /var/log/glpi/datainjection.log | tail -3
   ```
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -399,11 +434,18 @@ PRT-FULL-02;PRTSN-FULL-0002;Bob;Sales
 - Per-changed-custom-field rows with `new_value` formatted as `"<Field label>: <new value>"` and the previous value in `old_value` (empty on a fresh add).
 - The History tab in the GUI renders the same entries.
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -444,11 +486,18 @@ ROWS=100   # bump to 1000 for the full validation
     WHERE name LIKE 'BULK-%';" glpi
   ```
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -465,11 +514,18 @@ ROWS=100   # bump to 1000 for the full validation
 - Same outcome as C1, but with the XLSX backend.
 - Datainjection log shows `backendClass: PluginDatainjectionBackendxlsx`.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -494,11 +550,18 @@ ROWS=100   # bump to 1000 for the full validation
   Returns **no matches** after the import time.
 - All rows reach `injectLine post` with `status_label: "SUCCESS"`.
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -521,11 +584,18 @@ ROWS=100   # bump to 1000 for the full validation
   ```
   `sent_custom_fields` should be the **merged** array (existing + new), not just the new values.
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -538,11 +608,18 @@ ROWS=100   # bump to 1000 for the full validation
 **Expected**:
 - The upload step shows "The number of columns of the file is incorrect" (or a similar friendly message), not a 500.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -562,11 +639,18 @@ PRT-EMPTY-01;
 **Expected**:
 - One row, status **Failed** with reason `MANDATORY` (visible in the result table).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -581,11 +665,18 @@ PRT-EMPTY-01;
 - Returns to the model picker.
 - A subsequent import on the same model works without issue (session was cleaned).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -614,11 +705,18 @@ PRT-EMPTY-01;
     WHERE id = <ID FROM LOG LINE>;" glpi
   ```
 
-**Result row**:
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 ---
 
@@ -644,11 +742,18 @@ GLPI sets that token automatically for any plugin that registers with `$PLUGIN_H
 - The CSV is **not** imported (verify in Assets → there are no new rows from this attempt).
 - `/var/log/glpi/datainjection.log` shows no `processUploadedFile: enter` after the bad request (or shows an immediate abort).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -671,11 +776,18 @@ GLPI sets that token automatically for any plugin that registers with `$PLUGIN_H
 - Response is **302** to an error page or **403**.
 - The in-flight import is **not** aborted — go back to the browser tab and refresh; the progress page should still show the in-flight state (until the JS retries make it pass through anyway).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -700,11 +812,18 @@ GLPI sets that token automatically for any plugin that registers with `$PLUGIN_H
 - No row gets inserted.
 - `datainjection.log` shows the rejection (look for `inject_batch.php: received` followed by `inject_batch.php failed at offset 0` with a "no central access"-ish exception).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -719,11 +838,18 @@ GLPI sets that token automatically for any plugin that registers with `$PLUGIN_H
 **Expected**:
 - GLPI's standard "Access denied" page, not the model picker.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -739,11 +865,18 @@ GLPI sets that token automatically for any plugin that registers with `$PLUGIN_H
 - Result message: "File format is wrong. Extension csv required."
 - `glpi_plugin_datainjection_uploads/` directory has **no** new file.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -759,11 +892,18 @@ GLPI sets that token automatically for any plugin that registers with `$PLUGIN_H
 **Expected**:
 - `grep -n move_uploaded_file inc/model.class.php` returns exactly one match inside `readUploadedFile()`.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -788,11 +928,18 @@ sudo chmod 640 /var/log/glpi/datainjection.log
 sudo chown www-data:adm /var/log/glpi/datainjection.log
 ```
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -824,11 +971,18 @@ TEST-"; DROP TABLE glpi_assets_assets;--;SN-INJECT-2
 - Both rows imported as data. The `name` column contains the literal quote-laden string, **not** a truncated or executed version.
 - `glpi_assets_assets` table still has its normal row count (didn't drop).
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -852,11 +1006,18 @@ name;serial
 - No JavaScript alert dialog pops up.
 - The asset detail pages, once opened, also display the literal string.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -874,11 +1035,18 @@ name;serial
 - User B sees a fresh, empty state.
 - `/var/lib/glpi/plugins/datainjection/` (or `PLUGIN_DATAINJECTION_UPLOAD_DIR`) contains the temp file with `www-data` ownership; it's not directly user-accessible from a browser URL.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -898,11 +1066,18 @@ name;serial
 - `ls /var/log/glpi/datainjection.log*` shows the live file plus at least one `.1` (or `.2`/`.3`) segment.
 - The live file is <5 MB again.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -919,11 +1094,18 @@ name;serial
 - The diff shows zero new lines from the plugin's own warnings (the `getFieldValue: skipping dropdown lookup for abstract class` entries are expected — they're informational, not bugs).
 - No `Undefined array key`, no `Trying to access array offset on null`, no PHP fatal entries.
 
-**Result row** (copy + fill into the Master results table at the top, plus add any longer detail below):
+**Result** — fill these lines (you can also reflect the status into the Master results table at the **end** of this document):
 
-| Status | Tester | Date | Notes |
-|--------|--------|------|-------|
-|        |        |      |       |
+- **Status**: _____________________________________________________________ (Pass / Fail / Partial / N/A / Blocked)
+- **Tester**: _____________________________________________________________
+- **Date**:   _____________________________________________________________
+
+**Notes** — paste error messages, screenshots, log snippets, observations:
+
+> 
+>
+>
+>
 
 
 ---
@@ -956,3 +1138,49 @@ Environment captured at the time of testing:
 **Overall verdict**: ☐ Ship it  ☐ Ship with caveats  ☐ Block ship
 
 **Caveats / outstanding issues** (list the test IDs and a one-line summary; full details stay in each test's Notes row):
+
+
+
+
+---
+
+## Master results table
+
+Fill or transcribe per-test outcomes here once you've completed the suite (the in-section result blocks above are the authoritative working space; this table is the at-a-glance roll-up your reviewer or PM will read).
+
+| ID    | Title                                                                 | Status | Tester | Date | Quick notes |
+|-------|-----------------------------------------------------------------------|--------|--------|------|-------------|
+| A1    | Plugin shows up in the GLPI admin UI                                  |        |        |      |             |
+| A2    | Menu item appears for a permitted user                                |        |        |      |             |
+| A3    | Menu item is HIDDEN for a user without rights                         |        |        |      |             |
+| B1    | Round-trip a Computer CSV                                             |        |        |      |             |
+| B2    | Re-import the same file (update path)                                 |        |        |      |             |
+| C1    | Custom asset CSV import — basic columns                               |        |        |      |             |
+| C1b   | Mapping dropdown shows every standard column with a human label       |        |        |      |             |
+| C1c   | No Fields-plugin entries pollute the custom-asset Mappings dropdown   |        |        |      |             |
+| C1d   | No bogus `_customfield_<native>` rows in the dropdown                 |        |        |      |             |
+| C2    | Custom asset with custom fields — values persist to DB                |        |        |      |             |
+| C2b   | Imported custom-field values render in the asset GUI                  |        |        |      |             |
+| C2c   | Import generates History entries (`glpi_logs`)                        |        |        |      |             |
+| C3    | Large custom-asset import (100+ rows) completes end-to-end            |        |        |      |             |
+| C4    | XLSX format for custom assets                                         |        |        |      |             |
+| C5    | Fresh AssetDefinition with mandatory custom fields imports cleanly    |        |        |      |             |
+| C6    | Re-import same XLSX over existing rows merges values (update path)    |        |        |      |             |
+| D1    | Wrong delimiter                                                       |        |        |      |             |
+| D2    | Empty mandatory field                                                 |        |        |      |             |
+| D3    | Abort & start over button                                             |        |        |      |             |
+| D4    | Direct-SQL fallback log line fires when expected                      |        |        |      |             |
+| E1    | CSRF — upload form refuses requests without a valid token             |        |        |      |             |
+| E2    | CSRF — abort button is also gated                                     |        |        |      |             |
+| E3    | Access control — central-only endpoint                                |        |        |      |             |
+| E4    | Right enforcement — `plugin_datainjection_use` Read is required       |        |        |      |             |
+| E5    | File-upload guards — wrong extension                                  |        |        |      |             |
+| E6    | File-upload guards — `tmp_name` not a real upload                     |        |        |      |             |
+| E7    | Stored-data exposure — log file permissions                           |        |        |      |             |
+| E8    | SQL injection — try a quote in a mapped value                         |        |        |      |             |
+| E9    | XSS — quote-containing name in result table                           |        |        |      |             |
+| E10   | Session isolation — uploaded file is per-user                         |        |        |      |             |
+| F1    | Log file rotates at 5 MB                                              |        |        |      |             |
+| F2    | No PHP warnings during a normal import                                |        |        |      |             |
+
+> **Status legend**: `Pass` / `Fail` / `N/A` / `Blocked` / `In progress`.
